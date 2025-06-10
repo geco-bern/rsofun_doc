@@ -98,31 +98,31 @@ get_settings_str <- function(out_calib) {
   # individual_chains[[1]]$Z
 
   nrInternalChains <- lapply(
-    individual_chains, 
-    function(curr_chain){curr_chain$settings$nrChains})  |> 
-      unlist() |> 
-      unique() |> 
+    individual_chains,
+    function(curr_chain){curr_chain$settings$nrChains})  |>
+      unlist() |>
+      unique() |>
       paste0(collapse = "-")
 
   nrIterations <- lapply(
-    individual_chains, 
-    function(curr_chain){curr_chain$settings$iterations})|> 
-      unlist() |> 
-      unique() |> 
+    individual_chains,
+    function(curr_chain){curr_chain$settings$iterations})|>
+      unlist() |>
+      unique() |>
       paste0(collapse = "-")
 
   nrBurnin <- lapply(
-    individual_chains, 
-    function(curr_chain){curr_chain$settings$burnin})    |> 
-      unlist() |> 
-      unique() |> 
+    individual_chains,
+    function(curr_chain){curr_chain$settings$burnin})    |>
+      unlist() |>
+      unique() |>
       paste0(collapse = "-")
 
   sampler_name <- lapply(
-    individual_chains, 
-    function(curr_chain){curr_chain$settings$sampler})   |> 
-      unlist() |> 
-      unique() |> 
+    individual_chains,
+    function(curr_chain){curr_chain$settings$sampler})   |>
+      unlist() |>
+      unique() |>
       paste0(collapse = "-")
 
   # create descriptive string of settings for filename
@@ -130,17 +130,17 @@ get_settings_str <- function(out_calib) {
     sprintf(
       "Case-%s-Sampler-%s-%siterations_ofwhich%sburnin_chains_%sx%s_",
       out_calib$name,
-      sampler_name, 
-      nrIterations, 
-      nrBurnin, 
-      nrChains,  
+      sampler_name,
+      nrIterations,
+      nrBurnin,
+      nrChains,
       nrInternalChains
       )
     )
 }
 
 # Function to run calibration and write output for an individual calibration setup (e.g., by site)
-calib_sofun_bycase <- function(drivers_bycase, case_name = "global"){
+calib_sofun_bycase <- function(drivers_bycase, settings, case_name = "global"){
 
   validation_bycase <- drivers_bycase |>
     select(sitename, data = forcing) |>
@@ -197,17 +197,17 @@ calib_sofun_bycase <- function(drivers_bycase, case_name = "global"){
 
 }
 
-## Read data ---------------------------------------------------------------------
+## Read data -------------------------------------------------------------------
 # Read data produced with 01_sample_sites.R
 drivers <- read_rds(here::here("data/drivers_train.rds"))
 
-## Run calibrations ------------------------------------------------------------------
-### Global calibration (all sites) ---------------------------------------------------
-# Set random seed for reproducibility
+## Run calibrations ------------------------------------------------------------
+### Global calibration (all sites) ---------------------------------------------
+#### Case G1: global, reduced parameter set, only GPP as target ----------------
 set.seed(432)
 
 # Run calibration
-filnam_global <- calib_sofun_bycase(drivers, case_name = "global")
+filnam_global <- calib_sofun_bycase(drivers, case_name = "G1")
 
 out_calib_global <- readRDS(filnam_global)
 
@@ -220,6 +220,13 @@ print(get_runtime(out_calib_global))
 # Plot prior and posterior distributions
 gg <- plot_prior_posterior_density(out_calib_global$mod)
 
-ggsave(here::here("fig/prior_posterior.pdf"), plot = gg, width = 6, height = 5)
-ggsave(here::here("fig/prior_posterior.png"), plot = gg, width = 6, height = 5)
+ggsave(here::here("fig/prior_posterior_G1.pdf"), plot = gg, width = 6, height = 5)
+ggsave(here::here("fig/prior_posterior_G1.png"), plot = gg, width = 6, height = 5)
+
+#### Case G2: global, full parameter set, only GPP as target -------------------
+
+#### Case G3: global, full parameter set, GPP and traits as target -------------
+
+
+
 
