@@ -3,7 +3,7 @@ library(readr)
 library(FluxDataKit)
 # remotes::install_github("geco-bern/rgeco")
 library(rgeco)
-library(plotbiomes)
+# library(plotbiomes)
 
 # Sample sites -----------------------------------------------------------------
 df <- fdk_site_info |>
@@ -58,16 +58,16 @@ df_sampled_test <- df_test |>
 View(df_sampled_train)
 View(df_sampled_test)
 
-plot_map_simpl() +
-  geom_point(
-    aes(lon, lat, color = group),
-    data = bind_rows(
-      df_sampled_test |>
-        mutate(group = "test"),
-      df_sampled_train |>
-        mutate(group = "train")
-    )
-  )
+# plot_map_simpl() +
+#   geom_point(
+#     aes(lon, lat, color = group),
+#     data = bind_rows(
+#       df_sampled_test |>
+#         mutate(group = "test"),
+#       df_sampled_train |>
+#         mutate(group = "train")
+#     )
+#   )
 #
 # plotbiomes::whittaker_base_plot() +
 #   geom_point(
@@ -76,7 +76,7 @@ plot_map_simpl() +
 #   )
 
 # Subset data ------------------------------------------------------------------
-drivers <- read_rds("~/data_2/FluxDataKit/v3.4/zenodo_upload/rsofun_driver_data_v3.4.2.rds")
+drivers <- read_rds("/data_2/FluxDataKit/v3.4/zenodo_upload/rsofun_driver_data_v3.4.2.rds")
 
 # only sampled sites
 drivers_train <- drivers |>

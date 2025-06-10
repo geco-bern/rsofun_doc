@@ -5,7 +5,6 @@ library(rsofun)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
-library(sensitivity)
 library(BayesianTools)
 library(tictoc)
 
