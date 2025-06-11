@@ -27,7 +27,7 @@ df_train <- df |>
   # mutate(strata = interaction(whc_bin, mat_bin, mi_bin, igbp_land_use, drop = TRUE))
   mutate(strata = interaction(koeppen_code, igbp_land_use, drop = TRUE))
 
-set.seed(1982)
+set.seed(1)
 
 df_sampled_train <- df_train |>
   group_by(strata) |>
