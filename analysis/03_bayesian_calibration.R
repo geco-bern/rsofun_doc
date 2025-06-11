@@ -128,7 +128,7 @@ get_settings_str <- function(out_calib) {
   # create descriptive string of settings for filename
   return(
     sprintf(
-      "Case-%s-Sampler-%s-%siterations_ofwhich%sburnin_chains_%sx%s_",
+      "Setup-%s-Sampler-%s-%siterations_ofwhich%sburnin_chains_%sx%s_",
       out_calib$name,
       sampler_name,
       nrIterations,
@@ -139,93 +139,111 @@ get_settings_str <- function(out_calib) {
     )
 }
 
-# Function to run calibration and write output for an individual calibration setup (e.g., by site)
-calib_sofun_bycase <- function(drivers_bycase, settings, case_name = "global"){
-
-  validation_bycase <- drivers_bycase |>
-    select(sitename, data = forcing) |>
-    mutate(data = purrr::map(data, ~select(., date, gpp)))
-
-  # Common calibration settings for all cases
-  settings_calib <- list(
-    method = "BayesianTools",
-    metric = rsofun::cost_likelihood_pmodel,
-    control = list(
-      sampler = "DEzs",
-      settings = list(
-        burnin = 10000,
-        iterations = 50000,
-        nrChains = 3,       # number of independent chains
-        startValue = 3      # number of internal chains to be sampled
-      )),
-    par = list(
-      kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
-      kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
-      kphio_par_b = list(lower = 10, upper = 30, init = 20),
-      soilm_thetastar = list(
-        lower = 0.01 * drivers_bycase$site_info[[1]]$whc,
-        upper = 1.0  * drivers_bycase$site_info[[1]]$whc,
-        init  = 0.6  * drivers_bycase$site_info[[1]]$whc
-      ),
-      soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
-      err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
-    )
-  )
-
-  out <- calib_sofun(
-    drivers = drivers_bycase,
-    obs = validation_bycase,
-    settings = settings_calib,
-    par_fixed = list(
-      beta_unitcostratio = 146.0,
-      kc_jmax            = 0.41,
-      rd_to_vcmax        = 0.014,
-      tau_acclim         = 20.0
-      ),
-    targets = "gpp"
-  )
-
-  out$name <- case_name
-
-  settings_string <- get_settings_str(out)
-
-  filnam <- here::here(paste0("data/out_calib_", settings_string, ".rds"))
-
-  saveRDS(out, file = filnam)
-
-  return(filnam)
-
-}
-
 ## Read data -------------------------------------------------------------------
 # Read data produced with 01_sample_sites.R
 drivers <- read_rds(here::here("data/drivers_train.rds"))
 
+# Validation data is in the driver objects (ultimately obtained from FluxDataKit)
+validation <- drivers |>
+  select(sitename, data = forcing) |>
+  mutate(data = purrr::map(data, ~select(., date, gpp)))
+
 ## Run calibrations ------------------------------------------------------------
+
 ### Global calibration (all sites) ---------------------------------------------
-#### Case G1: global, reduced parameter set, only GPP as target ----------------
-set.seed(432)
+#### Setup s1: global, reduced parameter set, only GPP as target ----------------
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 10000,
+      iterations = 50000,
+      nrChains = 3,       # number of independent chains
+      startValue = 3      # number of internal chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
+    kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
+    kphio_par_b = list(lower = 10, upper = 30, init = 20),
+    soilm_thetastar = list(lower = 1, upper = 250, init = 40),
+    soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
+    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+  )
+)
 
-# Run calibration
-filnam_global <- calib_sofun_bycase(drivers, case_name = "G1")
+set.seed(1982)
 
-out_calib_global <- readRDS(filnam_global)
+out <- calib_sofun(
+  drivers = drivers,
+  obs = validation,
+  settings = settings_calib,
+  par_fixed = list(
+    beta_unitcostratio = 146.0,
+    kc_jmax            = 0.41,
+    rd_to_vcmax        = 0.014,
+    tau_acclim         = 20.0
+  ),
+  targets = "gpp"
+)
 
-# Plot MCMC diagnostics
-plot(out_calib_global$mod)
-summary(out_calib_global$mod) # Gives Gelman Rubin multivariate of 1.019
-summary(out_calib_global$par)
-print(get_runtime(out_calib_global))
+out$name <- "s1"
+settings_string <- get_settings_str(out)
+saveRDS(out, file = here::here(paste0("data/out_calib_", settings_string, ".rds")))
 
-# Plot prior and posterior distributions
-gg <- plot_prior_posterior_density(out_calib_global$mod)
+# # Plot MCMC diagnostics
+# plot(out$mod)
+# summary(out$mod) # Gives Gelman Rubin multivariate of 1.019
+# summary(out$par)
+# print(get_runtime(out))
+#
+# # Plot prior and posterior distributions
+# gg <- plot_prior_posterior_density(out$mod)
+#
+# ggsave(here::here("fig/prior_posterior_s1.pdf"), plot = gg, width = 6, height = 5)
+# ggsave(here::here("fig/prior_posterior_s1.png"), plot = gg, width = 6, height = 5)
 
-ggsave(here::here("fig/prior_posterior_G1.pdf"), plot = gg, width = 6, height = 5)
-ggsave(here::here("fig/prior_posterior_G1.png"), plot = gg, width = 6, height = 5)
+#### Setup s2: global, full parameter set, only GPP as target -------------------
+settings_calib <- list(
+  method = "BayesianTools",
+  metric = rsofun::cost_likelihood_pmodel,
+  control = list(
+    sampler = "DEzs",
+    settings = list(
+      burnin = 10000,
+      iterations = 50000,
+      nrChains = 3,       # number of independent chains
+      startValue = 3      # number of internal chains to be sampled
+    )),
+  par = list(
+    kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
+    kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
+    kphio_par_b = list(lower = 10, upper = 30, init = 20),
+    soilm_thetastar = list(lower = 1, upper = 250, init = 40),
+    soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
+    err_gpp = list(lower = 0.1, upper = 3, init = 0.8),
+    beta_unitcostratio = list(lower = 50, upper = 250, init = 146.0),
+    kc_jmax = list(lower = 0.1, upper = 0.8, init = 0.41),
+    tau_acclim = list(lower = 2, upper = 100, init = 20.0)
+  )
+)
 
-#### Case G2: global, full parameter set, only GPP as target -------------------
+set.seed(1982)
 
-#### Case G3: global, full parameter set, GPP and traits as target -------------
+out <- calib_sofun(
+  drivers = drivers,
+  obs = validation,
+  settings = settings_calib,
+  par_fixed = list(rd_to_vcmax = 0.014),
+  targets = "gpp"
+)
+
+out$name <- "s2"
+settings_string <- get_settings_str(out)
+saveRDS(out, file = here::here(paste0("data/out_calib_", settings_string, ".rds")))
+
+#### Setup s3: global, full parameter set, GPP and traits as target -------------
 # Todo:
 #   - select target dataset for Vcmax:Jmax and for d13C
 #   - derive ci:ca from d13C data
@@ -236,3 +254,64 @@ ggsave(here::here("fig/prior_posterior_G1.png"), plot = gg, width = 6, height = 
 # install.packages('leaf13C', repos = c('https://traitecoevo.r-universe.dev', 'https://cloud.r-project.org'))
 # df_d13c <- leaf13C::get_data()
 
+
+
+
+
+# # Function to run calibration and write output for an individual calibration setup (e.g., by site)
+# calib_sofun_bycase <- function(drivers_bycase, settings, case_name = "global"){
+#
+#   validation_bycase <- drivers_bycase |>
+#     select(sitename, data = forcing) |>
+#     mutate(data = purrr::map(data, ~select(., date, gpp)))
+#
+#   # Common calibration settings for all cases
+#   settings_calib <- list(
+#     method = "BayesianTools",
+#     metric = rsofun::cost_likelihood_pmodel,
+#     control = list(
+#       sampler = "DEzs",
+#       settings = list(
+#         burnin = 10000,
+#         iterations = 50000,
+#         nrChains = 3,       # number of independent chains
+#         startValue = 3      # number of internal chains to be sampled
+#       )),
+#     par = list(
+#       kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
+#       kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
+#       kphio_par_b = list(lower = 10, upper = 30, init = 20),
+#       soilm_thetastar = list(
+#         lower = 0.01 * drivers_bycase$site_info[[1]]$whc,
+#         upper = 1.0  * drivers_bycase$site_info[[1]]$whc,
+#         init  = 0.6  * drivers_bycase$site_info[[1]]$whc
+#       ),
+#       soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
+#       err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
+#     )
+#   )
+#
+#   out <- calib_sofun(
+#     drivers = drivers_bycase,
+#     obs = validation_bycase,
+#     settings = settings_calib,
+#     par_fixed = list(
+#       beta_unitcostratio = 146.0,
+#       kc_jmax            = 0.41,
+#       rd_to_vcmax        = 0.014,
+#       tau_acclim         = 20.0
+#       ),
+#     targets = "gpp"
+#   )
+#
+#   out$name <- case_name
+#
+#   settings_string <- get_settings_str(out)
+#
+#   filnam <- here::here(paste0("data/out_calib_", settings_string, ".rds"))
+#
+#   saveRDS(out, file = filnam)
+#
+#   return(filnam)
+#
+# }

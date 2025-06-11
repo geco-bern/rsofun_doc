@@ -90,11 +90,11 @@ View(df_sampled_test)
 #         mutate(group = "train")
 #     )
 #   )
-#
+
 # plotbiomes::whittaker_base_plot() +
 #   geom_point(
 #     aes(mat, map/10),
-#     data = df_sampled
+#     data = df_sampled_train
 #   )
 
 # Subset data ------------------------------------------------------------------
