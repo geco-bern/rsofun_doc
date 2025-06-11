@@ -226,7 +226,13 @@ ggsave(here::here("fig/prior_posterior_G1.png"), plot = gg, width = 6, height = 
 #### Case G2: global, full parameter set, only GPP as target -------------------
 
 #### Case G3: global, full parameter set, GPP and traits as target -------------
+# Todo:
+#   - select target dataset for Vcmax:Jmax and for d13C
+#   - derive ci:ca from d13C data
+#   - generate driver object for both datasets (using lon, lat info from their sites)
+#   - define likelihood function for parallel targets (Vcmax:Jmax, ci:ca, GPP)
 
-
-
+# From https://traitecoevo.r-universe.dev/leaf13C
+# install.packages('leaf13C', repos = c('https://traitecoevo.r-universe.dev', 'https://cloud.r-project.org'))
+# df_d13c <- leaf13C::get_data()
 
