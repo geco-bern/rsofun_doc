@@ -10,10 +10,13 @@ df_sites <- df |>
   mutate(site = paste0("lon_", as.character(format(longitude, digits = 2)), "_lat_", as.character(format(latitude, digits = 3)))) |>
   group_by(site) |>
   summarise(
+    lon = mean(longitude),
+    lat = mean(latitude),
     temp = mean(temperature_gs),
     vpd = mean(vpd_gs),
     par = mean(par_gs),
     elv = mean(z),
+    co2 = mean(ca),
     vcmax = mean(vcmax),
     jmax = mean(jmax),
     vj = mean(vj)
@@ -25,6 +28,9 @@ df_sites <- df |>
 df_sites |>
   ggplot(aes(x = vj)) +
   geom_histogram(bins = 15)
+
+rgeco::plot_map_simpl() +
+  geom_point(data = df_sites, aes(lon, lat))
 
 # Apply one-step P-model function on each row of df_sites
 library(dplyr)
@@ -44,10 +50,10 @@ params_modl <- list(
 # Apply the model function row-wise and bind results
 df_sites_with_outputs <- df_sites |>
   mutate(row_id = row_number()) |>
-  pmap_dfr(function(temp, vpd, patm, par, row_id, ...) {
+  pmap_dfr(function(temp, vpd, patm, par, co2, row_id, ...) {
     result <- run_pmodel_onestep_f_bysite(
       lc4 = FALSE,
-      forcing = data.frame(temp = temp, vpd = vpd, patm = patm, ppfd = par, co2 = 400),
+      forcing = data.frame(temp = temp, vpd = vpd, ppfd = par, co2 = co2, patm = patm),
       params_modl = params_modl,
       makecheck = FALSE
     ) |>

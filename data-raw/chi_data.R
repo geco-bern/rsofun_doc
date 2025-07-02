@@ -57,3 +57,11 @@ rgeco::plot_map_simpl() +
   geom_point(data = df_sites, aes(lon, lat))
 
 
+# XXX todo: use worldclim through ingestr to get one-step forcing for daytime growing season values:
+# - temperature
+# - vpd
+# - ppfd
+
+# XXX todo: use ingestr to extract elevation given lon/lat, and calculate patm using standard atmospheric pressure (e.g., calc_patm() in rpmodel or ingestr)
+
+# XXX todo: use ingestr to read CO2 value given column `collection.year`
