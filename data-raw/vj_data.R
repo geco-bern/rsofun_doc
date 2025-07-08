@@ -97,6 +97,7 @@ df_sites_with_outputs |>
 
 # # Kumarathunge data
 # df <- read_csv("~/data/archive/acitglob_kumarathunge_2020/data/Kumarathunge-aci-tglob-8595d961d4c8/Data/PPC-TGlob_V1.0.csv")
+# df <- read_csv("/data/archive/acitglob_kumarathunge_2020/data/Kumarathunge-aci-tglob-8595d961d4c8/Data/PPC-TGlob_V1.0.csv") # Workstation-02
 #
 # # filter data to field - native environment (seed source lon/lat can be interpreted as lon/lat for forcing data)
 # df <- df |>
