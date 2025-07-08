@@ -1,5 +1,6 @@
 library(tidyverse)
 library(rpmodel)
+library(rgeco) # remotes::install_github("https://github.com/geco-bern/rgeco")
 
 # Nick Smith's data,
 df <- read_csv(here::here("data/GlobV_v2.1_env_open.csv"))
@@ -29,7 +30,7 @@ df_sites |>
   ggplot(aes(x = vj)) +
   geom_histogram(bins = 15)
 
-rgeco::plot_map_simpl() +
+rgeco:::plot_map_simpl() +
   geom_point(data = df_sites, aes(lon, lat))
 
 # Apply one-step P-model function on each row of df_sites

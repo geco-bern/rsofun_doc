@@ -1,13 +1,14 @@
-remotes::install_github("traitecoevo/datastorr")
-remotes::install_github("traitecoevo/leaf13C")
+library(tidyverse)
+library(rgeco)   # remotes::install_github("https://github.com/geco-bern/rgeco")
+library(leaf13C) # remotes::install_github("traitecoevo/datastorr")
+                 # remotes::install_github("traitecoevo/leaf13C")
 
-library(leaf13C)
 
 # Please cite
 # Cornwell, William K., et al. “Climate and soils together regulate photosynthetic carbon isotope discrimination within C3 plants worldwide.” Global Ecology and Biogeography 27.9 (2018): 1056-1067.
 
 # see https://github.com/traitecoevo/leaf13C/blob/master/leaf13C_metadata.txt for column description
-df <- leaf13C::get_data()
+df <- leaf13C::get_data(version = "0.2.2")
 
 # Calculate chi (ci:ca) from big-Delta data.
 calc_chi_bigdelta <- function(bigdelta, ca, mgdd0 = NA){
@@ -46,7 +47,7 @@ df <- df |>
 
 df_sites <- df |>
   ungroup() |>
-  mutate(site = paste0("lon_", as.character(format(longitude, digits = 3)), "_lat_", as.character(format(latitude, digits = 3)))) |>
+  mutate(site = sprintf("lon_%+08.3f_lat_%+08.3f", longitude, latitude)) |>
   group_by(site) |>
   summarise(
     lon = mean(longitude),
@@ -59,7 +60,7 @@ df_sites |>
   ggplot(aes(x = chi)) +
   geom_histogram(bins = 15)
 
-rgeco::plot_map_simpl() +
+rgeco:::plot_map_simpl() +
   geom_point(data = df_sites, aes(lon, lat))
 
 
