@@ -5,6 +5,7 @@ library(rgeco) # remotes::install_github("https://github.com/geco-bern/rgeco")
 # Nick Smith's data,
 df <- read_csv(here::here("data/GlobV_v2.1_env_open.csv"))
 
+# xxx for GMD, do not aggregate across species, but specify likelihood as a function of mismatch wrt all species individually for a given site
 df_sites <- df |>
   ungroup() |>
   mutate(vj = vcmax/jmax) |>
