@@ -36,7 +36,7 @@ calc_chi_bigdelta <- function(bigdelta, ca, mgdd0 = NA){
 
 df <- df |>
   rowwise() |>
-  mutate(chi = calc_chi_bigdelta(big.D13.merged, 400))
+  mutate(chi = calc_chi_bigdelta(big.D13.merged, 400))  # using [co2] = 400 here, but should use value corresponding to data given observation year
 
 df_sites <- df |>
   ungroup() |>
@@ -61,6 +61,19 @@ rgeco::plot_map_simpl() +
 # - temperature
 # - vpd
 # - ppfd
+
+# temp:
+# - growing season: mean across months for which monthly tmean > 0 deg C
+# - daytime temperature: derived as a function of tmin and tmax, see equation 5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
+
+# vpd:
+# - vpd abgeleitet aus vapour pressure (Worldclim), gemäss code in ingestr für watch-wfdei
+# - (vpd(tmin) + vpd(tmax))/2
+# - average only over months with tmean > 0
+
+# ppfd:
+#   - aus solar radiation, multiplikation mit faktor (2....) gemäss anderen datenprodukten in ingestr
+
 
 # XXX todo: use ingestr to extract elevation given lon/lat, and calculate patm using standard atmospheric pressure (e.g., calc_patm() in rpmodel or ingestr)
 

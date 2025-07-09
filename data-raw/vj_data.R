@@ -30,7 +30,11 @@ df_sites |>
   geom_histogram(bins = 15)
 
 rgeco::plot_map_simpl() +
-  geom_point(data = df_sites, aes(lon, lat))
+  geom_point(
+    data = df_sites |>
+      drop_na(vj),
+    aes(lon, lat)
+    )
 
 # Apply one-step P-model function on each row of df_sites
 library(dplyr)
