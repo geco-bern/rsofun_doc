@@ -1,5 +1,6 @@
 library(tidyverse)
 library(rpmodel)
+library(rgeco) # remotes::install_github("https://github.com/geco-bern/rgeco")
 
 # Nick Smith's data,
 df <- read_csv(here::here("data/GlobV_v2.1_env_open.csv"))
@@ -29,7 +30,7 @@ df_sites |>
   ggplot(aes(x = vj)) +
   geom_histogram(bins = 15)
 
-rgeco::plot_map_simpl() +
+rgeco:::plot_map_simpl() +
   geom_point(
     data = df_sites |>
       drop_na(vj),
@@ -101,6 +102,7 @@ df_sites_with_outputs |>
 
 # # Kumarathunge data
 # df <- read_csv("~/data/archive/acitglob_kumarathunge_2020/data/Kumarathunge-aci-tglob-8595d961d4c8/Data/PPC-TGlob_V1.0.csv")
+# df <- read_csv("/data/archive/acitglob_kumarathunge_2020/data/Kumarathunge-aci-tglob-8595d961d4c8/Data/PPC-TGlob_V1.0.csv") # Workstation-02
 #
 # # filter data to field - native environment (seed source lon/lat can be interpreted as lon/lat for forcing data)
 # df <- df |>
