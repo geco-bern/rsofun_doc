@@ -5,7 +5,7 @@
 # The input forcing is first filled with NA.
 # In a second step the input forcing needs to be replaced with data from ingestr.
 #
-# These two objects are stored as *.RDS files in subfolder data/
+# These two objects are stored as *.rds files in subfolder data/
 
 rm(list = ls())
 library(tidyverse)
@@ -102,8 +102,8 @@ rgeco:::plot_map_simpl() +
   geom_point(data = df_chi_forcing, aes(lon, lat))
 
 
-saveRDS(df_chi_forcing, here::here("data/chi_forcing.RDS"))
-saveRDS(df_chi_target, here::here("data/chi_target.RDS"))
+saveRDS(df_chi_forcing, here::here("data/chi_forcing.rds"))
+saveRDS(df_chi_target, here::here("data/chi_target.rds"))
 
 
 

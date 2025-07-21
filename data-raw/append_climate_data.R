@@ -3,7 +3,7 @@
 #
 # It needs access to worldclim data set.
 #
-# The appended forcing data sets are stored as *.RDS files in subfolder data/
+# The appended forcing data sets are stored as *.rds files in subfolder data/
 
 rm(list = ls())
 library(tidyverse)

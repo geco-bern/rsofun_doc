@@ -5,7 +5,7 @@
 # The input forcing is taken from the data set.
 # In a second step this input forcing could be replaced with data from ingestr.
 #
-# These two objects are stored as *.RDS files in subfolder data/
+# These two objects are stored as *.rds files in subfolder data/
 
 rm(list = ls())
 library(tidyverse)
@@ -17,7 +17,7 @@ library(rsofun)  # install from branch simple_pmodel_v2
                  # devtools::install_github("geco-bern/rsofun@simple_pmodel_v2")
 
 # Nick Smith's data,
-df_vj_allobs <- read_csv(here::here("data/GlobV_v2.1_env_open.csv"))
+df_vj_allobs <- read_csv(here::here("data-raw/GlobV_v2.1_env_open.csv"))
 
 df_vj_allobs <- df_vj_allobs |>
   ungroup() |>
@@ -104,8 +104,8 @@ ggplot() +
 #   labs(color = "Vcmax\n(umol/m2/s)")
 
 
-saveRDS(df_vj_forcing, here::here("data/vj_forcing.RDS"))
-saveRDS(df_vj_target, here::here("data/vj_target.RDS"))
+saveRDS(df_vj_forcing, here::here("data/vj_forcing.rds"))
+saveRDS(df_vj_target, here::here("data/vj_target.rds"))
 
 
 
