@@ -8,8 +8,10 @@
 rm(list = ls())
 library(tidyverse)
 library(rpmodel)
-library(rgeco) # remotes::install_github("https://github.com/geco-bern/rgeco")
+library(rgeco) # pak::pkg_install("geco-bern/rgeco")
 library(dplyr)
 library(purrr)
 # library(rsofun)  # install from branch simple_pmodel_v2
-# devtools::install_github("geco-bern/rsofun@simple_pmodel_v2")
+# pak::pkg_install("geco-bern/rsofun@simple_pmodel_v2")
+# pak::pkg_install("geco-bern/ingestr")
+library(ingestr)

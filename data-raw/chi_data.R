@@ -9,9 +9,9 @@
 
 rm(list = ls())
 library(tidyverse)
-library(rgeco)   # remotes::install_github("https://github.com/geco-bern/rgeco")
-library(leaf13C) # remotes::install_github("traitecoevo/datastorr")
-                 # remotes::install_github("traitecoevo/leaf13C")
+library(rgeco)   # pak::pkg_install("https://github.com/geco-bern/rgeco")
+library(leaf13C) # pak::pkg_install("traitecoevo/datastorr")
+                 # pak::pkg_install("traitecoevo/leaf13C")
 
 # Please cite
 # Cornwell, William K., et al. “Climate and soils together regulate photosynthetic carbon isotope discrimination within C3 plants worldwide.” Global Ecology and Biogeography 27.9 (2018): 1056-1067.
