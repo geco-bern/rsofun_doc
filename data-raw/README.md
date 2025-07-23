@@ -6,11 +6,11 @@ These data sets will be (are) provided in the rsofun package as example data
 sets.
 
 To recreate the data set run:
-- chi_data.R
-- vj_data.R
-- append_climate_data.R
+- data-raw/chi_data.R
+- data-raw/vj_data.R
+- data-raw/append_climate_data.R
 
 
 
 Other input data:
-- GlobV_v2.1_env_open.csv: This is the open-access part of the data used for Smith et al., 2019. Received by Nick Smith by email, 30.06.2025
+- data-raw/GlobV_v2.1_env_open.csv: This is the open-access part of the data used for Smith et al., 2019. Received by Nick Smith by email, 30.06.2025

@@ -54,7 +54,7 @@ df_chi_allobs <- df_chi_allobs |>
   rowwise() |>
   mutate(chi = calc_chi_bigdelta(big.D13.merged, ca = 400)) |>
   ungroup() |>
-  mutate(site = sprintf("lon_%+07.2f_lat_%+07.2f", longitude, latitude))
+  mutate(sitename = sprintf("lon_%+07.2f_lat_%+07.2f", longitude, latitude))
 
 # drop NAs
 df_chi <- df_chi_allobs |>
@@ -68,31 +68,36 @@ df_chi <- df_chi_allobs |>
 #   For the GMD paper, not aggregating across species requires to specify
 #   likelihood as a function of mismatch wrt all species individually for a given site.
 df_chi_forcing <- df_chi |>
-  group_by(site) |>
+  group_by(sitename) |>
   summarise(.groups = "keep",
             lon = mean(longitude),
             lat = mean(latitude),
-            temp_degC    = NA_real_, #mean(temperature_gs),  # deg C,     growing season value (growing season, where monthly mean T>0)
-            vpd_Pa       = NA_real_, #mean(vpd_gs),           # Pa,        growing season value (growing season, where monthly mean T>0)
-            par_umolm2s  = NA_real_, #mean(par_gs),           # umol/m2/s, growing season value (growing season, where monthly mean T>0)
-            elv_masl     = NA_real_, #mean(z),                # m asl
-            co2_ppm      = NA_real_, #mean(ca)
-            )  |>           # ppm
+            year         = NA_real_,
+            temp_degC    = NA_real_, #mean(temperature_gs), # deg C,     growing season value (growing season, where monthly mean T>0)
+            vpd_Pa       = NA_real_, #mean(vpd_gs),         # Pa,        growing season value (growing season, where monthly mean T>0)
+            par_molm2s   = NA_real_, #mean(par_gs),         # mol/m2/s, growing season value (growing season, where monthly mean T>0)
+            elv_masl     = NA_real_, #mean(z),              # m asl
+            co2_ppm      = NA_real_, #mean(ca)              # ppm
+            Nobs   = NA_integer_,
+            Nyears = NA_integer_,
+            Ndates = NA_integer_
+            )  |>
   mutate(
     patm_Pa = rpmodel::calc_patm(elv_masl)
   )
-# TODO: get the meteo conditions through ingestr
-
 df_chi_target <- df_chi |>
-  group_by(site, species) |>
-  summarise(.groups = "keep",
-            lon = mean(longitude),
-            lat = mean(latitude),
-            chi_obs__ = mean(chi)   # unitless
+  mutate(collection.date = lubridate::make_date(collection.year, collection.month)) |>
+  group_by(sitename, species) |>
+  summarise(
+    .groups = "keep",
+    lon = mean(longitude),
+    lat = mean(latitude),
+    year   = mean(collection.year),
+    chi_obs__ = mean(chi), # unitless
+    Nobs = n(),
+    Nyears = length(unique(collection.year)),
+    Ndates = length(unique(collection.date)),
   )
-
-rm(df_chi)
-rm(df_chi_allobs)
 
 df_chi_target |>
   ggplot(aes(x = chi_obs__)) +
@@ -100,10 +105,15 @@ df_chi_target |>
 
 rgeco:::plot_map_simpl() +
   geom_point(data = df_chi_forcing, aes(lon, lat))
-
+# df_chi_target |> filter(Nobs>1)
+# df_chi_target |> filter(Nyears>1) |> print(n=100)
+# df_chi_target |> filter(Ndates>1) |> print(n=100)
 
 saveRDS(df_chi_forcing, here::here("data/chi_forcing.rds"))
 saveRDS(df_chi_target, here::here("data/chi_target.rds"))
+rm(df_chi)
+rm(df_chi_allobs)
+
 
 
 
@@ -160,7 +170,7 @@ df_chi_forcing_dummy <- df_chi_forcing[1,] |>
   mutate(
     temp_degC   = 17.7,    # deg C,     growing season value (growing season, where T>0)
     vpd_Pa      = 0.736,   # Pa,        growing season value (growing season, where T>0)
-    par_umolm2s = 849,     # umol/m2/s, growing season value (growing season, where T>0)
+    par_molm2s  = 849/10^6,# mol/m2/s, growing season value (growing season, where T>0)
     co2_ppm     = 360,     # ppm
     elv_masl    = 68,      # m asl
     patm_Pa     = rpmodel::calc_patm(elv_masl)
@@ -185,12 +195,12 @@ params_modl <- list(
 
 # Apply the model function row-wise and bind results
 df_chi_modeled <- df_chi_forcing_dummy |>
-  group_by(site) |> #, lon, lat) |>
+  group_by(sitename) |> #, lon, lat) |>
   group_modify(~run_pmodel_onestep_f_bysite(
     lc4 = FALSE,
-    forcing =  data.frame(temp = .x$temp_degC,        # TODO: with ingestr this could be daytime average
-                          vpd  = .x$vpd_Pa,           # TODO: with ingestr this could be daytime average
-                          ppfd = .x$par_umolm2s/1000, # TODO: rsofun needs ppfd in mol/m2/s
+    forcing =  data.frame(temp = .x$temp_degC, # TODO: with ingestr this could be daytime average
+                          vpd  = .x$vpd_Pa,    # TODO: with ingestr this could be daytime average
+                          ppfd = .x$par_molm2s,
                           co2  = .x$co2_ppm,
                           patm = .x$patm_Pa),
     params_modl = params_modl,
@@ -211,7 +221,7 @@ df_chi_modeled <- df_chi_forcing_dummy |>
 # Plot modelled vs observed
 
 # Combine modelled and observed
-df_chi_with_outputs <- dplyr::inner_join(df_chi_modeled, df_chi_target, by = join_by(site))
+df_chi_with_outputs <- dplyr::inner_join(df_chi_modeled, df_chi_target, by = join_by(sitename))
 
 # Vcmax
 df_chi_with_outputs |>
@@ -246,25 +256,4 @@ df_chi_with_outputs |>
 # This can be modelled in a much simplified version based on "geco-bern/get_Vcmax_data", which used daily values
 
 
-# XXX todo: use worldclim through ingestr to get one-step forcing for daytime growing season values:
-# - temperature
-# - vpd
-# - ppfd
-
-# temp:
-# - growing season: mean across months for which monthly tmean > 0 deg C
-# - daytime temperature: derived as a function of tmin and tmax, see equation 5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
-
-# vpd:
-# - vpd abgeleitet aus vapour pressure (Worldclim), gemäss code in ingestr für watch-wfdei
-# - (vpd(tmin) + vpd(tmax))/2
-# - average only over months with tmean > 0
-
-# ppfd:
-#   - aus solar radiation, multiplikation mit faktor (2....) gemäss anderen datenprodukten in ingestr
-
-
-# XXX todo: use ingestr to extract elevation given lon/lat, and calculate patm using standard atmospheric pressure (e.g., calc_patm() in rpmodel or ingestr)
-
-# XXX todo: use ingestr to read CO2 value given column `collection.year`
 

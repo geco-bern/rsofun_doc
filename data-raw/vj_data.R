@@ -9,7 +9,7 @@
 
 rm(list = ls())
 library(tidyverse)
-library(rpmodel)
+library(ingestr)
 library(rgeco) # pak::pkg_install("geco-bern/rgeco")
 library(dplyr)
 library(purrr)
@@ -22,10 +22,13 @@ df_vj_allobs <- read_csv(here::here("data-raw/GlobV_v2.1_env_open.csv"))
 df_vj_allobs <- df_vj_allobs |>
   ungroup() |>
   mutate(vj = vcmax/jmax) |>
-  mutate(site = sprintf("lon_%+07.2f_lat_%+07.2f", longitude, latitude))
+  mutate(sitename = sprintf("lon_%+07.2f_lat_%+07.2f", longitude, latitude))
 
-
-#TODO: no time information contained. Do we need that? Is month important for vj ratio? Is year (CO2) important for vj ratio?
+# df_vj_allobs |> filter(is.na(year))  # 2341 observations have no time information
+# df_vj_allobs |> filter(!is.na(year)) # 1331 observations have time information
+# df_vj_allobs |> filter(!is.na(month))  # 663 observations have month information
+# df_vj_allobs |> filter(!is.na(day))    # 663 observations have day   information
+# df_vj_allobs |> filter(!is.na(doy))    # 663 observations have doy   information
 
 
 # drop NAs
@@ -45,35 +48,53 @@ df_vj <- df_vj_allobs |>
 #   For the GMD paper, not aggregating across species requires to specify
 #   likelihood as a function of mismatch wrt all species individually for a given site.
 df_vj_forcing <- df_vj |>
-  group_by(site) |>
+  mutate(year_orig = year,
+         date      = lubridate::make_date(year, month)) |>
+  group_by(sitename) |>
   summarise(.groups = "keep",
     lon = mean(longitude),
     lat = mean(latitude),
-    temp_degC    = mean(temperature_gs),  # deg C,     growing season value (growing season, where monthly mean T>0)
-    vpd_Pa       = mean(vpd_gs),           # Pa,        growing season value (growing season, where monthly mean T>0)
-    par_umolm2s  = mean(par_gs),           # umol/m2/s, growing season value (growing season, where monthly mean T>0)
+    year= mean(year_orig),
+    temp_degC    = mean(temperature_gs),   # deg C,                  growing season value (growing season, where monthly mean T>0)
+    vpd_Pa       = mean(vpd_gs)*10^3,      # (VPD was probably kPa), growing season value (growing season, where monthly mean T>0)
+    par_molm2s   = mean(par_gs)/10^6,      # (par was in umol/m2/s), growing season value (growing season, where monthly mean T>0)
     elv_masl     = mean(z),                # m asl
-    co2_ppm      = mean(ca))  |>           # ppm
+    co2_ppm      = mean(ca),               # ppm
+    Nobs   = n(),
+    Nyears = length(unique(year_orig)),
+    Ndates = length(unique(date)),
+  ) |>
   mutate(
-    patm_Pa = rpmodel::calc_patm(elv_masl)
+    patm_Pa = ingestr::calc_patm(elv_masl)
   )
 
 df_vj_target <- df_vj |>
-  group_by(site, genus, species) |>
+  mutate(year_orig = year,
+         date      = lubridate::make_date(year, month)) |>
+  group_by(sitename, genus, species) |>
   summarise(.groups = "keep",
     lon = mean(longitude),
     lat = mean(latitude),
-    vcmax_obs_umolm2s = mean(vcmax),  # umol/m2/s
-    jmax_obs_umolm2s  = mean(jmax),   # umol/m2/s
-    vj_obs = mean(vj)                 # unitless ratio
+    year= mean(year_orig),
+    vcmax_obs_molm2s = mean(vcmax)/10^6,  # mol/m2/s
+    jmax_obs_molm2s  = mean(jmax)/10^6,   # mol/m2/s
+    vj_obs = mean(vj),                     # unitless ratio
+    Nobs   = n(),
+    Nyears = length(unique(year_orig)),
+    Ndates = length(unique(date)),
   )
+
+# df_vj_forcing |> filter(Nyears>1)
+# df_vj_forcing |> filter(Ndates>1)
+# df_vj_target |> filter(Nyears>1)
+# df_vj_target |> filter(Ndates>1)
+# df_vj |> filter(sitename == "lon_+026.70_lat_+058.30")
 
 rm(df_vj)
 
 # Show
-df_vj_target  # 1031 site,genus,species combinations
-df_vj_forcing # 106 sites
-# df_vj |> group_by(site) |> summarise(lon = mean(longitude), lat = mean(latitude)) # 247 sites (containing NAs)
+# df_vj_target  # 1031 sitename,genus,species combinations
+# df_vj_forcing # 106 sites
 
 # Plot
 df_vj_target |>
@@ -83,7 +104,7 @@ df_vj_target |>
 
 # rgeco:::plot_map_simpl() +
 #   geom_point(data = df_vj_allobs |>
-#                group_by(site) |>
+#                group_by(sitename) |>
 #                summarise(lon = mean(longitude),
 #                          lat = mean(latitude)),
 #              aes(lon, lat))
@@ -91,13 +112,13 @@ df_vj_target |>
 rgeco:::plot_map_simpl() +
   geom_point(data = df_vj_forcing, aes(lon, lat))
 
-ggplot() +
-  geom_point(data = df_vj_target, aes(genus, lat, color = vcmax_obs_umolm2s)) +
-  labs(color = "Vcmax\n(umol/m2/s)") +
-  theme_minimal() + theme(axis.text.x = element_text(angle=90), panel.grid.major.x = element_blank())
+# ggplot() +
+#   geom_point(data = df_vj_target, aes(genus, lat, color = vcmax_obs_molm2s)) +
+#   labs(color = "Vcmax\n(umol/m2/s)") +
+#   theme_minimal() + theme(axis.text.x = element_text(angle=90), panel.grid.major.x = element_blank())
 # Without aggregating across species below map plot doesn't make sense anymore:
 # rgeco:::plot_map_simpl() +
-#   geom_point(data = df_vj_target, aes(lon, lat, color = vcmax_umolm2s)) +
+#   geom_point(data = df_vj_target, aes(lon, lat, color = vcmax_obs_molm2s)) +
 #   theme(legend.position = c(0,0),
 #         legend.justification = c(0,0),
 #         legend.background = element_rect(fill = NA)) +
@@ -146,31 +167,27 @@ params_modl <- list(
 
 # Apply the model function row-wise and bind results
 df_vj_modeled <- df_vj_forcing |>
-  group_by(site) |> #, lon, lat) |>
+  group_by(sitename) |> #, lon, lat) |>
   group_modify(~run_pmodel_onestep_f_bysite(
     lc4 = FALSE,
-    forcing =  data.frame(temp = .x$temp_degC,        # TODO: with ingestr this could be daytime average
-                          vpd  = .x$vpd_Pa,           # TODO: with ingestr this could be daytime average
-                          ppfd = .x$par_umolm2s/1000, # TODO: rsofun needs ppfd in mol/m2/s
+    forcing =  data.frame(temp = .x$temp_degC,
+                          vpd  = .x$vpd_Pa,
+                          ppfd = .x$par_molm2s,
                           co2  = .x$co2_ppm,
                           patm = .x$patm_Pa),
     params_modl = params_modl,
     makecheck = FALSE)) |>
   rename(vcmax_mod_molm2s = vcmax,
-         jmax_mod_molm2s  = jmax) |>
-  # transform to same units as targets:
-  mutate(vcmax_mod_umolm2s = vcmax_mod_molm2s*1000,
-         jmax_mod_umolm2s  = jmax_mod_molm2s*1000) |>
-  select(-vcmax_mod_molm2s, -jmax_mod_molm2s)
+         jmax_mod_molm2s  = jmax)
 
 # Plot modelled vs observed
 
 # Combine modelled and observed
-df_vj_with_outputs <- dplyr::inner_join(df_vj_modeled, df_vj_target, by = join_by(site))
+df_vj_with_outputs <- dplyr::inner_join(df_vj_modeled, df_vj_target, by = join_by(sitename))
 
 # Vcmax
 df_vj_with_outputs |>
-  ggplot(aes(vcmax_mod_umolm2s, vcmax_obs_umolm2s)) +
+  ggplot(aes(vcmax_mod_molm2s*10^6, vcmax_obs_molm2s*10^6)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") #+
   # labs(
@@ -180,7 +197,7 @@ df_vj_with_outputs |>
 
 # Jmax
 df_vj_with_outputs |>
-  ggplot(aes(jmax_mod_umolm2s, jmax_obs_umolm2s)) +
+  ggplot(aes(jmax_mod_molm2s*10^6, jmax_obs_molm2s*10^6)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") #+
   # labs(
@@ -190,7 +207,7 @@ df_vj_with_outputs |>
 
 # Vcmax:Jmax ratio
 df_vj_with_outputs |>
-  mutate(vj_mod = vcmax_mod_umolm2s / jmax_mod_umolm2s) |>
+  mutate(vj_mod = vcmax_mod_molm2s / jmax_mod_molm2s) |>
   ggplot(aes(vj_mod, vj_obs)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") +
