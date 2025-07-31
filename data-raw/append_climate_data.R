@@ -25,6 +25,39 @@ df_vj_forcing  <- readRDS(here::here("data/vj_forcing.rds"))
 df_chi_target <- readRDS(here::here("data/chi_target.rds"))
 df_vj_target  <- readRDS(here::here("data/vj_target.rds"))
 
+      # # TODO: just checking for gpp sites: if ingestr-derived ppfd agrees with "rsofun_driver_data_v3.4.2.rds"
+      #   NOTE: we normally do this later when combining the forcing data for the chi and vj data with the gpp data
+      # #   Download FluxDataKit data from Zenodo:
+      # #   sudo apt install librdf0-dev
+      # #   install.packages("zen4R")
+      # library(zen4R)
+      # download_path <- tempdir(check = TRUE)
+      # download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "fdk_site_info.csv")
+      # download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "fdk_site_fullyearsequence.csv")
+      # download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "rsofun_driver_data_v3.4.2.rds")
+      # fdk_site_info             <- readr::read_csv(file.path(download_path, "fdk_site_info.csv"))
+      # fdk_site_fullyearsequence <- readr::read_csv(file.path(download_path, "fdk_site_fullyearsequence.csv"))
+      # drivers <- readRDS(file.path(download_path, "rsofun_driver_data_v3.4.2.rds"))
+      #
+      # # testthat::expect_equal(fdk_site_info,FluxDataKit::fdk_site_info) # THis fails
+      # # testthat::expect_equal(   # This succeeds
+      # #   fdk_site_info |>
+      # #     select(-koeppen_code),
+      # #   FluxDataKit::fdk_site_info |>
+      # #     mutate(reference_height = unname(reference_height)) |>
+      # #     select(-koeppen_code))
+      #
+      # gpp_sites_to_use <- fdk_site_info |>
+      #   filter(!(igbp_land_use %in% c("CRO", "WET"))) |>
+      #   left_join(
+      #     fdk_site_fullyearsequence,
+      #     by = "sitename"
+      #   ) |>
+      #   filter(nyears_gpp > 10)
+      #
+      # df_gpp_forcingtarget <- drivers |> filter(sitename %in% gpp_sites_to_use$sitename)
+      # # # END TODO
+
 
 # Prepare ingestr --------------------------------------------------------------
 siteinfo_all <- bind_rows(df_chi_forcing, df_vj_forcing) |>
@@ -37,9 +70,18 @@ siteinfo_all <- bind_rows(df_chi_forcing, df_vj_forcing) |>
     sitename, into=c(NA, "lon", NA, "lat"),
     sep = "_", remove = FALSE, convert = TRUE)
 
-# siteinfo_all <- siteinfo_all %>% slice(c(32,34)) # for development
-# siteinfo |> filter(is.na(year))
-# siteinfo |> filter(!is.na(year))
+      # # TODO: just checking for gpp sites: if ingestr-derived ppfd agrees with "rsofun_driver_data_v3.4.2.rds"
+      # # append gpp sites to siteinfo_all
+      # siteinfo_all <- bind_rows(
+      #   siteinfo_all,
+      #   df_gpp_forcingtarget |>
+      #     # get year from forcing
+      #     group_by(sitename) |> unnest(forcing) |> slice(1) |> mutate(year = lubridate::year(date)) |>
+      #     # get lon, lat from site_info
+      #     select(sitename, site_info, year) |> unnest(site_info) |>
+      #     select(sitename, lon, lat, year)
+      # )
+      # # END TODO
 
 siteinfo <- siteinfo_all |>
   # derive columns date_start and date_end
@@ -81,7 +123,7 @@ settings_worldclim <- list(varnam = c("tavg","tmin","tmax","vapr","srad"))
 # tmin, tmax, tavg, degC
 # WorldClim is derived from CRU, thus in CRU:
 #           tmp, tmn, tmx are: monthly average daily (mean,min,max) temperature
-df_worldclim <- ingest(
+df_worldclim_raw <- ingest(
   siteinfo,
   source    = "worldclim",
   settings  = settings_worldclim,
@@ -96,11 +138,22 @@ df_worldclim <- ingest(
          tmax_degC  = tmax) |>
   nest(data = -c(sitename))
 
-# TODO: instead of 1970-2000 average, we might use the actual values of the actual years?
+# NOTE: 10 sites are filtered out since they
+# did not return worldclim data
+# df_worldclim_raw |> unnest(c(data)) |>
+#   filter(if_any(everything(), is.na)) |>
+#   slice(1)
+df_worldclim <- df_worldclim_raw |> unnest(c(data)) |>
+  filter(!if_any(everything(), is.na)) |>
+  nest(data = -c(sitename))
+
+
+# TODO: instead of 1970-2000 average from worldclim, we might use the actual
+#       values of the actual years from worldclim?
 
 
 # Derive single values of co2, patm, ppfd, tgrowth, vpd (representing average growing conditions) ------------------------
-## Select CO2 from 1990: ----
+## Select CO2: ----
 df_co2 |>     # provides daily co2 values
   unnest(data) |>
   # do only keep a instance of each distinct date
@@ -137,27 +190,44 @@ kfFECmol <- 2.04 * 1e-6  # from-flux-to-energy, mol/J (Meek et al., 1984)
 ### for Tgrowth:
 # just use ingestr::calc_tgrowth
 # ingestr::calc_tgrowth(10,20,lat=45,doy=180)
-    # calc_tgrowth_FB <- function(Tmin, Tmax, lat_deg, doy){# eq.5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
-    #   # delta: deg,  monthly average solar declination (angle between equatorial plane and sun's rays)
-    #   delta = 23.45 * sin(2*pi * (284 + doy) / 365.25) # TODO: find source
-    #
-    #   # eq. A7.2, Jones, Plants and Microclimate, 2014, https://doi.org/10.1017/CBO9780511845727
-    #   xx <- -tanpi(lat_deg/180) * tanpi(delta/180) # cosine of the hour angle of the sun at sunrise or sunset
-    #   # daylength <- acos(xx) * 2 / 15
-    #
-    #   summand <- 0.5*sqrt(1 - xx^2) / acos(xx)  # units of inverse radians ??
-    #   Tg <- Tmax * (0.5 + summand)
-    #       + Tmin * (0.5 - summand)
-    #   return(Tg) # same units as Tmax and Tmin
-    # }
-    # calc_tgrowth_FB(      10,20,lat_deg=45,doy=180)
+    myingestr_calc_tgrowth <- function (tmin, tmax, lat, doy) {
+      out_berger <- ingestr:::get_berger_tls(doy)
+      xx <- (-1.0) * tan(lat * pi / 180) * tan(out_berger$decl_angle * pi / 180) # xx is -ru/rv in Davis (2017)
+      # xx is in the range of [-2 to +2] for lat going -80 to +80
+      if (xx <= -1){       # polar day (midnight sun)
+        hs                                   <- pi       # radians, according to Davis (2017)
+        #daylength_h                         <- 24
+        tgrowth <- tmin + (tmax-tmin)/2 # 24h day: average T is average of Tmax and Tmin (since lim h=>pi sin(pi)/pi = 0)
+      } else if (xx >= 1){ # polar night
+        hs                                   <- 0        # radians, according to Davis (2017)
+        hour_angle_of_sun_at_sunrise_sunset  <- 0        # degrees, according to Davis (2017)
+        #daylength_h <- 0
+        tgrowth <- tmax            # edge case: 1s day: average T is Tmax (since lim h=>0 sin(h)/h = 1)
 
+      } else {
+        # eq. A7.2, Jones (2014), Plants and Microclimate:
+        hs <- acos(xx)                                            # radians
+        # hour_angle_of_sun_at_sunrise_sunset <- acos(xx) *180 / pi # degrees
+        # daylength_h <- 2*hour_angle_of_sun_at_sunrise_sunset*24/360
+
+        # Version Fabian: assume subdaily temp: with T(h) = Tmin + dT/2 + dT/2*cos(h) (for h=[0,pi]=[midday,midnight], so that it is Tmax at h=0 and Tmin at h=pi)
+        #                 with dT = Tmax - Tmin
+        #                 Average T during day hours can be expressed as integral (similar to Davis (2017)):
+        #                 tgrowth = 2/h_s \int_0^{h_s} T(h) dh
+        #                 (with hs the hour angle of the sun, assuming h=0 at noon and h=pi at midnight)
+        tgrowth <- tmin + (tmax-tmin)/2 + (tmax-tmin)/2/hs*sin(hs)
+      }
+      return(tgrowth)
+    }
 ###
 df_worldclim2 <- df_worldclim |>
-  # derive (rounded) lon, lat from sitename
-  separate(
-    sitename, into=c(NA, "lon", NA, "lat"),
-    sep = "_", remove = FALSE, convert = TRUE) |> # re-append lon, lat dplyr::left_join(siteinfo, by = join_by(sitename)) |>
+  # get lon, lat
+  # # derive (rounded) lon, lat from sitename
+  # separate(
+  #   sitename, into=c(NA, "lon", NA, "lat"),
+  #   sep = "_", remove = FALSE, convert = TRUE) |> # re-append lon, lat dplyr::left_join(siteinfo, by = join_by(sitename)) |>
+  left_join(select(siteinfo_all, sitename, lon, lat),
+            by = join_by(sitename)) |>
   # postprocess climate data
   unnest(data) |>
   rowwise() |>
@@ -172,28 +242,21 @@ df_worldclim2 <- df_worldclim |>
     # (i.e. average temperature during daytime, considering daylength, assuming sinusoidal temp profile):
     # eq.5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
     doy             = lubridate::make_date(1970, month, 15) |> lubridate::yday(),
-    tgrowth_degC    = ingestr::calc_tgrowth(tmin_degC,tmax_degC,lat=lat,doy=doy),
+    # tgrowth_degC    = ingestr::calc_tgrowth(tmin_degC,tmax_degC,lat=lat,doy=doy),
+    tgrowth_degC   = myingestr_calc_tgrowth(tmin_degC,tmax_degC,lat=lat,doy=doy),
 
     # vpd:
     # variant 1:
-    VPD_TminTmaxAVG_Pa = ingestr::calc_vpd(eact = vapr_kPa*1e3, tmin = tmin_degC, tmax = tmax_degC),
-    # variant 2: (Peng)
-    VPD_Tgrowth_Pa     = ingestr::calc_vpd(eact = vapr_kPa*1e3, tc = tgrowth_degC),
+    VPD_TminTmaxAVG_Pa = ingestr::calc_vpd(eact = vapr_kPa*1e3, tmin = tmin_degC, tmax = tmax_degC)
+    # # variant 2: (Peng)
+    # VPD_Tgrowth_Pa     = ingestr::calc_vpd(eact = vapr_kPa*1e3, tc = tgrowth_degC),
   )
+# ggplot(df_worldclim2, aes(x=doy, y=lat, color = is.na(tgrowth_degC))) + geom_point()
+# ggplot(df_worldclim2, aes(x=doy, y=lat, color = tgrowth_degC)) + geom_point()
+stopifnot(0 == nrow(df_worldclim2 |> filter(is.na(tgrowth_degC)))) # assert tgrowth_degC correctly computed
 
-
-stopifnot(0 == nrow(df_worldclim2 |> filter(is.na(tgrowth_degC)))) # TODO: here we're loosing some sites
-df_worldclim2 |> filter(is.na(tgrowth_degC))  |> group_by(sitename) |> slice(1)   # 41 sites have NA in tgrowth
-df_worldclim2 |> filter(!is.na(tgrowth_degC)) |> group_by(sitename) |> slice(1)   # 585 siteas have at least 1 non-NA tgrowth
-
-pl_grow_seasonNA <-
-  rgeco:::plot_map_simpl() + # 41 sites have NA in tgrowth # TODO: can we keep these sites for the analysis?
-  geom_point(
-    data    = df_worldclim2 |> filter(is.na(tgrowth_degC)),
-    mapping = aes(lon, lat))
-ggsave(here::here("fig/fig_00_append_climate.png"), pl_grow_seasonNA, width=7.2, height=3.6, units="in")
-
-
+# df_worldclim2 |> filter(is.na(tgrowth_degC))  |> group_by(sitename) |> slice(1)   # 0 sites have NA in tgrowth
+# df_worldclim2 |> filter(!is.na(tgrowth_degC)) |> group_by(sitename) |> slice(1)   # 585 sites have at least 1 non-NA tgrowth
 
 # temp:
 # - growing season: mean across months for which monthly tmean > 0 deg C
@@ -215,46 +278,112 @@ df_worldclim_agg <-
   summarise(
     growing_season_months = paste0(month,collapse = ","),
     growing_season_length = length(month),
-    growing_season_length2= n(), # TODO: this is for double checking
+    # growing_season_length2= n(), # NOTE: this was for double checking
 
     temp = mean(tgrowth_degC),
-    temp2 = mean(tgrowth_degC, na.rm=T), # TODO: this is for double checking
 
-    vpd = mean(VPD_TminTmaxAVG_Pa), # TODO: remove one of the two
-    vpd2= mean(VPD_Tgrowth_Pa),
+    vpd = mean(VPD_TminTmaxAVG_Pa),
+    # vpd2= mean(VPD_Tgrowth_Pa),
 
     ppfd=mean(ppfd_molm2s)
   )
 
+# NOTE: 1 site is filtered out since it
+# did return worldclim tavg_degC of 0 for all 12 months. Thus no growing_season.
+# df_worldclim2 |>
+#   group_by(sitename) |> filter(sum(growing_season) < 1)
 
 
+      # # TODO: just checking for gpp sites: if ingestr-derived ppfd agrees with "rsofun_driver_data_v3.4.2.rds"
+      # library(ggplot2)
+      # df_gpp_forcingtarget
+      # df_compare_forcing_FDK <-
+      #   left_join(
+      #     df_gpp_forcingtarget |> unnest(forcing) |>
+      #       mutate(day   = lubridate::day(date),
+      #              month = lubridate::month(date),
+      #              year  = lubridate::year(date)) |>
+      #       select(
+      #         sitename,
+      #         year,
+      #         month,
+      #         day,
+      #         temp_FDK = temp,
+      #         tmin_FDK = tmin,
+      #         tmax_FDK = tmax,
+      #         ppfd_FDK = ppfd,
+      #         vpd_FDK  = vpd),
+      #     df_worldclim2 |>
+      #       filter(sitename %in% df_gpp_forcingtarget$sitename) |>
+      #       select(
+      #         sitename,
+      #         month,
+      #         temp_INGESTR = tavg_degC,
+      #         # temp_INGESTR = tgrowth_degC, # either temp is strongly correlated
+      #         tmin_INGESTR = tmin_degC,
+      #         tmax_INGESTR = tmax_degC,
+      #         ppfd_INGESTR = ppfd_molm2s,
+      #         vpd_INGESTR  = VPD_TminTmaxAVG_Pa),
+      #     by = join_by(sitename, month)
+      #   ) |>
+      #   pivot_longer(-c(sitename, year, month, day))
+      # df_compare_forcing_FDK3 <- df_compare_forcing_FDK |>
+      #   filter(day==15) |>
+      #   separate(name, into = c("name", "source"), sep = "_") |>
+      #   pivot_wider(names_from = source, values_from = value)
+      # plot_comparison <- ggplot(df_compare_forcing_FDK3, aes(x=FDK, y=INGESTR)) + geom_point() + facet_wrap(~name, scales = "free") +
+      #   geom_abline() + ggtitle("For VJ dataset:\nComparing ingestr vs vj climate")
+      # plot_comparison # THIS LOOKS GOOD
+      # # END TODO
 
 # Combine and output
+
+# since we did not get worldclim data for 10 sites
+# and only 0 temperature for another 1 sites:
+# `df_trait_forcing_filled` is missing these 11 sites
+# anti_join(df_co2_agg, df_worldclim_agg)$sitename |> dput()
+sites_to_remove <- c(
+  "lon_+158.80_lat_-054.50", "lon_-041.75_lat_-022.38", "lon_-063.80_lat_-064.80",
+  "lon_-063.82_lat_-064.82", "lon_-069.83_lat_+011.61", "lon_-072.38_lat_+078.53",
+  "lon_-074.60_lat_+078.58", "lon_-075.92_lat_+078.88", "lon_-079.38_lat_+008.97",
+  "lon_-086.70_lat_+076.35", "lon_+113.83_lat_+004.18"
+)
+sites_to_remove
+
 df_trait_forcing_filled <-
-  dplyr::inner_join(df_etopo_agg |> nest(patm = c(elv_masl, patm_Pa)),
-                    df_co2_agg   |> nest(co2  = c(co2_ppm)),
+  dplyr::full_join(df_etopo_agg |> nest(patm = c(elv_masl, patm_Pa)) |> filter(!(sitename %in% sites_to_remove)),
+                    df_co2_agg  |> nest(co2  = c(co2_ppm))           |> filter(!(sitename %in% sites_to_remove)),
                     by = join_by(sitename)) |>
-  dplyr::inner_join(df_worldclim_agg |> nest(clim = c(growing_season_months,growing_season_length,growing_season_length2,temp,temp2,vpd,vpd2,ppfd)),
+  dplyr::full_join(df_worldclim_agg |> nest(clim = c(growing_season_months,growing_season_length,temp,vpd,ppfd)),
                     by = join_by(sitename)) |>
   # re-append lon, lat
   dplyr::left_join(siteinfo, by = join_by(sitename)) |>
   select(sitename, lon, lat, patm, co2, clim)
 
-saveRDS(df_trait_forcing_filled, file = here::here("data/chi-vj_forcing.rds"))
 
 df_trait_targets <-
-  bind_rows(df_chi_target |> nest(chi = -c(sitename, lon, lat)),
-            df_vj_target  |> nest(vj  = -c(sitename, lon, lat))) |>
-  # ensure no duplicated sites
-  select(sitename, lon, lat, chi, vj) |>
+  dplyr::full_join(
+    df_chi_target |> select(-c(lon,lat)) |> nest(chi = -sitename) |> filter(!(sitename %in% sites_to_remove)),
+    df_vj_target  |> select(-c(lon,lat)) |> nest(vj  = -sitename) |> filter(!(sitename %in% sites_to_remove)),
+    by = join_by(sitename)) |>
+  select(sitename, chi, vj) |>
   ungroup() |>
   distinct()
 
-saveRDS(df_trait_targets, file = here::here("data/chi-vj_targets.rds"))
+# NOTE: ensure we have the same sites in
+check2 <- anti_join(df_trait_forcing_filled, df_trait_targets, by = join_by(sitename)); stopifnot(0 == nrow(check2))
+check1 <- anti_join(df_trait_targets, df_trait_forcing_filled, by = join_by(sitename)); stopifnot(0 == nrow(check1))
+
+stopifnot(all(df_trait_targets$sitename == df_trait_forcing_filled$sitename)) # ensure same ordering
+
+saveRDS(df_trait_forcing_filled, file = here::here("data/chi-vj_forcing.rds"),
+        compress = "xz")
+saveRDS(df_trait_targets,        file = here::here("data/chi-vj_targets.rds"),
+        compress = "xz")
 
 
 
-
+# Quality check derived data --------------------------------------------------------------
 
 # Check growing season lengths
 pl_grow_season <- rgeco:::plot_map_simpl() +
@@ -264,6 +393,7 @@ pl_grow_season <- rgeco:::plot_map_simpl() +
   labs(color = "Length of\ngrowing\nseason\n(months)")
 pl_grow_season
 ggsave(here::here("fig/fig_01_append_climate.png"), pl_grow_season, width=7.2, height=3.6, units="in")
+
 
 # Check all input data
 plot_clim <- function(colname_to_plot, label = NULL){
@@ -277,87 +407,92 @@ library(patchwork)
 p1 <- plot_clim("growing_season_length", "Length of\ngrowing\nseason\n(months)")
 p2 <- plot_clim("ppfd", "PPFD\n(mol/m2/s)")
 p3 <- plot_clim("temp", "Mean\ngrowth\ntemp\n(deg C)")
-p4 <- plot_clim("temp2","Mean\ngrowth\ntemp\n(na.rm)\n(deg C)")
-p5 <- plot_clim("vpd",  "VPD\n(f(Tmin,Tmax))\n(Pa)")
-p6 <- plot_clim("vpd2", "VPD\n(f(Tgrowth))\n(Pa)")
+p4 <- plot_clim("vpd",  "VPD\nmean(\n  f(Tmin),\n  f(Tmax)\n)\n(Pa)")
 pl_all_climate <-
   (p1+p2)/
+  (p3+p4)
+ggsave(here::here("fig/fig_02_append_climate.png"), pl_all_climate, width=7.2*2, height=3.6*2, units="in")
+
+plot_hist <- function(colname_to_plot, label = NULL){
+  unnest(df_trait_forcing_filled, c(clim,patm,co2)) |>
+    ggplot(aes(x = .data[[colname_to_plot]])) +
+    {if(!is.null(label)) labs(x = label) } +
+    geom_histogram(bins = 30) + theme_bw()
+}
+p1 <- plot_hist("growing_season_length", "Length of growing season (months)")
+p2 <- plot_hist("ppfd", "PPFD (mol/m2/s)")
+p3 <- plot_hist("temp", "Mean growth temp (deg C)")
+p4 <- plot_hist("vpd",  "VPD=mean(f(Tmin),f(Tmax)), (Pa)")
+p5 <- plot_hist("lat", "Latitude (deg)")
+p6 <- plot_hist("co2_ppm", "CO2 (ppm)")
+p7 <- plot_hist("elv_masl", "Elevation (masl)")
+p8 <- plot_hist("patm_Pa", "Atmospheric. pressure (Pa)")
+
+p9  <- ggplot(unnest(df_trait_targets, c("chi")), aes(x=chi_obs__)) + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed chi = Ci/Ca")
+p10 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vj_obs__))  + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed VJ = VCmax/Jmax")
+p11 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vcmax_obs_molm2s*10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed VCmax (umol/m2/s)")
+p12 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=jmax_obs_molm2s *10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed Jmax (umol/m2/s)")
+
+pl_all_climate_and_target_hist <-
+  (p1+p2)/
   (p3+p4)/
-  (p5+p6)
-ggsave(here::here("fig/fig_02_append_climate.png"), pl_all_climate, width=7.2*2, height=3.6*3, units="in")
+  (p5+p6)/
+  (p7+p8)/
+  (p9+p10)/
+  (p11+p12)
+ggsave(
+  here::here("fig/fig_03_append_climate.png"),
+  pl_all_climate_and_target_hist, width=3.6 * 2, height=1.8 * 5, units="in")
+
+
+
+
 
 
 
 ######### TODO ###################
 ##################################
 ##################################
-rgeco:::plot_map_simpl() +
-  geom_point(data = df_trait_forcing_filled, aes(lon, lat))
-
-# Issue 1: (some sites have no values in worldclim data)
-worldclim_missing_sites <- c(
-  "lon_+158.80_lat_-054.50", "lon_-041.75_lat_-022.38", "lon_-063.80_lat_-064.80",
-  "lon_-063.82_lat_-064.82", "lon_-069.83_lat_+011.61", "lon_-072.38_lat_+078.53",
-  "lon_-074.60_lat_+078.58", "lon_-075.92_lat_+078.88", "lon_-079.38_lat_+008.97",
-  "lon_-086.70_lat_+076.35", "lon_+113.83_lat_+004.18")
-# missing_sites <- anti_join(siteinfo_all, df_trait_forcing_filled, by = join_by(sitename))
-# df_etopo |> filter(sitename %in% missing_sites$sitename) # OK
-# df_co2_agg |> filter(sitename %in% missing_sites$sitename) # OK
-# df_worldclim |> filter(sitename %in% missing_sites$sitename) |> unnest(data) # got NA
-# df_worldclim2 |> filter(sitename %in% missing_sites$sitename) # got NA
-# df_worldclim_agg |> filter(sitename %in% missing_sites$sitename) # not ok
-
-df_worldclim |> filter(sitename %in% worldclim_missing_sites) |> unnest(data) |> print(n=100)# got NA
-
-# Issue 2: (one site has tavg_degC == 0 for all months, and thus no growing season)
-df_etopo |> filter(sitename == "lon_-074.60_lat_+078.58")
-df_co2_agg |> filter(sitename == "lon_-074.60_lat_+078.58")
-df_worldclim2 |> filter(sitename == "lon_-074.60_lat_+078.58") # OK
-df_worldclim_agg |> filter(sitename == "lon_-074.60_lat_+078.58") # not ok
-######### TODO ###################
-##################################
-##################################
-
-
 
 # VJ:
   # NOTE: potentially replace forcing data with data from ingestr to homogenize with chi data.
   #       however, we do not have the time information
   # TODO: compare the climate data, derived here with the one provided in vj data set
 
-df_compare_forcing <- dplyr::inner_join(
-  # a) climate data derive above
-  df_trait_forcing_filled |>
-    unnest(c(patm, co2, clim)) |>
-    select(sitename,
-           elv_masl   = elv_masl,
-           patm_Pa    = patm_Pa,
-           co2_ppm    = co2_ppm,
-           temp_degC  = temp,
-           temp2_degC_ingestr = temp2,
-           vpd_Pa     = vpd,
-           vpd2_Pa_ingestr = vpd2,
-           ppfd_molm2s= ppfd),
-  # b) climate data provided in vj data set
-  df_vj_forcing |>
-    mutate(ppfd_molm2s = par_molm2s) |>
-    select(sitename, elv_masl, patm_Pa, co2_ppm, temp_degC, vpd_Pa, ppfd_molm2s),
-  by = join_by(sitename),
-  suffix = c("_ingestr", "_vjdata")
-  )
-
-library(ggplot2)
-plot_comparison <- df_compare_forcing |>
-  pivot_longer(-sitename) |>
-  separate(name, into = c("name", "source"), sep = "_(?=[^_]+$)") |>
-  pivot_wider(names_from = source, values_from = value) |>
-  # filter(name %in% c("temp_degC","temp2_degC","vpd_Pa","vpd2_Pa")) |>
-  # filter(is.na(vjdata))
-  tidyr::fill(vjdata) |> # fills up the alternative versions of vpd2 and temp2
-  ggplot(aes(x=vjdata, y=ingestr)) + geom_point() + facet_wrap(~name, scales = "free") +
-  geom_abline() + ggtitle("For VJ dataset:\nComparing ingestr vs vj climate")
-plot_comparison
-ggsave(here::here("fig/fig_03_append_climate.png"), plot_comparison, width=7.2, height=7.2, units="in")
+# TODO: remove df_compare_forcing <- dplyr::inner_join(
+# TODO: remove   # a) climate data derive above
+# TODO: remove   df_trait_forcing_filled |>
+# TODO: remove     unnest(c(patm, co2, clim)) |>
+# TODO: remove     select(sitename,
+# TODO: remove            elv_masl   = elv_masl,
+# TODO: remove            patm_Pa    = patm_Pa,
+# TODO: remove            co2_ppm    = co2_ppm,
+# TODO: remove            temp_degC  = temp,
+# TODO: remove            # temp2_degC_ingestr = temp2,
+# TODO: remove            vpd_Pa     = vpd,
+# TODO: remove            # vpd2_Pa_ingestr = vpd2,
+# TODO: remove            ppfd_molm2s= ppfd),
+# TODO: remove   # b) climate data provided in vj data set
+# TODO: remove   df_vj_forcing |>
+# TODO: remove     mutate(ppfd_molm2s = par_molm2s) |>
+# TODO: remove     select(sitename, elv_masl, patm_Pa, co2_ppm, temp_degC, vpd_Pa, ppfd_molm2s),
+# TODO: remove   by = join_by(sitename),
+# TODO: remove   suffix = c("_ingestr", "_vjdata")
+# TODO: remove   )
+# TODO: remove
+# TODO: remove library(ggplot2)
+# TODO: remove plot_comparison <- df_compare_forcing |>
+# TODO: remove   pivot_longer(-sitename) |>
+# TODO: remove   separate(name, into = c("name", "source"), sep = "_(?=[^_]+$)") |>
+# TODO: remove   pivot_wider(names_from = source, values_from = value) |>
+# TODO: remove   # filter(name %in% c("temp_degC","temp2_degC","vpd_Pa","vpd2_Pa")) |>
+# TODO: remove   # filter(is.na(vjdata))
+# TODO: remove   tidyr::fill(vjdata) |> # fills up the alternative versions of vpd2 and temp2
+# TODO: remove   ggplot(aes(x=vjdata, y=ingestr)) + geom_point() + facet_wrap(~name, scales = "free") +
+# TODO: remove   geom_abline() + ggtitle("For VJ dataset:\nComparing ingestr vs vj climate")
+# TODO: remove plot_comparison
+# TODO: remove ggsave(here::here("fig/fig_04_append_climate.png"), plot_comparison, width=7.2, height=4.8, units="in")
+# TODO: remove This shows a mismatch between ppfd
 
 
 # TODO: future work:
@@ -372,15 +507,154 @@ ggsave(here::here("fig/fig_03_append_climate.png"), plot_comparison, width=7.2, 
 
 
 
-#### DO THE SAME FOR TIME SERIES FORCING DATA
-# TODO: combine this with the
-# df_timeseries_forcing <- tibble()
 
+
+
+
+# Combine with daily forcing data for gpp --------------------------------------------------------------
+
+## Load chi, vj data ----
+chi_vj_forcing <- readRDS(file = here::here("data/chi-vj_forcing.rds"))
+chi_vj_targets <- readRDS(file = here::here("data/chi-vj_targets.rds"))
+
+## Load gpp data ----
 #   Download FluxDataKit data from Zenodo:
 #   sudo apt install librdf0-dev
 #   install.packages("zen4R")
-# library(zen4R)
-# download_path <- tempdir(check = TRUE)
-# download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "rsofun_driver_data_v3.4.2.rds") # v3.4.2
-# df_timeseries_forcing_and_ <- readRDS(file.path(download_path, "rsofun_driver_data_v3.4.2.rds"))
+library(zen4R)
+download_path <- tempdir(check = TRUE)
+download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "fdk_site_info.csv")
+download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "fdk_site_fullyearsequence.csv")
+download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "rsofun_driver_data_v3.4.2.rds")
+fdk_site_info             <- readr::read_csv(file.path(download_path, "fdk_site_info.csv"))
+fdk_site_fullyearsequence <- readr::read_csv(file.path(download_path, "fdk_site_fullyearsequence.csv"))
+drivers <- readRDS(file.path(download_path, "rsofun_driver_data_v3.4.2.rds"))
 
+# testthat::expect_equal(fdk_site_info,FluxDataKit::fdk_site_info) # THis fails
+# testthat::expect_equal(   # This succeeds
+#   fdk_site_info |>
+#     select(-koeppen_code),
+#   FluxDataKit::fdk_site_info |>
+#     mutate(reference_height = unname(reference_height)) |>
+#     select(-koeppen_code))
+
+## Subset gpp sites ----
+gpp_sites_to_use <- fdk_site_info |>
+  filter(!(igbp_land_use %in% c("CRO", "WET"))) |>
+  left_join(
+    fdk_site_fullyearsequence,
+    by = "sitename"
+  ) |>
+  filter(nyears_gpp > 10)
+
+gpp_forcingtarget <- drivers |> filter(sitename %in% gpp_sites_to_use$sitename)
+
+## Prepare chi, vj, gpp data (drivers and targets) ----
+# format chi_vj_forcing similarly to rsofun::p_model_drivers
+chi_vj_drivers <- chi_vj_forcing |>
+  unnest(c(patm, co2, clim)) |>
+  ## 1) nest forcing
+  select(sitename,
+         lon, lat, elv_masl,
+         temp, vpd, ppfd, co2 = co2_ppm, patm = patm_Pa) |>
+  #nest(forcing = -c(sitename))
+  nest(forcing = c(temp, vpd, ppfd, co2, patm)) |>
+  ## 2) nest params_siml
+  mutate(lc4 = FALSE) |>
+  nest(params_siml = c(lc4)) |>
+  ## 3) nest site_info
+  rename(elv = elv_masl) |>
+  mutate(whc = NA) |>
+  nest(site_info = c(lon, lat, elv, whc)) |>
+  ## 4) add additional info
+  mutate(run_model = "onestep") |> # either "onestep" or "daily"
+  # order
+  select(sitename, run_model, params_siml, site_info, forcing)
+
+# format chi_vj_targets similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
+chi_vj_obs <- chi_vj_targets |>
+  ## 1) add additional info
+  rowwise() |> mutate(
+    run_model   = "onestep",
+    targets = list(list(
+      vj  = is.null(vj),
+      chi = is.null(chi),
+      gpp = FALSE
+    ))
+  ) |>
+  ## 2) nest data
+  ungroup() |>
+  nest(data = c(chi,vj)) |>
+  # order
+  select(sitename, run_model, targets, data)
+
+# format gpp_forcingtarget similarly to rsofun::p_model_drivers
+gpp_drivers <- gpp_forcingtarget |>
+  mutate(run_model = "daily") |> # either "onestep" or "daily"
+  # order
+  select(sitename, run_model, params_siml, site_info, forcing)
+
+# format gpp_forcingtarget similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
+gpp_obs <- gpp_forcingtarget |>
+  select(sitename, forcing) |> unnest(forcing) |>
+  select(sitename, date, gpp, gpp_qc, nee, nee_qc, le, le_qc) |>
+  nest(data = -c(sitename)) |>
+  mutate(run_model = "daily", # either "onestep" or "daily"
+         targets = list(list(
+           vj  = FALSE,
+           chi = FALSE,
+           gpp = TRUE
+         ))) |>
+  # order
+  select(sitename, run_model, targets, data)
+
+
+## Combine chi, vj, gpp data (drivers and targets) ----
+chi_vj_gpp_drivers <- bind_rows(gpp_drivers, chi_vj_drivers)
+chi_vj_gpp_obs     <- bind_rows(gpp_obs, chi_vj_obs)
+# chi_vj_gpp_drivers_obs <- dplyr::inner_join( # TODO: check if this is computationally more efficient for calib_sofun()
+#   chi_vj_gpp_drivers,
+#   chi_vj_gpp_obs,
+#   by = join_by(sitename, run_model))
+
+saveRDS(chi_vj_gpp_drivers, file = here::here("data/chi-vj-gpp_calibsofun_drivers.rds"),
+        compress = "xz")
+saveRDS(chi_vj_gpp_obs,     file = here::here("data/chi-vj-gpp_calibsofun_obs.rds"),
+        compress = "xz")
+
+
+
+
+## Plot the available data
+chi_vj_gpp_obs |> unnest_wider(targets) |> filter(vj)
+chi_vj_gpp_obs |> unnest_wider(targets) |> filter(chi)
+chi_vj_gpp_obs |> unnest_wider(targets) |> filter(gpp)
+
+coordinates <- chi_vj_gpp_drivers |> unnest(site_info) |> select(sitename, lon,lat,elv)
+
+pl1 <- rgeco:::plot_map_simpl() +
+  geom_point(size=0.1,shape = 20,
+    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
+      filter(vj) |>
+      left_join(coordinates),
+    mapping = aes(lon, lat)) + ggtitle("V/J sites")
+pl2 <- rgeco:::plot_map_simpl() +
+  geom_point(size=0.1,shape = 20,
+    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
+      filter(chi) |>
+      left_join(coordinates),
+    mapping = aes(lon, lat)) + ggtitle("Ci/Ca sites")
+pl3 <- rgeco:::plot_map_simpl() +
+  geom_point(size=0.1,shape = 20,
+    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
+      filter(gpp) |>
+      left_join(coordinates),
+    mapping = aes(lon, lat)) + ggtitle("GPP flux sites")
+pl_targets <-
+  (pl1 + theme(axis.text.x = element_blank()))/
+  (pl2 + theme(axis.text.x = element_blank()))/
+  pl3
+
+ggsave(
+  here::here("fig/fig_05_append_climate.png"),
+  pl_targets, width=3.6, height=1.8 * 3, units="in")

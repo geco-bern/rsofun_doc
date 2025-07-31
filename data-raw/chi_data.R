@@ -127,9 +127,6 @@ rm(df_chi_allobs)
 
 
 
-
-
-
 # TODO: replace forcing data with data from ingestr
 
 # TODO: below is just a test.

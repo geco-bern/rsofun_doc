@@ -5,11 +5,15 @@ of Ci/Ca (Chi).
 These data sets will be (are) provided in the rsofun package as example data
 sets.
 
+Output data set:
+- data/chi-vj-gpp_calibsofun_drivers.rds
+- data/chi-vj-gpp_calibsofun_obs.rds
+
+
 To recreate the data set run:
 - data-raw/chi_data.R
 - data-raw/vj_data.R
 - data-raw/append_climate_data.R
-
 
 
 Other input data:

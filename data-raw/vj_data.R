@@ -78,7 +78,7 @@ df_vj_target <- df_vj |>
     year= mean(year_orig),
     vcmax_obs_molm2s = mean(vcmax)/10^6,  # mol/m2/s
     jmax_obs_molm2s  = mean(jmax)/10^6,   # mol/m2/s
-    vj_obs = mean(vj),                     # unitless ratio
+    vj_obs__ = mean(vj),                     # unitless ratio
     Nobs   = n(),
     Nyears = length(unique(year_orig)),
     Ndates = length(unique(date)),
@@ -98,7 +98,7 @@ rm(df_vj)
 
 # Plot
 df_vj_target |>
-  ggplot(aes(x = vj_obs)) +
+  ggplot(aes(x = vj_obs__)) +
   geom_histogram(bins = 15)
 
 
@@ -207,8 +207,8 @@ df_vj_with_outputs |>
 
 # Vcmax:Jmax ratio
 df_vj_with_outputs |>
-  mutate(vj_mod = vcmax_mod_molm2s / jmax_mod_molm2s) |>
-  ggplot(aes(vj_mod, vj_obs)) +
+  mutate(vj_mod__ = vcmax_mod_molm2s / jmax_mod_molm2s) |>
+  ggplot(aes(vj_mod__, vj_obs__)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") +
   labs(
