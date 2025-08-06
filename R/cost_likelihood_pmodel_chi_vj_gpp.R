@@ -96,7 +96,7 @@ cost_likelihood_pmodel_chi_vj_gpp <- function(
     runread_pmodel_f(
       drivers   = _,
       par       = params_modl,
-      makecheck = TRUE,        # TODO: disable check
+      makecheck = FALSE,        # TODO: disable check
       parallel  = parallel,
       ncores    = ncores
     )
@@ -134,7 +134,7 @@ cost_likelihood_pmodel_chi_vj_gpp <- function(
                               co2  = .x$co2,
                               patm = .x$patm),
         params_modl = params_modl,
-        makecheck   = TRUE)) |> # TODO: disable check
+        makecheck   = FALSE)) |> # TODO: disable check
       rename(vcmax_mod_molm2s   = vcmax,
              jmax_mod_molm2s    = jmax,
              vcmax25_mod_molm2s = vcmax25,

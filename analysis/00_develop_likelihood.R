@@ -1,4 +1,3 @@
-rm(list = ls())
 library(tidyverse)
 library(rpmodel)
 library(rgeco) # pak::pkg_install("geco-bern/rgeco")
@@ -8,10 +7,11 @@ library(purrr)
 library(rsofun)  # install from branch simple_pmodel_v2
 # pak::pkg_install("geco-bern/ingestr")
 library(ingestr)
+library(BayesianTools)
 
 ## Load forcing and targets data ----
-chi_vj_gpp_drivers <- readRDS(here::here("data/chi-vj-gpp_calibsofun_drivers.rds"))
-chi_vj_gpp_obs     <- readRDS(here::here("data/chi-vj-gpp_calibsofun_obs.rds"))
+chi_vj_gpp_drivers <- read_rds(here::here("data/01_chi-vj-gpp_calibsofun_drivers.rds"))
+chi_vj_gpp_obs     <- read_rds(here::here("data/01_chi-vj-gpp_calibsofun_obs.rds"))
 
 
         # Test run pmodel --------------------------------------------------------------
@@ -338,3 +338,232 @@ par_calib_join_gpp <- calib_sofun(
 par_calib_join_gpp$mod |> summary() # DEzs(1,5) takes ~ 6.9s
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Setup actual calibration:
+set.seed(1982)
+source(here::here("R/calibration_helpers.R"))
+
+# FROM THE REVISION PLAN:
+# Setup 1: global, reduced parameter set (as in initial manuscript version), only GPP as target
+# Setup 2: global, full parameter set, only GPP as target
+# Setup 3: global, full parameter set, GPP and traits as target
+# We expect Setup 2 to yield wider posteriors than from Setup 1, and that posterior distributions will be narrowed again by Setup 3. This experimental design will allow us to demonstrate the robustness (or absence thereof) of the MCMC and the usefulness of using traits for simultaneously calibrating with fluxes.
+
+
+## Load loglikelihood ----
+source(here::here("R/cost_likelihood_pmodel_chi_vj_gpp.R"))
+
+## Setup the settings for the three calibration setups ----
+par_setup1 <- list(
+  kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
+  kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
+  kphio_par_b     = list(lower = 10, upper = 30, init = 20),
+  soilm_thetastar = list(lower = 1, upper = 250, init = 40),
+  soilm_betao     = list(lower = 0.0, upper = 1.0, init = 0.0),
+  err_gpp         = list(lower = 0.1, upper = 3, init = 0.8),
+  err_chi         = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_chi and err_vj this errors
+  err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_chi and err_vj this errors
+)
+
+#TODO: define ranges for new parameters
+par_setup23 <- list(
+  kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
+  kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
+  kphio_par_b     = list(lower = 10, upper = 30, init = 20),
+  soilm_thetastar = list(lower = 1, upper = 250, init = 40),
+  soilm_betao     = list(lower = 0.0, upper = 1.0, init = 0.0),
+  beta_unitcostratio = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*146.0),
+  rd_to_vcmax        = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.014),      # 0.014 value from Atkin et al. 2015 for C3 herbaceous
+  tau_acclim         = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*20.0),
+  kc_jmax            = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.41),
+  err_gpp         = list(lower = 0.1, upper = 3, init = 0.8),
+  err_chi         = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_chi and err_vj this errors
+  err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_chi and err_vj this errors
+)
+        # From 02_sensitivity_analysis.R:
+        # # best parameter values (initial values)
+        # par_cal_best <- c(
+        #   kphio              = list(lower = 0.03,   upper = 0.15,  init = 0.09423773 ),
+        #   kphio_par_a        = list(lower = -0.004, upper = 0.001, init = 0.0025     ),
+        #   kphio_par_b        = list(lower = 10,     upper = 30,    init = 20         ),
+        #   soilm_thetastar    = list(lower = 0,      upper = 240,   init = 0.6*240    ),
+        #   soilm_betao        = list(lower = 0,      upper = 1,     init = 0.2        ),
+        #   beta_unitcostratio = list(lower = 50.0,   upper = 200.0, init = 146.0      ),
+        #   rd_to_vcmax        = list(lower = 0.01,   upper = 0.1,   init = 0.014      ),
+        #   tau_acclim         = list(lower = 7.0,    upper = 60.0,  init = 30.0       ),
+        #   kc_jmax            = list(lower = 0.2,    upper = 0.8,   init = 0.41       ),
+        #   error_gpp          = list(lower = 0.01    upper = 4,     init = 1          ),
+        # )
+
+
+create_settings_and_par_fixed <- function(par, burnin=1, iterations=5){
+  default_par_fixed <- list(# fix parameter value from previous calibration
+    kphio              = 0.04998,
+    kphio_par_a        = 0.0,
+    kphio_par_b        = 1.0,
+    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+    soilm_betao        = 0.0,
+    beta_unitcostratio = 146.0,
+    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+    tau_acclim         = 20.0,
+    kc_jmax            = 0.41
+  )
+
+  list(
+    settings = list(
+      method = "BayesianTools",
+      metric = cost_likelihood_pmodel_chi_vj_gpp,
+      control = list(
+        sampler = "DEzs",
+        settings = list(
+          burnin = burnin,     #10000,
+          iterations = iterations, #50000,
+          nrChains = 3,       # number of independent chains
+          startValue = 3      # number of internal chains to be sampled
+        )),
+      par = par
+    ),
+    # only keep par_fixed that are not set as par
+    par_fixed = default_par_fixed[
+      !(names(default_par_fixed) %in% names(par))
+      ]
+  )
+}
+#create_settings_and_par_fixed(par_setup1)$settings
+#create_settings_and_par_fixed(par_setup1)$par_fixed
+#create_settings_and_par_fixed(par_setup23)$settings
+#create_settings_and_par_fixed(par_setup23)$par_fixed
+
+## Setup the data (drivers and obs) for the three calibration setups ----
+
+# subset different combination of target variables
+# for easier handling do this in combined drivobs-object
+drivobs_chi_vj_gpp <- dplyr::inner_join(
+  chi_vj_gpp_drivers2,
+  chi_vj_gpp_obs,
+  by = join_by(sitename, run_model))
+
+# TODO: check if passing combined drivobs is computationally more efficient for calib_sofun()
+drivobs_setup12 <- drivobs_chi_vj_gpp |>
+  unnest_wider(targets) |>
+  filter(gpp) |>
+  nest(targets = c(vj, chi, gpp))
+
+drivobs_setup3 <- drivobs_chi_vj_gpp
+
+
+## Calibrate parameters ----
+
+in_calib_setup1  <- create_settings_and_par_fixed(par_setup1, burnin=10000, iterations=50000)
+in_calib_setup23 <- create_settings_and_par_fixed(par_setup23, burnin=10000/3, iterations=50000/3) # TODO: remove /3
+
+# Run setup1:
+out_calib_setup1 <- calib_sofun(
+  drivers   = select(drivobs_setup12, sitename, run_model, params_siml, site_info, forcing),
+  obs       = select(drivobs_setup12, sitename, run_model, targets, data),
+  settings  = in_calib_setup1$settings,
+  # arguments for the cost function
+  par_fixed = in_calib_setup1$par_fixed
+)
+plot(out_calib_setup1$mod)
+summary(out_calib_setup1$mod)
+# setup1: DEzs(1,5) takes ~ 20.9 seconds
+# setup1: DEzs(10000,50000) takes ~ 150'000 seconds = 42h
+
+
+# Store intermediate results
+out_calib_setup1$name <- "s1"
+settings_string <- get_calibration_settings_str(out_calib_setup1)
+write_rds(out_calib_setup1,
+        file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
+        compress = "xz")
+
+
+# Run setup2:
+out_calib_setup2 <- calib_sofun(
+  drivers   = select(drivobs_setup12, sitename, run_model, params_siml, site_info, forcing),
+  obs       = select(drivobs_setup12, sitename, run_model, targets, data),
+  settings  = in_calib_setup23$settings,
+  # arguments for the cost function
+  par_fixed = in_calib_setup23$par_fixed
+)
+#plot(out_calib_setup2$mod)
+summary(out_calib_setup2$mod)
+# setup2: DEzs(1,5) takes ~ 22.7 seconds
+# setup2: DEzs(10000/3, 50000/3) takes ~ 43000 seconds = 12 hours
+
+# Store intermediate results
+out_calib_setup2$name <- "s2"
+settings_string <- get_calibration_settings_str(out_calib_setup2)
+write_rds(out_calib_setup2,
+        file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
+        compress = "xz")
+
+
+# Run setup3:
+in_calib_setup23 <- create_settings_and_par_fixed(par_setup23, burnin=1000, iterations=5000) # TODO: remove /3
+out_calib_setup3 <- calib_sofun(
+  drivers   = select(drivobs_setup3, sitename, run_model, params_siml, site_info, forcing),
+  obs       = select(drivobs_setup3, sitename, run_model, targets, data),
+  settings  = in_calib_setup23$settings,
+  # arguments for the cost function
+  par_fixed = in_calib_setup23$par_fixed
+)
+#plot(out_calib_setup3$mod)
+summary(out_calib_setup3$mod)
+# setup3: DEzs(1,5) takes ~ 100 seconds (makecheck=TRUE) and 100 seconds (makecheck=FALSE)
+# setup3: DEzs(10000/10, 50000/10) takes ~ 80'000 seconds = 22 hours
+
+# Store intermediate results
+out_calib_setup3$name <- "s3"
+settings_string <- get_calibration_settings_str(out_calib_setup3)
+write_rds(out_calib_setup3,
+        file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
+        compress = "xz")
+
+
+
+
+
+
+# Make some comparison plots:
+
+pl1 <- plot_prior_posterior_density(out_calib_setup1$mod) + ggtitle("Setup 1 10k/50k")
+pl2 <- plot_prior_posterior_density(out_calib_setup2$mod) + ggtitle("Setup 2 3k/13k")
+pl3 <- plot_prior_posterior_density(out_calib_setup3$mod) + ggtitle("Setup 3 1k/5k")
+
+# pl1
+# pl2
+# pl3
+
+library(patchwork)
+(pl1 + theme(legend.position = "none"))/
+  (pl2 + theme(legend.position = "none"))/
+  pl3
