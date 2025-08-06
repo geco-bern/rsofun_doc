@@ -11,6 +11,7 @@ Output data set:
 
 
 To recreate the data set run:
+- data-raw/gpp_data.R
 - data-raw/chi_data.R
 - data-raw/vj_data.R
 - data-raw/append_climate_data.R

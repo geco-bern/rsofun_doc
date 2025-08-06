@@ -1,11 +1,12 @@
 # This script appends climate data to the the input forcings for
 # 'df_chi_forcing' and 'df_vj_forcing' by using the {ingestr} package.
+# And then combines it to
 #
-# It needs access to worldclim data set.
+# It needs access to worldclim data set in the form of *.tif files
+# located at '/data/archive/worldclim_fick_2017/data/*.tif'.
 #
 # The appended forcing data sets are stored as *.rds files in subfolder data/
 
-rm(list = ls())
 library(tidyverse)
 library(rpmodel)
 library(rgeco) # pak::pkg_install("geco-bern/rgeco")
@@ -19,11 +20,11 @@ library(ingestr)
 
 
 # Load data --------------------------------------------------------------------
-df_chi_forcing <- readRDS(here::here("data/chi_forcing.rds"))
-df_vj_forcing  <- readRDS(here::here("data/vj_forcing.rds"))
+df_chi_forcing <- read_rds(here::here("data/00_chi_forcing.rds"))
+df_vj_forcing  <- read_rds(here::here("data/00_vj_forcing.rds"))
 
-df_chi_target <- readRDS(here::here("data/chi_target.rds"))
-df_vj_target  <- readRDS(here::here("data/vj_target.rds"))
+df_chi_target <- read_rds(here::here("data/00_chi_target.rds"))
+df_vj_target  <- read_rds(here::here("data/00_vj_target.rds"))
 
       # # TODO: just checking for gpp sites: if ingestr-derived ppfd agrees with "rsofun_driver_data_v3.4.2.rds"
       #   NOTE: we normally do this later when combining the forcing data for the chi and vj data with the gpp data
@@ -37,7 +38,7 @@ df_vj_target  <- readRDS(here::here("data/vj_target.rds"))
       # download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "rsofun_driver_data_v3.4.2.rds")
       # fdk_site_info             <- readr::read_csv(file.path(download_path, "fdk_site_info.csv"))
       # fdk_site_fullyearsequence <- readr::read_csv(file.path(download_path, "fdk_site_fullyearsequence.csv"))
-      # drivers <- readRDS(file.path(download_path, "rsofun_driver_data_v3.4.2.rds"))
+      # drivers <- read_rds(file.path(download_path, "rsofun_driver_data_v3.4.2.rds"))
       #
       # # testthat::expect_equal(fdk_site_info,FluxDataKit::fdk_site_info) # THis fails
       # # testthat::expect_equal(   # This succeeds
@@ -376,11 +377,10 @@ check1 <- anti_join(df_trait_targets, df_trait_forcing_filled, by = join_by(site
 
 stopifnot(all(df_trait_targets$sitename == df_trait_forcing_filled$sitename)) # ensure same ordering
 
-saveRDS(df_trait_forcing_filled, file = here::here("data/chi-vj_forcing.rds"),
-        compress = "xz")
-saveRDS(df_trait_targets,        file = here::here("data/chi-vj_targets.rds"),
-        compress = "xz")
-
+# write_rds(df_trait_forcing_filled, file = here::here("data/01_chi-vj_forcing.rds"),
+#         compress = "xz")
+# write_rds(df_trait_targets,        file = here::here("data/01_chi-vj_targets.rds"),
+#         compress = "xz")
 
 
 # Quality check derived data --------------------------------------------------------------
@@ -514,40 +514,15 @@ ggsave(
 # Combine with daily forcing data for gpp --------------------------------------------------------------
 
 ## Load chi, vj data ----
-chi_vj_forcing <- readRDS(file = here::here("data/chi-vj_forcing.rds"))
-chi_vj_targets <- readRDS(file = here::here("data/chi-vj_targets.rds"))
+# chi_vj_forcing <- read_rds(file = here::here("data/01_chi-vj_forcing.rds"))
+# chi_vj_targets <- read_rds(file = here::here("data/01_chi-vj_targets.rds"))
+chi_vj_forcing <- df_trait_forcing_filled
+chi_vj_targets <- df_trait_targets
 
 ## Load gpp data ----
-#   Download FluxDataKit data from Zenodo:
-#   sudo apt install librdf0-dev
-#   install.packages("zen4R")
-library(zen4R)
-download_path <- tempdir(check = TRUE)
-download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "fdk_site_info.csv")
-download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "fdk_site_fullyearsequence.csv")
-download_zenodo(path = download_path, "10.5281/zenodo.14808331", files = "rsofun_driver_data_v3.4.2.rds")
-fdk_site_info             <- readr::read_csv(file.path(download_path, "fdk_site_info.csv"))
-fdk_site_fullyearsequence <- readr::read_csv(file.path(download_path, "fdk_site_fullyearsequence.csv"))
-drivers <- readRDS(file.path(download_path, "rsofun_driver_data_v3.4.2.rds"))
+gpp_forcingtarget <- read_rds(file = here::here("data/00_gpp_forcingtarget.rds"))
 
-# testthat::expect_equal(fdk_site_info,FluxDataKit::fdk_site_info) # THis fails
-# testthat::expect_equal(   # This succeeds
-#   fdk_site_info |>
-#     select(-koeppen_code),
-#   FluxDataKit::fdk_site_info |>
-#     mutate(reference_height = unname(reference_height)) |>
-#     select(-koeppen_code))
 
-## Subset gpp sites ----
-gpp_sites_to_use <- fdk_site_info |>
-  filter(!(igbp_land_use %in% c("CRO", "WET"))) |>
-  left_join(
-    fdk_site_fullyearsequence,
-    by = "sitename"
-  ) |>
-  filter(nyears_gpp > 10)
-
-gpp_forcingtarget <- drivers |> filter(sitename %in% gpp_sites_to_use$sitename)
 
 ## Prepare chi, vj, gpp data (drivers and targets) ----
 # format chi_vj_forcing similarly to rsofun::p_model_drivers
@@ -617,10 +592,15 @@ chi_vj_gpp_obs     <- bind_rows(gpp_obs, chi_vj_obs)
 #   chi_vj_gpp_obs,
 #   by = join_by(sitename, run_model))
 
-saveRDS(chi_vj_gpp_drivers, file = here::here("data/chi-vj-gpp_calibsofun_drivers.rds"),
-        compress = "xz")
-saveRDS(chi_vj_gpp_obs,     file = here::here("data/chi-vj-gpp_calibsofun_obs.rds"),
-        compress = "xz")
+write_rds(
+  chi_vj_gpp_drivers,
+  file = here::here("data/01_chi-vj-gpp_calibsofun_drivers.rds"),
+  compress = "xz")
+
+write_rds(
+  chi_vj_gpp_obs,
+  file = here::here("data/01_chi-vj-gpp_calibsofun_obs.rds"),
+  compress = "xz")
 
 
 

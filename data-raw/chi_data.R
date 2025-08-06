@@ -7,7 +7,6 @@
 #
 # These two objects are stored as *.rds files in subfolder data/
 
-rm(list = ls())
 library(tidyverse)
 library(rgeco)   # pak::pkg_install("https://github.com/geco-bern/rgeco")
 library(leaf13C) # pak::pkg_install("traitecoevo/datastorr")
@@ -109,8 +108,8 @@ rgeco:::plot_map_simpl() +
 # df_chi_target |> filter(Nyears>1) |> print(n=100)
 # df_chi_target |> filter(Ndates>1) |> print(n=100)
 
-saveRDS(df_chi_forcing, here::here("data/chi_forcing.rds"))
-saveRDS(df_chi_target, here::here("data/chi_target.rds"))
+write_rds(df_chi_forcing, here::here("data/00_chi_forcing.rds"))
+write_rds(df_chi_target, here::here("data/00_chi_target.rds"))
 rm(df_chi)
 rm(df_chi_allobs)
 
@@ -120,14 +119,6 @@ rm(df_chi_allobs)
 
 
 
-
-
-
-
-
-
-
-# TODO: replace forcing data with data from ingestr
 
 # TODO: below is just a test.
 

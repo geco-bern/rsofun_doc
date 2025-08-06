@@ -3,18 +3,14 @@
 # their ratio vj = vcmax/jmax with P-model.
 #
 # The input forcing is taken from the data set.
-# In a second step this input forcing could be replaced with data from ingestr.
+# However, in a second step this input forcing is then overwritten with data from ingestr.
 #
 # These two objects are stored as *.rds files in subfolder data/
-
-rm(list = ls())
 library(tidyverse)
 library(ingestr)
-library(rgeco) # pak::pkg_install("geco-bern/rgeco")
+# library(rgeco) # pak::pkg_install("geco-bern/rgeco")
 library(dplyr)
 library(purrr)
-library(rsofun)  # install from branch simple_pmodel_v2
-                 # pak::pkg_install("geco-bern/rsofun@simple_pmodel_v2")
 
 # Nick Smith's data,
 df_vj_allobs <- read_csv(here::here("data-raw/GlobV_v2.1_env_open.csv"))
@@ -92,9 +88,17 @@ df_vj_target <- df_vj |>
 
 rm(df_vj)
 
-# Show
+write_rds(df_vj_forcing, here::here("data/00_vj_forcing.rds"))
+write_rds(df_vj_target, here::here("data/00_vj_target.rds"))
 # df_vj_target  # 1031 sitename,genus,species combinations
 # df_vj_forcing # 106 sites
+
+
+
+
+
+
+
 
 # Plot
 df_vj_target |>
@@ -125,8 +129,6 @@ rgeco:::plot_map_simpl() +
 #   labs(color = "Vcmax\n(umol/m2/s)")
 
 
-saveRDS(df_vj_forcing, here::here("data/vj_forcing.rds"))
-saveRDS(df_vj_target, here::here("data/vj_target.rds"))
 
 
 
@@ -153,6 +155,9 @@ saveRDS(df_vj_target, here::here("data/vj_target.rds"))
 
 
 # TODO: below is just a test.
+
+library(rsofun)  # install from branch simple_pmodel_v2
+# pak::pkg_install("geco-bern/rsofun@simple_pmodel_v2")
 
 # Apply one-step P-model function on each row of df_vj
 # Define constant model parameters
