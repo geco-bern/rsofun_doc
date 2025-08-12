@@ -132,7 +132,7 @@ siteinfo$Beck_KG_code = extract(r, select(siteinfo, c(lon, lat)), ID = FALSE)[["
 siteinfo <- siteinfo |>
   left_join(Beck_KG_metadata, by = join_by(Beck_KG_code)) |>
   select(-Beck_KG_code, -Beck_KG_description, -Beck_KG_colorcode)
-siteinfo <- siteinfo |> 
+siteinfo <- siteinfo |>
   mutate(Beck_KG = if_else(sitename == "lon_-079.38_lat_+008.97","EF",Beck_KG))
 stopifnot(all(!is.na(siteinfo$Beck_KG)))
 
@@ -165,7 +165,7 @@ lccs_metadata <- tribble(
   220, "Permanent snow and ice", "255, 255, 255")
 r2 <- rast("/data/archive/landcover_defourny_2023/data/C3S-LC-L4-LCCS-Map-300m-P1Y-2020-v2.1.1.nc"); # plot(r2[["lccs_class"]])
 siteinfo$lccs_code = extract(r2[["lccs_class"]], select(siteinfo, c(lon, lat)), ID = FALSE)[["lccs_class"]]
-siteinfo <- siteinfo |> 
+siteinfo <- siteinfo |>
   mutate(lccs_code = floor(lccs_code/10)*10) |> # floor regional codes to global codes
   left_join(lccs_metadata, by = join_by(lccs_code)) |>
   select(-lccs_code, -lccs_colorcode)

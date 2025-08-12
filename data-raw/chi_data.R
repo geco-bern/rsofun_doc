@@ -198,7 +198,6 @@ df_chi_modeled <- df_chi_forcing_dummy |>
            vcmax25_mod_molm2s = vcmax25,
            jmax25_mod_molm2s  = jmax25,
            gs_accl_mod_molCmolPhPa = gs_accl, # mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}
-           wscal_mod__        = wscal,
            chi_mod__          = chi,
            iwue_mod__         = iwue,
            rd_mod_gCm2s       = rd)
