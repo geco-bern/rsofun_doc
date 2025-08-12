@@ -46,4 +46,17 @@ df_gpp_forcingtarget <- gpp_sites_to_use |>
     nyears_gpp, koeppen_code, igbp_land_use, year_start_gpp, year_end_gpp)) |>
   select(sitename, params_siml, site_info, forcing)
 
-write_rds(df_gpp_forcingtarget, here::here("data/00_gpp_forcingtarget.rds"))
+
+# only keep years with good quality data
+df_gpp_forcingtarget_cropped <- df_gpp_forcingtarget |>
+  unnest(c(site_info, forcing)) |>
+  mutate(year = year(date)) |>
+  filter(year >= year_start_gpp & year <= year_end_gpp) |>
+  select(-year_start_gpp, -year_end_gpp, -year) |>
+  nest(site_info = 'lon':'igbp_land_use',
+       forcing = 'date':'le_qc')
+
+
+write_rds(df_gpp_forcingtarget_cropped,
+          here::here("data/00_gpp_forcingtarget.rds"),
+          compress = "xz")
