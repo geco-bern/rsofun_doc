@@ -16,6 +16,7 @@ library(purrr)
 # library(rsofun)  # install from branch simple_pmodel_v2
 # pak::pkg_install("geco-bern/ingestr")
 library(ingestr)
+library(terra)
 
 
 
@@ -92,6 +93,86 @@ siteinfo <- siteinfo_all |>
   # only subset needed columns
   select(sitename, date_start, date_end, lon, lat) #,Nobs, Nyears
 
+# Get metadata on landcover and climate
+## Add Koeppen-Geiger
+Beck_KG_metadata <- tribble(
+    ~Beck_KG_code, ~Beck_KG, ~Beck_KG_description, ~Beck_KG_colorcode,
+    # source: https://doi.org/10.6084/m9.figshare.6396959 (legend.txt)
+    1,   "Af",   "Tropical, rainforest",                   "[0 0 255]",
+    2,   "Am",   "Tropical, monsoon",                      "[0 120 255]",
+    3,   "Aw",   "Tropical, savannah",                     "[70 170 250]",
+    4,   "BWh",  "Arid, desert, hot",                      "[255 0 0]",
+    5,   "BWk",  "Arid, desert, cold",                     "[255 150 150]",
+    6,   "BSh",  "Arid, steppe, hot",                      "[245 165 0]",
+    7,   "BSk",  "Arid, steppe, cold",                     "[255 220 100]",
+    8,   "Csa",  "Temperate, dry summer, hot summer",      "[255 255 0]",
+    9,   "Csb",  "Temperate, dry summer, warm summer",     "[200 200 0]",
+    10,  "Csc",  "Temperate, dry summer, cold summer",     "[150 150 0]",
+    11,  "Cwa",  "Temperate, dry winter, hot summer",      "[150 255 150]",
+    12,  "Cwb",  "Temperate, dry winter, warm summer",     "[100 200 100]",
+    13,  "Cwc",  "Temperate, dry winter, cold summer",     "[50 150 50]",
+    14,  "Cfa",  "Temperate, no dry season, hot summer",   "[200 255 80]",
+    15,  "Cfb",  "Temperate, no dry season, warm summer",  "[100 255 80]",
+    16,  "Cfc",  "Temperate, no dry season, cold summer",  "[50 200 0]",
+    17,  "Dsa",  "Cold, dry summer, hot summer",           "[255 0 255]",
+    18,  "Dsb",  "Cold, dry summer, warm summer",          "[200 0 200]",
+    19,  "Dsc",  "Cold, dry summer, cold summer",          "[150 50 150]",
+    20,  "Dsd",  "Cold, dry summer, very cold winter",     "[150 100 150]",
+    21,  "Dwa",  "Cold, dry winter, hot summer",           "[170 175 255]",
+    22,  "Dwb",  "Cold, dry winter, warm summer",          "[90 120 220]",
+    23,  "Dwc",  "Cold, dry winter, cold summer",          "[75 80 180]",
+    24,  "Dwd",  "Cold, dry winter, very cold winter",     "[50 0 135]",
+    25,  "Dfa",  "Cold, no dry season, hot summer",        "[0 255 255]",
+    26,  "Dfb",  "Cold, no dry season, warm summer",       "[55 200 255]",
+    27,  "Dfc",  "Cold, no dry season, cold summer",       "[0 125 125]",
+    28,  "Dfd",  "Cold, no dry season, very cold winter",  "[0 70 95]",
+    29,  "ET",   "Polar, tundra",                          "[178 178 178]",
+    30,  "EF",   "Polar, frost",                           "[102 102 102]")
+r <- rast("/data/archive/koeppengeiger_beck_2018/data/Beck_KG_V1_present_0p5.tif"); # plot(r)
+siteinfo$Beck_KG_code = extract(r, select(siteinfo, c(lon, lat)), ID = FALSE)[["Beck_KG_V1_present_0p5"]]
+siteinfo <- siteinfo |>
+  left_join(Beck_KG_metadata, by = join_by(Beck_KG_code)) |>
+  select(-Beck_KG_code, -Beck_KG_description, -Beck_KG_colorcode)
+siteinfo <- siteinfo |> 
+  mutate(Beck_KG = if_else(sitename == "lon_-079.38_lat_+008.97","EF",Beck_KG))
+stopifnot(all(!is.na(siteinfo$Beck_KG)))
+
+## Add LCCS landcover
+lccs_metadata <- tribble(
+  ~lccs_code, ~lccs, ~lccs_colorcode,
+  # source: Table 1-2 https://dast.copernicus-climate.eu/documents/satellite-land-cover/WP2-FDDP-LC-2021-2022-SENTINEL3-300m-v2.1.1_PUGS_v1.1_final.pdf
+  0, "No Data", "0, 0, 0",
+  10, "Cropland, rainfed", "255, 255, 100",
+  20, "Cropland, irrigated or post-flooding", "170, 240, 240",
+  30, "Mosaic cropland (>50%) / natural vegetation (tree, shrub, herbaceous cover) (<50%)", "220, 240, 100",
+  40, "Mosaic natural vegetation (tree, shrub, herbaceous cover) (>50%) /cropland (<50%)", "200, 200, 100",
+  50, "Tree cover, broadleaved, evergreen, closed to open (>15%)", "0, 100, 0",
+  60, "Tree cover, broadleaved, deciduous, closed to open (>15%)", "0, 160, 0",
+  70, "Tree cover, needleleaved, evergreen, closed to open (>15%)", "0, 60, 0",
+  80, "Tree cover, needleleaved, deciduous, closed to open (>15%)", "40, 80, 0",
+  90, "Tree cover, mixed leaf type (broadleaved and needleleaved)", "120, 130, 0",
+  100, "Mosaic tree and shrub (>50%) / herbaceous cover (<50%)", "140, 160, 0",
+  110, "Mosaic herbaceous cover (>50%) / tree and shrub (<50%)", "190, 150, 0",
+  120, "Shrubland", "150, 100, 0",
+  130, "Grassland", "255, 180, 50",
+  140, "Lichens and mosses", "255, 220, 210",
+  150, "Sparse vegetation (tree, shrub, herbaceous cover) (<15%)", "255, 235, 175",
+  160, "Tree cover, flooded, fresh or brackish water", "0, 120, 90",
+  170, "Tree cover, flooded, saline water", "0, 150, 120",
+  180, "Shrub or herbaceous cover, flooded, fresh/saline/brackish water", "0, 220, 130",
+  190, "Urban areas", "195, 20, 0",
+  200, "Bare areas", "255, 245, 215",
+  210, "Water bodies", "0, 70, 200",
+  220, "Permanent snow and ice", "255, 255, 255")
+r2 <- rast("/data/archive/landcover_defourny_2023/data/C3S-LC-L4-LCCS-Map-300m-P1Y-2020-v2.1.1.nc"); # plot(r2[["lccs_class"]])
+siteinfo$lccs_code = extract(r2[["lccs_class"]], select(siteinfo, c(lon, lat)), ID = FALSE)[["lccs_class"]]
+siteinfo <- siteinfo |> 
+  mutate(lccs_code = floor(lccs_code/10)*10) |> # floor regional codes to global codes
+  left_join(lccs_metadata, by = join_by(lccs_code)) |>
+  select(-lccs_code, -lccs_colorcode)
+stopifnot(all(!is.na(siteinfo$lccs)))
+siteinfo <- siteinfo |> rename(Defourny_LCCS = lccs)
+
 
 # Run ingestr to get elv, co2, tavg,tmin,tmax,vapr,srad ------------------------
 ## Get elevation data
@@ -147,10 +228,6 @@ df_worldclim_raw <- ingest(
 df_worldclim <- df_worldclim_raw |> unnest(c(data)) |>
   filter(!if_any(everything(), is.na)) |>
   nest(data = -c(sitename))
-
-
-# TODO: instead of 1970-2000 average from worldclim, we might use the actual
-#       values of the actual years from worldclim?
 
 
 # Derive single values of co2, patm, ppfd, tgrowth, vpd (representing average growing conditions) ------------------------
@@ -359,7 +436,7 @@ df_trait_forcing_filled <-
                     by = join_by(sitename)) |>
   # re-append lon, lat
   dplyr::left_join(siteinfo, by = join_by(sitename)) |>
-  select(sitename, lon, lat, patm, co2, clim)
+  select(sitename, lon, lat, patm, co2, clim, Defourny_LCCS, Beck_KG)
 
 
 df_trait_targets <-
@@ -455,8 +532,6 @@ ggsave(
 ##################################
 
 # VJ:
-  # NOTE: potentially replace forcing data with data from ingestr to homogenize with chi data.
-  #       however, we do not have the time information
   # TODO: compare the climate data, derived here with the one provided in vj data set
 
 # TODO: remove df_compare_forcing <- dplyr::inner_join(
@@ -523,7 +598,6 @@ chi_vj_targets <- df_trait_targets
 gpp_forcingtarget <- read_rds(file = here::here("data/00_gpp_forcingtarget.rds"))
 
 
-
 ## Prepare chi, vj, gpp data (drivers and targets) ----
 # format chi_vj_forcing similarly to rsofun::p_model_drivers
 chi_vj_drivers <- chi_vj_forcing |>
@@ -531,8 +605,8 @@ chi_vj_drivers <- chi_vj_forcing |>
   ## 1) nest forcing
   select(sitename,
          lon, lat, elv_masl,
-         temp, vpd, ppfd, co2 = co2_ppm, patm = patm_Pa) |>
-  #nest(forcing = -c(sitename))
+         temp, vpd, ppfd, co2 = co2_ppm, patm = patm_Pa,
+         Defourny_LCCS, Beck_KG) |>
   nest(forcing = c(temp, vpd, ppfd, co2, patm)) |>
   ## 2) nest params_siml
   mutate(lc4 = FALSE) |>
@@ -540,7 +614,7 @@ chi_vj_drivers <- chi_vj_forcing |>
   ## 3) nest site_info
   rename(elv = elv_masl) |>
   mutate(whc = NA) |>
-  nest(site_info = c(lon, lat, elv, whc)) |>
+  nest(site_info = c(lon, lat, elv, whc, Defourny_LCCS, Beck_KG)) |>
   ## 4) add additional info
   mutate(run_model = "onestep") |> # either "onestep" or "daily"
   # order
