@@ -1,5 +1,5 @@
-# This script prepares the input forcing tibble ('df_chi_forcing') and
-# output target tibble ('df_chi_target') needed for simulating Chi = Ci/Ca
+# This script prepares the input forcing tibble ('df_bigD13C_forcing') and
+# output target tibble ('df_bigD13C_target') needed for simulating bigD13C = Ci/Ca
 # with P-model.
 #
 # The input forcing is first filled with NA.
@@ -16,49 +16,15 @@ library(leaf13C) # pak::pkg_install("traitecoevo/datastorr")
 # Cornwell, William K., et al. “Climate and soils together regulate photosynthetic carbon isotope discrimination within C3 plants worldwide.” Global Ecology and Biogeography 27.9 (2018): 1056-1067.
 
 # see https://github.com/traitecoevo/leaf13C/blob/master/leaf13C_metadata.txt for column description
-df_chi_allobs <- leaf13C::get_data(version = "0.2.2")
-
-# Calculate chi (ci:ca) from big-Delta data.
-calc_chi_bigdelta <- function(bigdelta, ca, mgdd0 = NA){
-  # source Lavergne 2020, New Phytol, https://doi.org/10.1111/nph.16314:
-
-  # bigdelta # (permil) observed discrimination in plant material relative to atmospheric CO2
-  # ca       # (Pa) ambient (ca) partial CO2 pressure
-  # mgdd0    # ???
-  # chi      # (-) ratio of leaf internal (ci) to ambient (ca) partial CO2 pressure
-
-  # Parameters
-  a <- 4.4  # isotope fractionation from CO2 diffusion in air (4.4 permil; Craig, 1953)
-  b <- 27.0 # isotope fractionation from effective Rubisco carboxylation (26–30 permil)
-
-  if (!is.na(mgdd0)){ # internal note: Method Wang Hang with mgdd0 being the temperature depencey of gammastar, getting beta=146.0 (unitcost ratio)
-
-    # account for co2 compensation point and its temperature dependency
-    f <- 8.0    # isotope fractionation from photorespiration (8–16 permil; Ubierna & Farquhar, 2014)
-    k <- 0.0512 # ???
-    gammastar25 <- 42.75                              # (Pa) photorespiratory compensation point at 25°C
-    gammastar <- gammastar25*exp(k*(mgdd0 - 25.0))    # (Pa) the CO2 compensation point
-    chi <- (bigdelta - a + f*gammastar/ca)/(b - a)    # Eqn 2, Lavergne 2020, New Phytol
-
-  } else {
-
-    chi <- (bigdelta - a)/(b - a)
-
-  }
-
-  return(chi)
-}
-
-df_chi_allobs <- df_chi_allobs |>
-  rowwise() |>
-  mutate(chi = calc_chi_bigdelta(big.D13.merged, ca = 400)) |>
-  ungroup() |>
+df_bigD13C_allobs <- leaf13C::get_data(version = "0.2.2") |>
+  tibble() |>
+  rename(bigD13C = big.D13.merged) |>
   mutate(sitename = sprintf("lon_%+07.2f_lat_%+07.2f", longitude, latitude))
 
-# drop NAs
-df_chi <- df_chi_allobs |>
+df_bigD13C <- df_bigD13C_allobs |>
   # dropping observations that are missing either of the targets
-  drop_na(chi)
+  drop_na(bigD13C)
+
 
 # aggregate model inputs and model targets
 #   inputs:  by site only         (reducing number of simulations)
@@ -66,7 +32,7 @@ df_chi <- df_chi_allobs |>
 #
 #   For the GMD paper, not aggregating across species requires to specify
 #   likelihood as a function of mismatch wrt all species individually for a given site.
-df_chi_forcing <- df_chi |>
+df_bigD13C_forcing <- df_bigD13C |>
   group_by(sitename) |>
   summarise(.groups = "keep",
             lon = mean(longitude),
@@ -84,7 +50,7 @@ df_chi_forcing <- df_chi |>
   mutate(
     patm_Pa = rpmodel::calc_patm(elv_masl)
   )
-df_chi_target <- df_chi |>
+df_bigD13C_target <- df_bigD13C |>
   mutate(collection.date = lubridate::make_date(collection.year, collection.month)) |>
   group_by(sitename, species) |>
   summarise(
@@ -92,26 +58,26 @@ df_chi_target <- df_chi |>
     lon = mean(longitude),
     lat = mean(latitude),
     year   = mean(collection.year),
-    chi_obs__ = mean(chi), # unitless
+    bigD13C_obs__ = mean(bigD13C), # unitless
     Nobs = n(),
     Nyears = length(unique(collection.year)),
     Ndates = length(unique(collection.date)),
   )
 
-df_chi_target |>
-  ggplot(aes(x = chi_obs__)) +
+df_bigD13C_target |>
+  ggplot(aes(x = bigD13C_obs__)) +
   geom_histogram(bins = 15)
 
 rgeco:::plot_map_simpl() +
-  geom_point(data = df_chi_forcing, aes(lon, lat))
-# df_chi_target |> filter(Nobs>1)
-# df_chi_target |> filter(Nyears>1) |> print(n=100)
-# df_chi_target |> filter(Ndates>1) |> print(n=100)
+  geom_point(data = df_bigD13C_forcing, aes(lon, lat))
+# df_bigD13C_target |> filter(Nobs>1)
+# df_bigD13C_target |> filter(Nyears>1) |> print(n=100)
+# df_bigD13C_target |> filter(Ndates>1) |> print(n=100)
 
-write_rds(df_chi_forcing, here::here("data/00_chi_forcing.rds"))
-write_rds(df_chi_target, here::here("data/00_chi_target.rds"))
-rm(df_chi)
-rm(df_chi_allobs)
+write_rds(df_bigD13C_forcing, here::here("data/00_bigD13C_forcing.rds"))
+write_rds(df_bigD13C_target, here::here("data/00_bigD13C_target.rds"))
+rm(df_bigD13C)
+rm(df_bigD13C_allobs)
 
 
 
@@ -150,11 +116,11 @@ rm(df_chi_allobs)
 #   params_modl = params_modl,
 #   makecheck = FALSE
 # )
-# plot(mod$chi)
+# plot(mod$bigD13C)
 #### END EXAMPLE
 
 #### DEVELOPMENT
-df_chi_forcing_dummy <- df_chi_forcing[1,] |>
+df_bigD13C_forcing_dummy <- df_bigD13C_forcing |>
   mutate(
     temp_degC   = 17.7,    # deg C,     growing season value (growing season, where T>0)
     vpd_Pa      = 0.736,   # Pa,        growing season value (growing season, where T>0)
@@ -163,7 +129,7 @@ df_chi_forcing_dummy <- df_chi_forcing[1,] |>
     elv_masl    = 68,      # m asl
     patm_Pa     = rpmodel::calc_patm(elv_masl)
   )
-df_chi_forcing_dummy
+df_bigD13C_forcing_dummy
 
 # Apply one-step P-model function on each row of df_sites
 library(dplyr)
@@ -182,7 +148,7 @@ params_modl <- list(
 
 
 # Apply the model function row-wise and bind results
-df_chi_modeled <- df_chi_forcing_dummy |>
+df_bigD13C_modeled <- df_bigD13C_forcing_dummy |>
   group_by(sitename) |> #, lon, lat) |>
   group_modify(~run_pmodel_onestep_f_bysite(
     lc4 = FALSE,
@@ -198,49 +164,27 @@ df_chi_modeled <- df_chi_forcing_dummy |>
            vcmax25_mod_molm2s = vcmax25,
            jmax25_mod_molm2s  = jmax25,
            gs_accl_mod_molCmolPhPa = gs_accl, # mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}
-           chi_mod__          = chi,
+           bigD13C_mod__      = bigdelta,
            iwue_mod__         = iwue,
            rd_mod_gCm2s       = rd)
   # transform to same units as targets:
-  # # unneeded for chi
+  # # unneeded for bigD13C
 
 
 # Plot modelled vs observed
 
 # Combine modelled and observed
-df_chi_with_outputs <- dplyr::inner_join(df_chi_modeled, df_chi_target, by = join_by(sitename))
+df_bigD13C_with_outputs <- dplyr::inner_join(df_bigD13C_modeled, df_bigD13C_target, by = join_by(sitename))
 
 # Vcmax
-df_chi_with_outputs |>
-  ggplot(aes(chi_mod__, chi_obs__)) +
+df_bigD13C_with_outputs |>
+  ggplot(aes(bigD13C_mod__, bigD13C_obs__)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") #+
   # labs(
-  #   x = "Modelled Chi (-)",
-  #   y = "Observed Chi (-)"
+  #   x = "Modelled bigD13C (-)",
+  #   y = "Observed bigD13C (-)"
   # )
 
 #### END DEVELOPMENT
-
-
-# TODO: (source: https://github.com/geco-bern/rsofun/issues/134, May 2023)
-# notneeded:     In rsofun, introduce a non-structural C pool (NSC) with prescribed decay constant.
-# notneeded:     Add GPP to NSC and treat isotopic signature explicitly (calculating d13C from simulated ci:ca,
-# notneeded:     using Farquhar et al. (1989), see also Wang et al., 2017). NSC pool and d13C implementation
-# since we can use:     output(7) = dble(out_pmodel%chi)
-
-
-# TODO: colin: As far as I know the most extensive compilation of leaf-level
-# δ13C data is in Lavergne et al. (2020) GCB. I suggest using Eq (2) in Lavergne
-# et al. (2020) New Phytologist for the relationship between Δ13C and χ.
-
-
-
-# TODO: Beni:
-# @Fabian, the d13C data will have to be treated and modelled in a similar way as the vj data
-#
-# Here we need the below input forcing data for each site.
-# This can be modelled in a much simplified version based on "geco-bern/get_Vcmax_data", which used daily values
-
-
 

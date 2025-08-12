@@ -1,4 +1,4 @@
-sitename,run_model,targets_vj,targets_chi,targets_gpp,dataset
+sitename,run_model,targets_vj,targets_bigD13C,targets_gpp,dataset
 lon_+003.97_lat_+043.58,onestep,TRUE,FALSE,FALSE,train
 lon_+004.78_lat_+052.48,onestep,TRUE,FALSE,FALSE,train
 lon_+007.21_lat_+048.18,onestep,TRUE,FALSE,FALSE,train

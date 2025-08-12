@@ -3,11 +3,11 @@ library(rgeco)
 library(ggplot2)
 library(sf)
 
-# Load gpp, vj, chi data -------------------------------------------------------
-drivers <- read_rds(here::here("data/01_chi-vj-gpp_calibsofun_drivers.rds"))
-obs     <- read_rds(here::here("data/01_chi-vj-gpp_calibsofun_obs.rds"))
+# Load gpp, vj, bigD13C data -------------------------------------------------------
+drivers <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_drivers.rds"))
+obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_obs.rds"))
 
-# add information to driver vj or chi is fitted
+# add information to driver vj or bigD13C is fitted
 drivers <- drivers |>
   left_join(
     obs |> unnest_wider(targets,  names_sep = "_") |> select(sitename, starts_with("targets")),
@@ -17,7 +17,7 @@ drivers <- drivers |>
 
 
 gpp_forcing    <- drivers |> filter(run_model == "daily")
-vj_chi_forcing <- drivers |> filter(run_model == "onestep")
+vj_bigD13C_forcing <- drivers |> filter(run_model == "onestep")
 
 
 # NOTE: 'gpp_forcing' was already filtered:
@@ -34,16 +34,16 @@ gpp_forcing |> unnest(site_info) |>
 
       # # Remove sites without climate and landcover classification
       # gpp_forcing |> unnest(site_info) |> filter(is.na(FDK_koeppen_code) | is.na(FDK_igbp_land_use)) # nrow: 0, all gpp sites have koeppen or igbp information
-      # vj_chi_forcing |> unnest(site_info) |> filter(is.na(Defourny_LCCS) | is.na(Beck_KG)) # nrow: 3, three vj sites have no koeppen or igbp information
+      # vj_bigD13C_forcing |> unnest(site_info) |> filter(is.na(Defourny_LCCS) | is.na(Beck_KG)) # nrow: 3, three vj sites have no koeppen or igbp information
 
 
 
 # Sample sites for training and testing ----------------------------------------
 
-## ensure no data leakage if we make train-test split separately on gpp and vj_chi data sets
-stopifnot(length(intersect(gpp_forcing$sitename, vj_chi_forcing$sitename)) == 0)
+## ensure no data leakage if we make train-test split separately on gpp and vj_bigD13C data sets
+stopifnot(length(intersect(gpp_forcing$sitename, vj_bigD13C_forcing$sitename)) == 0)
 
-## Define strata for split for gpp as well as for chi-vj datasets --------------
+## Define strata for split for gpp as well as for bigD13C-vj datasets --------------
 gpp_strata <- gpp_forcing |>
   unnest(site_info) |>
   # mutate(p_over_pet = as.numeric(p_over_pet)) |>
@@ -55,10 +55,10 @@ gpp_strata <- gpp_forcing |>
   # mutate(strata = interaction(whc_bin, mat_bin, mi_bin, igbp_land_use, drop = TRUE))
   mutate(strata = interaction(FDK_koeppen_code, FDK_igbp_land_use, drop = TRUE))
 
-vjchi_strata <- vj_chi_forcing |>
+vjbigD13C_strata <- vj_bigD13C_forcing |>
   # define strata
   unnest(site_info) |>
-  mutate(strata = interaction(Beck_KG, Defourny_LCCS, targets_vj, targets_chi, targets_gpp, drop = TRUE))
+  mutate(strata = interaction(Beck_KG, Defourny_LCCS, targets_vj, targets_bigD13C, targets_gpp, drop = TRUE))
 
 
 ## gpp sites -------------------------------------------------------------------
@@ -89,35 +89,35 @@ gpp_unused <- gpp_strata |>
 # END TODO
 
 
-## vj, chi sites ---------------------------------------------------------------
+## vj, bigD13C sites ---------------------------------------------------------------
 set.seed(1982)
 
 # determine test sites
-vjchi_test <- vjchi_strata |>
+vjbigD13C_test <- vjbigD13C_strata |>
   group_by(strata) |>
   slice_sample(n=1) |>
   ungroup()
 
 # all other are train sites
-vjchi_train <- vjchi_strata |>
-  filter(!(sitename %in% vjchi_test$sitename))
+vjbigD13C_train <- vjbigD13C_strata |>
+  filter(!(sitename %in% vjbigD13C_test$sitename))
 
 # check that all are used:
-vjchi_unused <- vjchi_strata |>
-  anti_join(vjchi_test) |>
-  anti_join(vjchi_train)
-stopifnot(nrow(vjchi_unused) == 0)
+vjbigD13C_unused <- vjbigD13C_strata |>
+  anti_join(vjbigD13C_test) |>
+  anti_join(vjbigD13C_train)
+stopifnot(nrow(vjbigD13C_unused) == 0)
 
 
 ## Write to file ---------------------------------------------------------------
 # TODO: write_rds(drivers_train, file = here::here("data/drivers_train.rds"))
-# TODO: make this as a dataframe that specifies: sitename, run_model, targets_vj, targets_chi, targets_gpp, and dataset=["test","train"]
+# TODO: make this as a dataframe that specifies: sitename, run_model, targets_vj, targets_bigD13C, targets_gpp, and dataset=["test","train"]
 
 df_test_train_split <- bind_rows(
-  vjchi_train |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "train"),
-  vjchi_test  |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "test"),
-  gpp_train |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "train"),
-  gpp_test  |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "test")
+  vjbigD13C_train |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "train"),
+  vjbigD13C_test  |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "test"),
+  gpp_train |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "train"),
+  gpp_test  |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "test")
 )
 
 write_csv(df_test_train_split, file = here::here("data/01_test_train_split.csv"))
@@ -127,7 +127,7 @@ write_csv(df_test_train_split, file = here::here("data/01_test_train_split.csv")
 drivers2 <- drivers |>
   dplyr::left_join(
     df_test_train_split,
-    by = join_by(sitename, run_model, targets_vj, targets_chi, targets_gpp)
+    by = join_by(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp)
   ) |>
   # TODO
   mutate(dataset2 = if_else(is.na(dataset), "unused", dataset))
@@ -137,14 +137,14 @@ drivers2 <- drivers |>
 # Plot the distribution of training and testing sites --------------------------
 dat_to_plot <- drivers2 |>
   unnest(site_info) |>
-  mutate(target = paste(targets_vj, targets_chi, targets_gpp)) |>
+  mutate(target = paste(targets_vj, targets_bigD13C, targets_gpp)) |>
   mutate(target = case_when(
     target == "FALSE FALSE TRUE" ~ "gpp",
-    target == "FALSE TRUE TRUE"  ~ "gpp+chi",
-    target == "TRUE TRUE TRUE"   ~ "gpp+chi+vj",
+    target == "FALSE TRUE TRUE"  ~ "gpp+bigD13C",
+    target == "TRUE TRUE TRUE"   ~ "gpp+bigD13C+vj",
 
-    target == "FALSE TRUE FALSE" ~ "chi",
-    target == "TRUE TRUE FALSE"  ~ "chi+vj",
+    target == "FALSE TRUE FALSE" ~ "bigD13C",
+    target == "TRUE TRUE FALSE"  ~ "bigD13C+vj",
 
     target == "TRUE FALSE FALSE" ~ "vj",
     target == "TRUE FALSE FALSE" ~ "none",

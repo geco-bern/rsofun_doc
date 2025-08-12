@@ -133,12 +133,7 @@ rgeco:::plot_map_simpl() +
 
 
 
-# TODO: potentially replace forcing data with data from ingestr to homogenize with chi data.
-#       however, we do not have the time information
-# rm(df_vj_forcing)
-# df_vj_forcing <- ingestr::...
-
-
+# NOTE: replace forcing data with data from ingestr to homogenize with bigD13C data.
 
 
 

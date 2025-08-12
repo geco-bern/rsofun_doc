@@ -1,5 +1,5 @@
 # This script appends climate data to the the input forcings for
-# 'df_chi_forcing' and 'df_vj_forcing' by using the {ingestr} package.
+# 'df_bigD13C_forcing' and 'df_vj_forcing' by using the {ingestr} package.
 # And then combines it to
 #
 # It needs access to worldclim data set in the form of *.tif files
@@ -20,14 +20,14 @@ library(terra)
 
 
 # Load data --------------------------------------------------------------------
-df_chi_forcing <- read_rds(here::here("data/00_chi_forcing.rds"))
+df_bigD13C_forcing <- read_rds(here::here("data/00_bigD13C_forcing.rds"))
 df_vj_forcing  <- read_rds(here::here("data/00_vj_forcing.rds"))
 
-df_chi_target <- read_rds(here::here("data/00_chi_target.rds"))
+df_bigD13C_target <- read_rds(here::here("data/00_bigD13C_target.rds"))
 df_vj_target  <- read_rds(here::here("data/00_vj_target.rds"))
 
       # # TODO: just checking for gpp sites: if ingestr-derived ppfd agrees with "rsofun_driver_data_v3.4.2.rds"
-      #   NOTE: we normally do this later when combining the forcing data for the chi and vj data with the gpp data
+      #   NOTE: we normally do this later when combining the forcing data for the bigD13C and vj data with the gpp data
       # #   Download FluxDataKit data from Zenodo:
       # #   sudo apt install librdf0-dev
       # #   install.packages("zen4R")
@@ -61,7 +61,7 @@ df_vj_target  <- read_rds(here::here("data/00_vj_target.rds"))
 
 
 # Prepare ingestr --------------------------------------------------------------
-siteinfo_all <- bind_rows(df_chi_forcing, df_vj_forcing) |>
+siteinfo_all <- bind_rows(df_bigD13C_forcing, df_vj_forcing) |>
   # ensure no duplicated sites
   select(sitename, year) |> # drop lon, lat (derive from sitename)
   ungroup() |>
@@ -440,10 +440,10 @@ df_trait_forcing_filled <-
 
 df_trait_targets <-
   dplyr::full_join(
-    df_chi_target |> select(-c(lon,lat)) |> nest(chi = -sitename) |> filter(!(sitename %in% sites_to_remove)),
+    df_bigD13C_target |> select(-c(lon,lat)) |> nest(bigD13C = -sitename) |> filter(!(sitename %in% sites_to_remove)),
     df_vj_target  |> select(-c(lon,lat)) |> nest(vj  = -sitename) |> filter(!(sitename %in% sites_to_remove)),
     by = join_by(sitename)) |>
-  select(sitename, chi, vj) |>
+  select(sitename, bigD13C, vj) |>
   ungroup() |>
   distinct()
 
@@ -453,9 +453,9 @@ check1 <- anti_join(df_trait_targets, df_trait_forcing_filled, by = join_by(site
 
 stopifnot(all(df_trait_targets$sitename == df_trait_forcing_filled$sitename)) # ensure same ordering
 
-# write_rds(df_trait_forcing_filled, file = here::here("data/01_chi-vj_forcing.rds"),
+# write_rds(df_trait_forcing_filled, file = here::here("data/01_bigD13C-vj_forcing.rds"),
 #         compress = "xz")
-# write_rds(df_trait_targets,        file = here::here("data/01_chi-vj_targets.rds"),
+# write_rds(df_trait_targets,        file = here::here("data/01_bigD13C-vj_targets.rds"),
 #         compress = "xz")
 
 
@@ -504,7 +504,7 @@ p6 <- plot_hist("co2_ppm", "CO2 (ppm)")
 p7 <- plot_hist("elv_masl", "Elevation (masl)")
 p8 <- plot_hist("patm_Pa", "Atmospheric. pressure (Pa)")
 
-p9  <- ggplot(unnest(df_trait_targets, c("chi")), aes(x=chi_obs__)) + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed chi = Ci/Ca")
+p9  <- ggplot(unnest(df_trait_targets, c("bigD13C")), aes(x=bigD13C_obs__)) + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed bigD13C = Ci/Ca")
 p10 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vj_obs__))  + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed VJ = VCmax/Jmax")
 p11 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vcmax_obs_molm2s*10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed VCmax (umol/m2/s)")
 p12 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=jmax_obs_molm2s *10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed Jmax (umol/m2/s)")
@@ -587,19 +587,19 @@ ggsave(
 
 # Combine with daily forcing data for gpp --------------------------------------------------------------
 
-## Load chi, vj data ----
-# chi_vj_forcing <- read_rds(file = here::here("data/01_chi-vj_forcing.rds"))
-# chi_vj_targets <- read_rds(file = here::here("data/01_chi-vj_targets.rds"))
-chi_vj_forcing <- df_trait_forcing_filled
-chi_vj_targets <- df_trait_targets
+## Load bigD13C, vj data ----
+# bigD13C_vj_forcing <- read_rds(file = here::here("data/01_bigD13C-vj_forcing.rds"))
+# bigD13C_vj_targets <- read_rds(file = here::here("data/01_bigD13C-vj_targets.rds"))
+bigD13C_vj_forcing <- df_trait_forcing_filled
+bigD13C_vj_targets <- df_trait_targets
 
 ## Load gpp data ----
 gpp_forcingtarget <- read_rds(file = here::here("data/00_gpp_forcingtarget.rds"))
 
 
-## Prepare chi, vj, gpp data (drivers and targets) ----
-# format chi_vj_forcing similarly to rsofun::p_model_drivers
-chi_vj_drivers <- chi_vj_forcing |>
+## Prepare bigD13C, vj, gpp data (drivers and targets) ----
+# format bigD13C_vj_forcing similarly to rsofun::p_model_drivers
+bigD13C_vj_drivers <- bigD13C_vj_forcing |>
   unnest(c(patm, co2, clim)) |>
   ## 1) nest forcing
   select(sitename,
@@ -619,20 +619,20 @@ chi_vj_drivers <- chi_vj_forcing |>
   # order
   select(sitename, run_model, params_siml, site_info, forcing)
 
-# format chi_vj_targets similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
-chi_vj_obs <- chi_vj_targets |>
+# format bigD13C_vj_targets similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
+bigD13C_vj_obs <- bigD13C_vj_targets |>
   ## 1) add additional info
   rowwise() |> mutate(
     run_model   = "onestep",
     targets = list(list(
       vj  = is.null(vj),
-      chi = is.null(chi),
+      bigD13C = is.null(bigD13C),
       gpp = FALSE
     ))
   ) |>
   ## 2) nest data
   ungroup() |>
-  nest(data = c(chi,vj)) |>
+  nest(data = c(bigD13C,vj)) |>
   # order
   select(sitename, run_model, targets, data)
 
@@ -650,56 +650,56 @@ gpp_obs <- gpp_forcingtarget |>
   mutate(run_model = "daily", # either "onestep" or "daily"
          targets = list(list(
            vj  = FALSE,
-           chi = FALSE,
+           bigD13C = FALSE,
            gpp = TRUE
          ))) |>
   # order
   select(sitename, run_model, targets, data)
 
 
-## Combine chi, vj, gpp data (drivers and targets) ----
-chi_vj_gpp_drivers <- bind_rows(gpp_drivers, chi_vj_drivers)
-chi_vj_gpp_obs     <- bind_rows(gpp_obs, chi_vj_obs)
-# chi_vj_gpp_drivers_obs <- dplyr::inner_join( # TODO: check if this is computationally more efficient for calib_sofun()
-#   chi_vj_gpp_drivers,
-#   chi_vj_gpp_obs,
+## Combine bigD13C, vj, gpp data (drivers and targets) ----
+bigD13C_vj_gpp_drivers <- bind_rows(gpp_drivers, bigD13C_vj_drivers)
+bigD13C_vj_gpp_obs     <- bind_rows(gpp_obs, bigD13C_vj_obs)
+# bigD13C_vj_gpp_drivers_obs <- dplyr::inner_join( # TODO: check if this is computationally more efficient for calib_sofun()
+#   bigD13C_vj_gpp_drivers,
+#   bigD13C_vj_gpp_obs,
 #   by = join_by(sitename, run_model))
 
 write_rds(
-  chi_vj_gpp_drivers,
-  file = here::here("data/01_chi-vj-gpp_calibsofun_drivers.rds"),
+  bigD13C_vj_gpp_drivers,
+  file = here::here("data/01_bigD13C-vj-gpp_calibsofun_drivers.rds"),
   compress = "xz")
 
 write_rds(
-  chi_vj_gpp_obs,
-  file = here::here("data/01_chi-vj-gpp_calibsofun_obs.rds"),
+  bigD13C_vj_gpp_obs,
+  file = here::here("data/01_bigD13C-vj-gpp_calibsofun_obs.rds"),
   compress = "xz")
 
 
 
 
 ## Plot the available data
-chi_vj_gpp_obs |> unnest_wider(targets) |> filter(vj)
-chi_vj_gpp_obs |> unnest_wider(targets) |> filter(chi)
-chi_vj_gpp_obs |> unnest_wider(targets) |> filter(gpp)
+bigD13C_vj_gpp_obs |> unnest_wider(targets) |> filter(vj)
+bigD13C_vj_gpp_obs |> unnest_wider(targets) |> filter(bigD13C)
+bigD13C_vj_gpp_obs |> unnest_wider(targets) |> filter(gpp)
 
-coordinates <- chi_vj_gpp_drivers |> unnest(site_info) |> select(sitename, lon,lat,elv)
+coordinates <- bigD13C_vj_gpp_drivers |> unnest(site_info) |> select(sitename, lon,lat,elv)
 
 pl1 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
-    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
+    data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
       filter(vj) |>
       left_join(coordinates),
     mapping = aes(lon, lat)) + ggtitle("V/J sites")
 pl2 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
-    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
-      filter(chi) |>
+    data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
+      filter(bigD13C) |>
       left_join(coordinates),
-    mapping = aes(lon, lat)) + ggtitle("Ci/Ca sites")
+    mapping = aes(lon, lat)) + ggtitle("bigD13C sites")
 pl3 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
-    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
+    data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
       filter(gpp) |>
       left_join(coordinates),
     mapping = aes(lon, lat)) + ggtitle("GPP flux sites")

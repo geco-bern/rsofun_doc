@@ -6,7 +6,7 @@ This repository contains the code for producing results published in Paredes et 
 
 - `analysis/` contains scripts for site selection, sensitivity analysis, model calibration, calibration diagnostics, and model evaluation.
 - `fig/` contains publication figures
-- `data/` contains data objects created by scripts in `analysis/`.
+- `data/` contains data objects created by scripts in `analysis/` or in `data-raw/`.
 
 ## References
 
