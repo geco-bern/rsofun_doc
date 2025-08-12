@@ -3,9 +3,11 @@
 #
 # This object is stored as *.rds file in subfolder data/
 
+library(tidyr)
 library(dplyr)
 library(zen4R)
 library(readr)
+library(here)
 
 ## Load gpp data ----
 #   Download FluxDataKit data from Zenodo:
@@ -40,7 +42,7 @@ df_gpp_forcingtarget <- gpp_sites_to_use |>
   select(sitename, nyears_gpp,
          FDK_koeppen_code = koeppen_code, FDK_igbp_land_use = igbp_land_use,
          year_start_gpp, year_end_gpp) |>
-  dplyr::left_join(drivers, by = join_by(sitename)) |>
+  left_join(drivers, by = join_by(sitename)) |>
   # nest the additional columns into site_info
   unnest(site_info) |>
   nest(site_info = c(
