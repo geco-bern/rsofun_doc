@@ -8,6 +8,7 @@ library(dplyr)
 library(zen4R)
 library(readr)
 library(here)
+library(lubridate)
 
 ## Load gpp data ----
 #   Download FluxDataKit data from Zenodo:
@@ -52,8 +53,7 @@ df_gpp_forcingtarget <- gpp_sites_to_use |>
 
 
 # only keep years with good quality data
-# df_gpp_forcingtarget_cropped <-
-df_gpp_forcingtarget |>
+df_gpp_forcingtarget_cropped <- df_gpp_forcingtarget |>
   unnest(c(site_info, forcing)) |>
   mutate(year = year(date)) |>
   filter(year >= year_start_gpp & year <= year_end_gpp) |>
