@@ -16,7 +16,7 @@ drivers <- drivers |>
 
 
 
-gpp_forcing    <- drivers |> filter(run_model == "daily")
+gpp_forcing        <- drivers |> filter(run_model == "daily")
 vj_bigD13C_forcing <- drivers |> filter(run_model == "onestep")
 
 
@@ -62,12 +62,13 @@ vjbigD13C_strata <- vj_bigD13C_forcing |>
 
 
 ## gpp sites -------------------------------------------------------------------
+## for simplicity only take 1 site per stratum for training and 1 site for testing
 set.seed(1)
 
 gpp_train <- gpp_strata |>
   filter(nyears_gpp > 15) |>
   group_by(strata) |>
-  sample_n(size = 1, replace = FALSE) |> # TODO: why do we only use 1 site per strata for training?
+  sample_n(size = 1, replace = FALSE) |>
   ungroup()
 
 gpp_train
@@ -78,41 +79,34 @@ gpp_test <- gpp_strata |>
   filter(!(sitename %in% gpp_train$sitename)) |>
   filter(nyears_gpp > 5) |>
   group_by(strata) |>
-  sample_n(size = 1, replace = FALSE) |> # TODO: why do we sample and don't use all the remaining sites?
+  sample_n(size = 1, replace = FALSE) |>
   ungroup()
 
-# TODO check:
-gpp_unused <- gpp_strata |>
-  anti_join(gpp_test) |>
-  anti_join(gpp_train)
-# stopifnot(nrow(gpp_unused) == 0) # TODO: reactivate.
-# END TODO
+# # check which sites are unuse:
+# gpp_unused <- gpp_strata |>
+#   anti_join(gpp_test) |>
+#   anti_join(gpp_train)
+# # stopifnot(nrow(gpp_unused) == 0) # TODO: reactivate.
 
 
 ## vj, bigD13C sites ---------------------------------------------------------------
 set.seed(1982)
 
 # determine test sites
-vjbigD13C_test <- vjbigD13C_strata |>
-  group_by(strata) |>
-  slice_sample(n=1) |>
-  ungroup()
-
-# all other are train sites
 vjbigD13C_train <- vjbigD13C_strata |>
-  filter(!(sitename %in% vjbigD13C_test$sitename))
+  slice_sample(prop=0.5, by = c(strata, targets_vj, targets_bigD13C))
 
-# check that all are used:
-vjbigD13C_unused <- vjbigD13C_strata |>
-  anti_join(vjbigD13C_test) |>
-  anti_join(vjbigD13C_train)
-stopifnot(nrow(vjbigD13C_unused) == 0)
+# determine test sites
+vjbigD13C_test <- vjbigD13C_strata |>
+  filter(strata %in% unique(vjbigD13C_train$strata)) |> # ensure test is in same strata as train
+  filter(!(sitename %in% vjbigD13C_test$sitename))      # simply remove the 50% from train, no need to slice_sample again
+  # slice_sample(prop=0.5, by = c(strata, targets_vj, targets_bigD13C))
 
+vjbigD13C_strata |> group_by(targets_vj, targets_bigD13C) |> summarise(n())
+vjbigD13C_train  |> group_by(targets_vj, targets_bigD13C) |> summarise(n())
+vjbigD13C_test   |> group_by(targets_vj, targets_bigD13C) |> summarise(n())
 
 ## Write to file ---------------------------------------------------------------
-# TODO: write_rds(drivers_train, file = here::here("data/drivers_train.rds"))
-# TODO: make this as a dataframe that specifies: sitename, run_model, targets_vj, targets_bigD13C, targets_gpp, and dataset=["test","train"]
-
 df_test_train_split <- bind_rows(
   vjbigD13C_train |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "train"),
   vjbigD13C_test  |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "test"),
@@ -131,7 +125,6 @@ drivers2 <- drivers |>
   ) |>
   # TODO
   mutate(dataset2 = if_else(is.na(dataset), "unused", dataset))
-# END TODO
 
 
 # Plot the distribution of training and testing sites --------------------------
@@ -147,12 +140,11 @@ dat_to_plot <- drivers2 |>
     target == "TRUE TRUE FALSE"  ~ "bigD13C+vj",
 
     target == "TRUE FALSE FALSE" ~ "vj",
-    target == "TRUE FALSE FALSE" ~ "none",
+    target == "FALSE FALSE FALSE" ~ "none",
     TRUE ~ NA_character_)) |>
   select(target, everything())
 
-filter(dat_to_plot, is.na(target)) #TODO: where are these coming from??
-filter(dat_to_plot, is.na(target)) |> magrittr::extract2("sitename") # "lon_+151.14_lat_-033.69" "lon_-079.10_lat_+035.97" "lon_-083.81_lat_+042.27"
+filter(dat_to_plot, target == "none") |> magrittr::extract2("sitename") # "lon_+151.14_lat_-033.69" "lon_-079.10_lat_+035.97" "lon_-083.81_lat_+042.27"
 
 
 ## Fig A: Plot a map of test train data:
@@ -214,8 +206,8 @@ ggsave(
 
 
 ## Fig B: Plot histograms of covariates of of test train data:
-dat_to_plot2a <- pivot_longer(dat_to_plot, c(lon, lat, elv, whc))
-dat_to_plot2b <- pivot_longer(dat_to_plot, c(FDK_koeppen_code, FDK_igbp_land_use, Defourny_LCCS, Beck_KG))
+dat_to_plot2a <- pivot_longer(dat_to_plot, c(lon, lat, elv, whc)) |> filter(target != "none")
+dat_to_plot2b <- pivot_longer(dat_to_plot, c(FDK_koeppen_code, FDK_igbp_land_use, Defourny_LCCS, Beck_KG)) |> filter(target != "none")
 
 # numerical covariates
 fig_B_test_train_hist <- ggplot(dat_to_plot2a |> filter(!is.na(target))) +
