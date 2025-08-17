@@ -13,6 +13,12 @@ library(BayesianTools)
 bigD13C_vj_gpp_drivers <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_drivers.rds"))
 bigD13C_vj_gpp_obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_obs.rds"))
 
+## Read test-train split ----
+df_test_train_split <- read_csv(here::here("data/01_test_train_split.csv"))
+
+sites_train <- df_test_train_split |> filter(dataset == "train")
+sites_test  <- df_test_train_split |> filter(dataset == "test")
+
 
         # Test run pmodel --------------------------------------------------------------
         # ## Apply one-step P-model function on each row ----
@@ -49,7 +55,7 @@ bigD13C_vj_gpp_obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun
         #          jmax25_mod_molm2s  = jmax25,
         #          gs_accl_mod_molCmolPhPa = gs_accl, # mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}
         #          wscal_mod__        = wscal,
-        #          bigD13C_mod__          = bigD13C,
+        #          bigD13C_mod_permil          = bigD13C,
         #          iwue_mod__         = iwue,
         #          rd_mod_gCm2s       = rd) |>
         #   mutate(vj_mod__ = vcmax_mod_molm2s/jmax_mod_molm2s)
@@ -79,19 +85,19 @@ bigD13C_vj_gpp_obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun
         # traits_mod_obs_bigD13C <- traits_mod_obs |>
         #   # get obs
         #   unnest(bigD13C) |>
-        #   select(sitename, model, species, bigD13C_obs__) |>
+        #   select(sitename, model, species, bigD13C_obs_permil) |>
         #   # get model
         #   unnest(model) |>
         #   select(sitename, species,
-        #          bigD13C_obs__,
-        #          bigD13C_mod__)
+        #          bigD13C_obs_permil,
+        #          bigD13C_mod_permil)
         #
         # # traits_mod_obs_gpp <- traits_mod_obs |> unnest(gpp)
         #
         #
         # ## Plot modelled vs observed ----
         # ### bigD13C
-        # ggplot(traits_mod_obs_bigD13C, aes(bigD13C_mod__, bigD13C_obs__)) +
+        # ggplot(traits_mod_obs_bigD13C, aes(bigD13C_mod_permil, bigD13C_obs_permil)) +
         #   geom_point() +
         #   geom_abline(slope = 1, intercept = 0, linetype = "dotted") #+
         # # labs(
@@ -114,13 +120,25 @@ bigD13C_vj_gpp_obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun
 
 ## Preprocess observation data (gpp)
 
+# some observations of gpp are negative TODO: filter them out
+## for training sites
+bigD13C_vj_gpp_obs |> filter(sitename %in% sites_train$sitename) |>
+  filter(run_model == "daily") |> unnest(data) |>
+  ggplot(aes(x=gpp, color = sitename)) + geom_density()# + facet_wrap(~sitename)
+## for testing sites
+bigD13C_vj_gpp_obs |> filter(sitename %in% sites_test$sitename) |>
+  filter(run_model == "daily") |> unnest(data) |>
+  ggplot(aes(x=gpp, color = sitename)) + geom_density()# + facet_wrap(~sitename)
+
 # some observations of gpp are NA, filter them out:
+# some observations of gpp are negative, filter those below -2 out
 # TODO: document this
 bigD13C_vj_gpp_obs <- bind_rows(
   # filter out NAs in gpp observations
   bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
     unnest(data) |>
     filter(!is.na(gpp)) |>
+    filter(gpp > -2) |>
     nest(data = -c(sitename, run_model, targets)),
   # do not filter out anything from the other observations
   bigD13C_vj_gpp_obs |> filter(run_model != "daily")
@@ -149,12 +167,19 @@ bigD13C_vj_gpp_drivers |>
 
 
 
+## Apply test-train split to data ----
+train_drivers <- bigD13C_vj_gpp_drivers2 |> filter(sitename %in% sites_train$sitename)
+train_obs     <- bigD13C_vj_gpp_obs     |> filter(sitename %in% sites_train$sitename)
+
+test_drivers <- bigD13C_vj_gpp_drivers2 |> filter(sitename %in% sites_test$sitename)
+test_obs     <- bigD13C_vj_gpp_obs     |> filter(sitename %in% sites_test$sitename)
+
+
 
 
 
 ## Compute loglikelihood ----
 source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
-
 ## Calibrate parameters ----
 
 # Define calibration settings for three targets
@@ -177,8 +202,8 @@ settings_joint_likelihood_bigD13C_vj_gpp <- list(
 
 # Run the calibration on all data:
 par_calib_join_bigD13C_vj_gpp <- calib_sofun(
-  drivers  = bigD13C_vj_gpp_drivers2,
-  obs      = bigD13C_vj_gpp_obs,
+  drivers  = train_drivers,
+  obs      = train_obs,
   settings = settings_joint_likelihood_bigD13C_vj_gpp,
   # arguments for the cost function
   par_fixed = list(         # fix parameter value from previous calibration
@@ -203,8 +228,8 @@ par_calib_join_bigD13C_vj_gpp <- calib_sofun(
 # for easier handling do this in combined drivobs-object
 drivobs_bigD13C_vj_gpp <- dplyr::inner_join(
   # TODO: check if combined drivobs is computationally more efficient for calib_sofun()
-  bigD13C_vj_gpp_drivers2,
-  bigD13C_vj_gpp_obs,
+  train_drivers,
+  train_obs,
   by = join_by(sitename, run_model))
 
 # case 1: no gpp provided, only bigD13C,vj
@@ -466,8 +491,8 @@ create_settings_and_par_fixed <- function(par, burnin=1, iterations=5){
 # subset different combination of target variables
 # for easier handling do this in combined drivobs-object
 drivobs_bigD13C_vj_gpp <- dplyr::inner_join(
-  bigD13C_vj_gpp_drivers2,
-  bigD13C_vj_gpp_obs,
+  train_drivers,
+  train_obs,
   by = join_by(sitename, run_model))
 
 # TODO: check if passing combined drivobs is computationally more efficient for calib_sofun()

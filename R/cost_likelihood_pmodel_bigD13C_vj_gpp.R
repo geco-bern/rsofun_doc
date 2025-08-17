@@ -119,7 +119,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
       jmax25_mod_molm2s        = numeric(),
       gs_accl_mod_molCmolPhPa  = numeric(),
       wscal_mod__              = numeric(),
-      bigD13C_mod__                = numeric(),
+      bigD13C_mod_permil                = numeric(),
       iwue_mod__               = numeric(),
       rd_mod_gCm2s             = numeric(),
       vj_mod__                 = numeric())
@@ -140,7 +140,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
              vcmax25_mod_molm2s = vcmax25,
              jmax25_mod_molm2s  = jmax25,
              gs_accl_mod_molCmolPhPa = gs_accl,
-             bigD13C_mod__      = bigdelta,
+             bigD13C_mod_permil      = bigdelta,
              iwue_mod__         = iwue,
              rd_mod_gCm2s       = rd) |>
       mutate(vj_mod__ = vcmax_mod_molm2s/jmax_mod_molm2s)
@@ -191,7 +191,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     # join the modelled data
     left_join(
       df_onestep |>
-        select(sitename, vcmax_mod_molm2s, jmax_mod_molm2s, bigD13C_mod__, vj_mod__),
+        select(sitename, vcmax_mod_molm2s, jmax_mod_molm2s, bigD13C_mod_permil, vj_mod__),
       by = join_by(sitename)) |>
     # nest again
     nest(modobs = -c(sitename, run_model, targets))
@@ -215,11 +215,11 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     df_mod_obs_onestep |>
       unnest(modobs) |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(bigD13C = list(), bigD13C_mod__ = numeric())) |>
+      ensure_cols_defined(tibble(bigD13C = list(), bigD13C_mod_permil = numeric())) |>
       unnest(bigD13C) |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(bigD13C_obs__ = numeric())) |>
-      rename(all_of(c(mod = "bigD13C_mod__", obs = "bigD13C_obs__"))) |>
+      ensure_cols_defined(tibble(bigD13C_obs_permil = numeric())) |>
+      rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
       mutate(target  = "bigD13C",#curr_target,
              err_par = par[["err_bigD13C"]]) |> #par[[paste0("err_,"curr_target]]) |>
       select(sitename, run_model, target, mod, obs, err_par),
@@ -245,8 +245,8 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   # df_mod_obs_daily   |> unnest(modobs) |> filter(is.na(gpp))                       # OK
   # df_mod_obs_onestep |> unnest(modobs) |> unnest(vj) |> filter(is.na(vj_mod__))    # OK
   # df_mod_obs_onestep |> unnest(modobs) |> unnest(vj) |> filter(is.na(vj_obs__))    # OK
-  # df_mod_obs_onestep |> unnest(modobs) |> unnest(bigD13C) |> filter(is.na(bigD13C_mod__))  # OK
-  # df_mod_obs_onestep |> unnest(modobs) |> unnest(bigD13C) |> filter(is.na(bigD13C_obs__))  # OK
+  # df_mod_obs_onestep |> unnest(modobs) |> unnest(bigD13C) |> filter(is.na(bigD13C_mod_permil))  # OK
+  # df_mod_obs_onestep |> unnest(modobs) |> unnest(bigD13C) |> filter(is.na(bigD13C_obs_permil))  # OK
 
   # D) Compute likelihood ----
 
