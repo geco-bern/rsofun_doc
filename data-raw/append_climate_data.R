@@ -504,7 +504,7 @@ p6 <- plot_hist("co2_ppm", "CO2 (ppm)")
 p7 <- plot_hist("elv_masl", "Elevation (masl)")
 p8 <- plot_hist("patm_Pa", "Atmospheric. pressure (Pa)")
 
-p9  <- ggplot(unnest(df_trait_targets, c("bigD13C")), aes(x=bigD13C_obs__)) + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed bigD13C = Ci/Ca")
+p9  <- ggplot(unnest(df_trait_targets, c("bigD13C")), aes(x=bigD13C_obs_permil)) + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed bigD13C = Ci/Ca")
 p10 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vj_obs__))  + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed VJ = VCmax/Jmax")
 p11 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vcmax_obs_molm2s*10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed VCmax (umol/m2/s)")
 p12 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=jmax_obs_molm2s *10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed Jmax (umol/m2/s)")

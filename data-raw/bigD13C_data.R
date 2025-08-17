@@ -7,6 +7,7 @@
 #
 # These two objects are stored as *.rds files in subfolder data/
 
+library(lubridate)
 library(tidyverse)
 library(rgeco)   # pak::pkg_install("https://github.com/geco-bern/rgeco")
 library(leaf13C) # pak::pkg_install("traitecoevo/datastorr")
@@ -25,6 +26,13 @@ df_bigD13C <- df_bigD13C_allobs |>
   # dropping observations that are missing either of the targets
   drop_na(bigD13C)
 
+# Exploratory plots of data
+ggplot(df_bigD13C,
+       aes(x=bigD13C, color = ps.type)) + geom_histogram() +
+  theme_bw()
+rgeco:::plot_map_simpl() +
+  geom_point(data = df_bigD13C, aes(longitude, latitude, color = ps.type))
+
 
 # aggregate model inputs and model targets
 #   inputs:  by site only         (reducing number of simulations)
@@ -33,7 +41,7 @@ df_bigD13C <- df_bigD13C_allobs |>
 #   For the GMD paper, not aggregating across species requires to specify
 #   likelihood as a function of mismatch wrt all species individually for a given site.
 df_bigD13C_forcing <- df_bigD13C |>
-  group_by(sitename) |>
+  group_by(sitename, ps.type) |>
   summarise(.groups = "keep",
             lon = mean(longitude),
             lat = mean(latitude),
@@ -45,45 +53,45 @@ df_bigD13C_forcing <- df_bigD13C |>
             co2_ppm      = NA_real_, #mean(ca)              # ppm
             Nobs   = NA_integer_,
             Nyears = NA_integer_,
-            Ndates = NA_integer_
+            Ndates = NA_integer_,
+            ps.type = unique(ps.type)
             )  |>
   mutate(
     patm_Pa = rpmodel::calc_patm(elv_masl)
   )
 df_bigD13C_target <- df_bigD13C |>
   mutate(collection.date = lubridate::make_date(collection.year, collection.month)) |>
-  group_by(sitename, species) |>
+  group_by(sitename, species, ps.type) |>
   summarise(
     .groups = "keep",
     lon = mean(longitude),
     lat = mean(latitude),
     year   = mean(collection.year),
-    bigD13C_obs__ = mean(bigD13C), # unitless
+    bigD13C_obs_permil = mean(bigD13C), # unitless
     Nobs = n(),
     Nyears = length(unique(collection.year)),
     Ndates = length(unique(collection.date)),
+    ps.type = unique(ps.type),
   )
 
-df_bigD13C_target |>
-  ggplot(aes(x = bigD13C_obs__)) +
-  geom_histogram(bins = 15)
+ggplot(df_bigD13C_target,
+       aes(x=bigD13C_obs_permil, color = ps.type)) + geom_histogram() +
+  theme_bw()
 
 rgeco:::plot_map_simpl() +
-  geom_point(data = df_bigD13C_forcing, aes(lon, lat))
+  geom_point(data = df_bigD13C_forcing, aes(lon, lat, color = ps.type))
 # df_bigD13C_target |> filter(Nobs>1)
 # df_bigD13C_target |> filter(Nyears>1) |> print(n=100)
 # df_bigD13C_target |> filter(Ndates>1) |> print(n=100)
+
+# Filter out non-C3 plants:
+df_bigD13C_forcing <- df_bigD13C_forcing |> filter(ps.type == "C3") |> ungroup(ps.type) |> select(-ps.type)
+df_bigD13C_target  <- df_bigD13C_target  |> filter(ps.type == "C3") |> ungroup(ps.type) |> select(-ps.type)
 
 write_rds(df_bigD13C_forcing, here::here("data/00_bigD13C_forcing.rds"))
 write_rds(df_bigD13C_target, here::here("data/00_bigD13C_target.rds"))
 rm(df_bigD13C)
 rm(df_bigD13C_allobs)
-
-
-
-
-
-
 
 
 # TODO: below is just a test.
@@ -164,7 +172,7 @@ df_bigD13C_modeled <- df_bigD13C_forcing_dummy |>
            vcmax25_mod_molm2s = vcmax25,
            jmax25_mod_molm2s  = jmax25,
            gs_accl_mod_molCmolPhPa = gs_accl, # mol C (mol photons)\eqn{^{-1}} Pa\eqn{^{-1}
-           bigD13C_mod__      = bigdelta,
+           bigD13C_mod_permil      = bigdelta,
            iwue_mod__         = iwue,
            rd_mod_gCm2s       = rd)
   # transform to same units as targets:
@@ -178,7 +186,7 @@ df_bigD13C_with_outputs <- dplyr::inner_join(df_bigD13C_modeled, df_bigD13C_targ
 
 # Vcmax
 df_bigD13C_with_outputs |>
-  ggplot(aes(bigD13C_mod__, bigD13C_obs__)) +
+  ggplot(aes(bigD13C_mod_permil, bigD13C_obs_permil)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") #+
   # labs(
