@@ -17,6 +17,7 @@ library(purrr)
 # pak::pkg_install("geco-bern/ingestr")
 library(ingestr)
 library(terra)
+library(patchwork)
 
 
 # Load data --------------------------------------------------------------------
@@ -224,9 +225,171 @@ df_worldclim_raw <- ingest(
 # df_worldclim_raw |> unnest(c(data)) |>
 #   filter(if_any(everything(), is.na)) |>
 #   slice(1)
-df_worldclim <- df_worldclim_raw |> unnest(c(data)) |>
+df_worldclim_monthly <- df_worldclim_raw |>
+  unnest(c(data)) |>
   filter(!if_any(everything(), is.na)) |>
-  nest(data = -c(sitename))
+  nest(data = -c(sitename)) |>
+  ungroup()
+
+# Temporally disaggregate/downscale monthly climate to daily climate values  ------------------------
+# COPYING/ADAPTING FUNCTIONS FROM INGESTR:
+
+# Interpolates monthly data to daily data using polynomials or linear
+# for a single year
+expand_clim_worldclim_monthly <- function( mdf, worldclim_vars ){
+  # define variables
+  sitename <- year <- NULL
+
+  ddf <- mdf |>
+    # apply it separately for each site and each year
+    group_split(sitename, year) |>
+    purrr::map(\(df) expand_clim_worldclim_monthly_byyr(first(df$year), df, worldclim_vars) |>
+                 mutate('sitename' = first(df$sitename)) #ensure to keep sitename
+    ) |>
+    bind_rows()
+
+  return( ddf )
+
+}
+# Interpolates monthly data to daily data using polynomials or linear
+# for a single year
+expand_clim_worldclim_monthly_byyr <- function( yr, mdf, worldclim_vars ){
+  mdf <- mdf |> rename( # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    vapr = vapr_kPa,    # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    srad = srad_kJm2d,  # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tavg = tavg_degC,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmin = tmin_degC,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmax = tmax_degC)   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+
+  # define variables
+  year <- ccov_int <- NULL
+  nmonth <- 12
+
+  startyr <- mdf$year %>% first()
+  endyr   <- mdf$year %>% last()
+
+  yr_pvy <- max(startyr, yr-1)
+  yr_nxt <- min(endyr, yr+1)
+
+  # add first and last year to head and tail of 'mdf'
+  first <- mdf[1:12,] %>% mutate( year = year - 1)
+  last  <- mdf[(nrow(mdf)-11):nrow(mdf),] %>% mutate( year = year + 1 )
+
+  ddf <- ingestr:::init_dates_dataframe( yr, yr )
+
+
+  # air temperature: interpolate using polynomial
+  polynomial_interpolate <- function(mdf, yr, yr_pvy, yr_nxt, var = "tavg"){
+    mval     <- dplyr::filter( mdf, year==yr     )[[var]]
+    mval_pvy <- dplyr::filter( mdf, year==yr_pvy )[[var]]
+    mval_nxt <- dplyr::filter( mdf, year==yr_nxt )[[var]]
+    if (length(mval_pvy)==0){mval_pvy <- mval}
+    if (length(mval_nxt)==0){mval_nxt <- mval}
+
+    return(
+      init_dates_dataframe( yr, yr ) %>%
+        mutate(
+          "{var}" := ingestr:::monthly2daily( mval, "polynom", mval_pvy[nmonth], mval_nxt[1], leapyear = lubridate::leap_year(yr) ) )
+    )
+  }
+  if ("tavg" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "tavg") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # daily minimum and maximum air temperature: interpolate using polynomial
+  if ("tmin" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "tmin") %>%
+      right_join( ddf, by = c("date") )
+  }
+  if ("tmax" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "tmax") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # cloud cover: interpolate using polynomial
+  if ("ccov" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "ccov") %>%
+      rename(ccov_int = ccov) %>%
+      # Reduce CCOV to a maximum 100%
+      mutate( ccov = ifelse( ccov_int > 100, 100, ccov_int ) ) %>%
+      right_join( ddf, by = c("date") ) %>%
+      select(-ccov_int)
+  }
+
+  # solar radiation: interpolate using polynomial
+  if ("srad" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "srad") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # VPD: interpolate vapor pressure 'vapr' using polynomial
+  if ("vapr" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "vapr") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # precipitation: interpolate using weather generator
+
+  if ("prec" %in% worldclim_vars){
+    mprec <- dplyr::filter( mdf, year==yr )$prec
+    mwetd <- dplyr::filter( mdf, year==yr )$wetd
+
+    if (any(!is.na(mprec))&&any(!is.na(mwetd))){
+      ddf <-  init_dates_dataframe( yr, yr ) %>%
+        mutate( prec = get_daily_prec( mprec, mwetd, leapyear = lubridate::leap_year(yr) ) ) %>%
+        right_join( ddf, by = c("date") )
+    }
+  }
+
+  ddf <- ddf |> rename(  # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    vapr_kPa   = vapr,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    srad_kJm2d = srad,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tavg_degC  = tavg,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmin_degC  = tmin,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmax_degC  = tmax)   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+
+  return( ddf )
+
+}
+
+mdf <- df_worldclim_monthly |>
+  # slice_sample(n=10) |> # for development
+  unnest(data) |>
+  mutate(date = make_date(month = month, day = 1)) |>
+  mutate(year = year(date)) |>
+  group_by(sitename) |>
+  ungroup()
+
+# worldclim_vars <- c("tavg_degC", "tmin_degC", "tmax_degC", "vapr_kPa", "srad_kJm2d")
+worldclim_vars <- c("tavg", "tmin", "tmax", "vapr", "srad")
+df_worldclim <- 
+  expand_clim_worldclim_monthly( mdf, worldclim_vars ) |>
+    group_by(sitename) |>
+    select(sitename, date, tavg_degC, tmin_degC, tmax_degC, vapr_kPa, srad_kJm2d) |>
+    nest(data = -c(sitename))
+
+# Illustrate temporal disaggregation of monthly climate values
+df_for_plot_monthly <- df_worldclim_monthly |> slice_sample(n=10) |> unnest(data) |> mutate(date = make_date(month = month, day = 1))
+df_for_plot_daily   <- df_worldclim |> unnest(data) |> filter(sitename %in% df_for_plot_monthly$sitename)
+
+pl_disaggregation <- ggplot(df_for_plot_monthly, aes(x = date, y = tavg_degC, group = sitename)) + # color = sitename
+  scale_x_date(date_breaks = "month", date_labels = "%b, %dst") +
+  # monthly data:
+  geom_step(direction = "hv") + # since we put the monthly avg at the first of each month
+  # daily data:
+  geom_line(data = df_for_plot_daily, color = "red")
+pl_disagg <-
+  ( # first row
+    (pl_disaggregation + aes(y=tavg_degC)) +
+      (pl_disaggregation + aes(y=tmin_degC)) +
+      (pl_disaggregation + aes(y=tmax_degC))
+  )/( # second row
+    (pl_disaggregation + aes(y=vapr_kPa))
+  )/( # third row
+      (pl_disaggregation + aes(y=srad_kJm2d))
+  )
+ggsave(here::here("fig/00_fig_A_append_climate_disaggregate.png"), pl_disagg, width=7.2, height=7.2, units="in")
 
 
 # Derive single values of co2, patm, ppfd, tgrowth, vpd (representing average growing conditions) ------------------------
@@ -318,7 +481,8 @@ df_worldclim2 <- df_worldclim |>
     # tgrowth:
     # (i.e. average temperature during daytime, considering daylength, assuming sinusoidal temp profile):
     # eq.5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
-    doy             = lubridate::make_date(1970, month, 15) |> lubridate::yday(),
+    # doy             = lubridate::make_date(1970, month, 15) |> lubridate::yday(),
+    doy             = lubridate::yday(date),
     # tgrowth_degC    = ingestr::calc_tgrowth(tmin_degC,tmax_degC,lat=lat,doy=doy),
     tgrowth_degC   = myingestr_calc_tgrowth(tmin_degC,tmax_degC,lat=lat,doy=doy),
 
@@ -333,16 +497,16 @@ df_worldclim2 <- df_worldclim |>
 stopifnot(0 == nrow(df_worldclim2 |> filter(is.na(tgrowth_degC)))) # assert tgrowth_degC correctly computed
 
 # df_worldclim2 |> filter(is.na(tgrowth_degC))  |> group_by(sitename) |> slice(1)   # 0 sites have NA in tgrowth
-# df_worldclim2 |> filter(!is.na(tgrowth_degC)) |> group_by(sitename) |> slice(1)   # 585 sites have at least 1 non-NA tgrowth
+# df_worldclim2 |> filter(!is.na(tgrowth_degC)) |> group_by(sitename) |> slice(1)   # 571 sites have at least 1 non-NA tgrowth
 
 # temp:
-# - growing season: mean across months for which monthly tmean > 0 deg C
+# - growing season: mean across days for which disaggregated daily tmean > 0 deg C
 # - daytime temperature: derived as a function of tmin and tmax, see equation 5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
 
 # vpd:
 # - vpd abgeleitet aus vapour pressure (Worldclim), gemäss code in ingestr für watch-wfdei
 # - (vpd(tmin) + vpd(tmax))/2
-# - average only over months with tmean > 0
+# - average only over days with tavg > 0
 
 # ppfd:
 #   - aus solar radiation, multiplikation mit faktor (2....) gemäss anderen datenprodukten in ingestr
@@ -353,9 +517,12 @@ df_worldclim_agg <-
   # compute means across growing season (i.e. across months for which monthly tmean > 0 deg C)
   filter(growing_season) |>
   summarise(
-    growing_season_months = paste0(month,collapse = ","),
-    growing_season_length = length(month),
-    # growing_season_length2= n(), # NOTE: this was for double checking
+    # with monthly data:
+    # growing_season_months = paste0(month,collapse = ","),
+    # growing_season_length = length(month),
+    # with daily data:
+    # growing_season_doys = paste0(doy,collapse = ","),
+    growing_season_length = length(doy),
 
     temp = mean(tgrowth_degC),
 
@@ -431,7 +598,7 @@ df_trait_forcing_filled <-
   dplyr::full_join(df_etopo_agg |> nest(patm = c(elv_masl, patm_Pa)) |> filter(!(sitename %in% sites_to_remove)),
                     df_co2_agg  |> nest(co2  = c(co2_ppm))           |> filter(!(sitename %in% sites_to_remove)),
                     by = join_by(sitename)) |>
-  dplyr::full_join(df_worldclim_agg |> nest(clim = c(growing_season_months,growing_season_length,temp,vpd,ppfd)),
+  dplyr::full_join(df_worldclim_agg |> nest(clim = c(growing_season_length,temp,vpd,ppfd)),
                     by = join_by(sitename)) |>
   # re-append lon, lat
   dplyr::left_join(siteinfo, by = join_by(sitename)) |>
@@ -466,7 +633,7 @@ pl_grow_season <- rgeco:::plot_map_simpl() +
   geom_point(
     data    = unnest(df_trait_forcing_filled, clim),
     mapping = aes(lon, lat, color = growing_season_length)) +
-  labs(color = "Length of\ngrowing\nseason\n(months)")
+  labs(color = "Length of\ngrowing\nseason\n(days)")
 pl_grow_season
 ggsave(here::here("fig/fig_01_append_climate.png"), pl_grow_season, width=7.2, height=3.6, units="in")
 
@@ -479,8 +646,7 @@ plot_clim <- function(colname_to_plot, label = NULL){
       data    = unnest(df_trait_forcing_filled, clim),
       mapping = aes(lon, lat, color = .data[[colname_to_plot]]))
 }
-library(patchwork)
-p1 <- plot_clim("growing_season_length", "Length of\ngrowing\nseason\n(months)")
+p1 <- plot_clim("growing_season_length", "Length of\ngrowing\nseason\n(days)")
 p2 <- plot_clim("ppfd", "PPFD\n(mol/m2/s)")
 p3 <- plot_clim("temp", "Mean\ngrowth\ntemp\n(deg C)")
 p4 <- plot_clim("vpd",  "VPD\nmean(\n  f(Tmin),\n  f(Tmax)\n)\n(Pa)")
@@ -495,7 +661,7 @@ plot_hist <- function(colname_to_plot, label = NULL){
     {if(!is.null(label)) labs(x = label) } +
     geom_histogram(bins = 30) + theme_bw()
 }
-p1 <- plot_hist("growing_season_length", "Length of growing season (months)")
+p1 <- plot_hist("growing_season_length", "Length of growing season (days)")
 p2 <- plot_hist("ppfd", "PPFD (mol/m2/s)")
 p3 <- plot_hist("temp", "Mean growth temp (deg C)")
 p4 <- plot_hist("vpd",  "VPD=mean(f(Tmin),f(Tmax)), (Pa)")

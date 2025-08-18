@@ -195,9 +195,9 @@ settings_joint_likelihood_bigD13C_vj_gpp <- list(
   par = list(kc_jmax = list(lower = 0.2,  upper = 0.6, init = 0.41),  # uniform priors
              # TODO: add further parameters
              # TODO: error parameters must come last
-             err_gpp = list(lower = 0.001, upper = 0.6, init = 0.3),
+             err_gpp     = list(lower = 0.001, upper = 0.6, init = 0.3),
              err_bigD13C = list(lower = 0.001, upper = 0.6, init = 0.3),
-             err_vj  = list(lower = 0.001, upper = 0.6, init = 0.3))
+             err_vj      = list(lower = 0.001, upper = 0.6, init = 0.3))
 )
 
 # Run the calibration on all data:
