@@ -363,7 +363,7 @@ mdf <- df_worldclim_monthly |>
 
 # worldclim_vars <- c("tavg_degC", "tmin_degC", "tmax_degC", "vapr_kPa", "srad_kJm2d")
 worldclim_vars <- c("tavg", "tmin", "tmax", "vapr", "srad")
-df_worldclim <- 
+df_worldclim <-
   expand_clim_worldclim_monthly( mdf, worldclim_vars ) |>
     group_by(sitename) |>
     select(sitename, date, tavg_degC, tmin_degC, tmax_degC, vapr_kPa, srad_kJm2d) |>
@@ -791,9 +791,9 @@ bigD13C_vj_obs <- bigD13C_vj_targets |>
   rowwise() |> mutate(
     run_model   = "onestep",
     targets = list(list(
-      vj  = is.null(vj),
-      bigD13C = is.null(bigD13C),
-      gpp = FALSE
+      vj      = !is.null(vj),
+      bigD13C = !is.null(bigD13C),
+      gpp     = FALSE
     ))
   ) |>
   ## 2) nest data
@@ -815,9 +815,9 @@ gpp_obs <- gpp_forcingtarget |>
   nest(data = -c(sitename)) |>
   mutate(run_model = "daily", # either "onestep" or "daily"
          targets = list(list(
-           vj  = FALSE,
+           vj      = FALSE,
            bigD13C = FALSE,
-           gpp = TRUE
+           gpp     = TRUE
          ))) |>
   # order
   select(sitename, run_model, targets, data)

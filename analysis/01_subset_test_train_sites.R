@@ -99,7 +99,7 @@ vjbigD13C_train <- vjbigD13C_strata |>
 # determine test sites
 vjbigD13C_test <- vjbigD13C_strata |>
   filter(strata %in% unique(vjbigD13C_train$strata)) |> # ensure test is in same strata as train
-  filter(!(sitename %in% vjbigD13C_test$sitename))      # simply remove the 50% from train, no need to slice_sample again
+  filter(!(sitename %in% vjbigD13C_train$sitename))     # simply remove the 50% from train, no need to slice_sample again
   # slice_sample(prop=0.5, by = c(strata, targets_vj, targets_bigD13C))
 
 vjbigD13C_strata |> group_by(targets_vj, targets_bigD13C) |> summarise(n())
