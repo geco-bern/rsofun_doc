@@ -96,6 +96,15 @@ set.seed(1982)
 vjbigD13C_train <- vjbigD13C_strata |>
   slice_sample(prop=0.5, by = c(strata, targets_vj, targets_bigD13C))
 
+# ensure the three sites with combined d13C and VJ data are in training set
+vjbigD13C_train <-
+  bind_rows(
+    vjbigD13C_train,
+    vjbigD13C_strata |> filter(targets_vj & targets_bigD13C) # i.e. lon_+151.14_lat_-033.69, lon_-079.10_lat_+035.97 and lon_-083.81_lat_+042.27
+  ) |>
+  distinct()
+
+
 # determine test sites
 vjbigD13C_test <- vjbigD13C_strata |>
   filter(strata %in% unique(vjbigD13C_train$strata)) |> # ensure test is in same strata as train

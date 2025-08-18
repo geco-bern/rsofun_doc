@@ -220,6 +220,9 @@ lon_-003.06_lat_+055.90,onestep,TRUE,FALSE,FALSE,train
 lon_-071.58_lat_-013.12,onestep,TRUE,FALSE,FALSE,train
 lon_-085.40_lat_+042.41,onestep,TRUE,FALSE,FALSE,train
 lon_-085.52_lat_+039.03,onestep,TRUE,FALSE,FALSE,train
+lon_+151.14_lat_-033.69,onestep,TRUE,TRUE,FALSE,train
+lon_-079.10_lat_+035.97,onestep,TRUE,TRUE,FALSE,train
+lon_-083.81_lat_+042.27,onestep,TRUE,TRUE,FALSE,train
 lon_+004.78_lat_+052.48,onestep,FALSE,TRUE,FALSE,test
 lon_+007.52_lat_+047.47,onestep,FALSE,TRUE,FALSE,test
 lon_+008.33_lat_+047.50,onestep,FALSE,TRUE,FALSE,test
