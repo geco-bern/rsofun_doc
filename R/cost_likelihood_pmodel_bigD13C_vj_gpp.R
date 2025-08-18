@@ -249,20 +249,48 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   # df_mod_obs_onestep |> unnest(modobs) |> unnest(bigD13C) |> filter(is.na(bigD13C_obs_permil))  # OK
 
   # D) Compute likelihood ----
+  ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,         sd    = sd, log = TRUE)} # TODO: err_par must be positive
+  ll_normal2   <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,         sd    = sd, log = TRUE)} # TODO: err_par must be positive
+  ll_lognormal <- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = log(mod), sdlog = sd, log = TRUE)} # TODO: err_par must be positive
+  # ll_userdefined <- function(obs,mod,err_par1, err_par2, err_par3){}
 
   # compute ll
-  df_ll <- df_mod_obs |>
-    filter(!is.na(obs)) |>
-    mutate(ll = stats::dnorm( # compute loglikelihood
-      x    = obs - mod,
-      mean = 0,
-      sd   = err_par,
-      log  = TRUE
-    )) |>
+  df_ll <- df_mod_obs |> group_by(target, err_par) |>
+    # compute loglikelihoods
+    # rowwise() |> # not needed and slowing things down
+    mutate(ll = case_when(
+      target == "gpp"     ~ ll_normal(obs,mod,err_par),
+      target == "bigD13C" ~ ll_normal(obs,mod,err_par),
+      target == "vj"      ~ ll_lognormal(obs,mod,err_par))) |>
     select(sitename, run_model, target, mod, obs, err_par, ll)
 
-  # df_ll
   ll <- sum(df_ll$ll)
+
+  # # illustrate the loglikelihoods across the modobs space:
+  # library(ggplot2)
+  # library(patchwork)
+  # library(geomtextpath)
+  # ll_plots <- df_mod_obs |> group_by(target, err_par) |>
+  #   # sample the mod_obs_space
+  #   reframe(expand.grid(
+  #     mod = seq(min(mod)/5, max(mod)*5, length = 200),
+  #     obs = seq(min(obs)/5, max(obs)*5, length = 200))
+  #   ) |>
+  #   # compute loglikelihoods
+  #   mutate(ll = case_when(
+  #     target == "gpp"     ~ ll_normal(obs,mod,err_par),
+  #     target == "bigD13C" ~ ll_normal(obs,mod,err_par),
+  #     target == "vj"      ~ ll_lognormal(obs,mod,err_par))) |>
+  #   # plot
+  #   group_split(target) |>
+  #   lapply(\(df){
+  #     ggplot(df, aes(x=mod, y=obs, z = ll)) +
+  #       facet_wrap(~target, scales = "free") +
+  #       geom_abline() +
+  #       geomtextpath::geom_textcontour(color = 'darkgreen')
+  #   })
+  # ll_plots[[1]]+ll_plots[[2]]+ll_plots[[3]]
+
 
   # trap boundary conditions
   if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
