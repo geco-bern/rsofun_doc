@@ -77,7 +77,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     drivers,
     par_fixed = NULL,   # non-calibrated model parameters
     parallel  = FALSE,
-    ncores    = 2
+    ncores    = 1
 ){
 
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
@@ -96,7 +96,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     runread_pmodel_f(
       drivers   = _,
       par       = params_modl,
-      makecheck = FALSE,        # TODO: disable check
+      makecheck = FALSE,
       parallel  = parallel,
       ncores    = ncores
     )
@@ -145,8 +145,6 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
              rd_mod_gCm2s       = rd) |>
       mutate(vj_mod__ = vcmax_mod_molm2s/jmax_mod_molm2s)
   }
-
-
 
   # C) Bring together modelled and observed ----
 
@@ -237,7 +235,13 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
       select(sitename, run_model, target, mod, obs, err_par)
   )
   stopifnot(all(targets %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
-
+  # browser()
+  # df_mod_obs_onestep |> unnest_wider(targets, names_sep = "_") |> filter(targets_vj & targets_bigD13C)
+  # df_mod_obs_onestep |> unnest_wider(targets, names_sep = "_") |> filter(targets_vj & targets_bigD13C) |>
+  #   unnest(modobs) |>
+  #   unnest(bigD13C)
+  # df_mod_obs |> filter(sitename %in% c("lon_+151.14_lat_-033.69", "lon_-079.10_lat_+035.97", "lon_-083.81_lat_+042.27")) |> arrange(sitename)
+  # df_ll |> filter(sitename %in% c("lon_+151.14_lat_-033.69", "lon_-079.10_lat_+035.97", "lon_-083.81_lat_+042.27")) |> arrange(sitename)
   # NOTE: below was used to solve issue with NA in modeled or observed values
   # df_mod_obs |> filter(is.na(obs)) # OK
   # df_mod_obs |> filter(is.na(mod)) # OK
@@ -249,9 +253,10 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   # df_mod_obs_onestep |> unnest(modobs) |> unnest(bigD13C) |> filter(is.na(bigD13C_obs_permil))  # OK
 
   # D) Compute likelihood ----
-  ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,         sd    = sd, log = TRUE)} # TODO: err_par must be positive
-  ll_normal2   <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,         sd    = sd, log = TRUE)} # TODO: err_par must be positive
-  ll_lognormal <- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = log(mod), sdlog = sd, log = TRUE)} # TODO: err_par must be positive
+  ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par must be positive
+  ll_lognormal <- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = mod,             sdlog = sd, log = TRUE)} # TODO: err_par must be positive
+  ll_lognormal2<- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = log(mod) + sd^2, sdlog = sd, log = TRUE)}
+  ll_proportional<-function(obs,mod,sd){stats::dnorm(x=obs, mean = mod,                sd = abs(mod)*sd, log = TRUE)} # proportional: https://docs.pumas.ai/stable/model_components/error_models/
   # ll_userdefined <- function(obs,mod,err_par1, err_par2, err_par3){}
 
   # compute ll
@@ -261,12 +266,16 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     mutate(ll = case_when(
       target == "gpp"     ~ ll_normal(obs,mod,err_par),
       target == "bigD13C" ~ ll_normal(obs,mod,err_par),
-      target == "vj"      ~ ll_lognormal(obs,mod,err_par))) |>
+      # target == "vj"      ~ ll_lognormal2(obs,mod,err_par)
+      # target == "vj"      ~ ll_proportional(obs,mod,err_par)
+      target == "vj"      ~ ll_normal(obs,mod,err_par)
+    )) |>
     select(sitename, run_model, target, mod, obs, err_par, ll)
 
   ll <- sum(df_ll$ll)
 
   # # illustrate the loglikelihoods across the modobs space:
+  # browser()
   # library(ggplot2)
   # library(patchwork)
   # library(geomtextpath)
@@ -280,16 +289,73 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   #   mutate(ll = case_when(
   #     target == "gpp"     ~ ll_normal(obs,mod,err_par),
   #     target == "bigD13C" ~ ll_normal(obs,mod,err_par),
-  #     target == "vj"      ~ ll_lognormal(obs,mod,err_par))) |>
+  #     # target == "vj"      ~ ll_lognormal2(obs,mod,err_par)
+  #     # target == "vj"      ~ ll_proportional(obs,mod,err_par)
+  #     target == "vj"      ~ ll_normal(obs,mod,err_par)
+  #   )) |>
   #   # plot
   #   group_split(target) |>
   #   lapply(\(df){
   #     ggplot(df, aes(x=mod, y=obs, z = ll)) +
   #       facet_wrap(~target, scales = "free") +
-  #       geom_abline() +
-  #       geomtextpath::geom_textcontour(color = 'darkgreen')
+  #       geom_raster(aes(fill=ll)) +
+  #       geomtextpath::geom_textcontour(color = 'darkgreen') +
+  #       geom_abline()
   #   })
   # ll_plots[[1]]+ll_plots[[2]]+ll_plots[[3]]
+
+  # df_mod_obs |> group_by(target, err_par) |>
+  #   # sample the mod_obs_space
+  #   reframe(expand.grid(
+  #     mod = seq(min(mod)/5, max(mod), length = 200),
+  #     obs = seq(min(obs)/5, max(obs), length = 200))
+  #   ) |>
+  #   # compute loglikelihoods
+  #   mutate(ll = case_when(
+  #     target == "gpp"     ~ ll_normal(obs,mod,err_par),
+  #     target == "bigD13C" ~ ll_normal(obs,mod,err_par),
+  #     # target == "vj"      ~ ll_lognormal2(obs,mod,err_par)
+  #     # target == "vj"      ~ ll_proportional(obs,mod,err_par)
+  #     target == "vj"      ~ ll_normal(obs,mod,err_par)
+  #   )) |>
+  #   mutate(likelihood = exp(ll)) |>
+  #   filter(target == "vj") |>
+  #   group_by(target, mod) |> mutate(maxL = max(likelihood)) |> ungroup() |>
+  #   # PLOT VARIANT 1: obs on x-axis for a few model output values
+  #   nest(data = -mod) |> slice_sample(n = 5) |> unnest(data) |>
+  #   # PLOT VARIANT 1a: absolute likelihood
+  #   ggplot(aes(x=obs, y=likelihood, color=factor(mod))) +
+  #   # PLOT VARIANT 1b: normalized
+  #   # ggplot(aes(x=obs, y=likelihood/maxL, color=factor(mod))) +
+  #   geom_point() +
+  #   # mark the mode:
+  #   geom_point(data = \(df){df |> group_by(target, mod) |> filter(likelihood == max(likelihood))}, color = "black") +
+  #   # mark the model output:
+  #   geom_vline(aes(xintercept = mod))
+  #   # # PLOT VARIANT 2a: mod vs obs
+  #   # ggplot(aes(x=mod, y=obs, z = likelihood, fill=likelihood)) +
+  #   # # PLOT VARIANT 2b: mod vs obs
+  #   # # ggplot(aes(x=mod, y=obs, z = likelihood/maxL, fill=likelihood/maxL)) +
+  #   # facet_wrap(~target, scales = "free") +
+  #   # geom_raster() +
+  #   # geomtextpath::geom_textcontour(color = 'darkgreen') +
+  #   # # mark the mode (per x-axis)
+  #   # geom_point(data = \(df){df |> group_by(target, mod) |> filter(likelihood == max(likelihood))}, color = "black") +
+  #   # geom_abline()
+
+
+
+
+  # trap boundary conditions
+  if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
+
+  return(ll)
+}
+
+
+
+
+
 
 
 
