@@ -1,7 +1,6 @@
 get_calibration_settings_str <- function(out_calib) {
   # defines a filename-compatible description of calibration settings
   # from 'out_calib', i.e. an output object of calib_sofun()
-
   stopifnot(is(out_calib$mod, "mcmcSamplerList"))
 
   # explore what's in a mcmcSamplerList:
@@ -20,7 +19,8 @@ get_calibration_settings_str <- function(out_calib) {
 
   nrInternalChains <- lapply(
     individual_chains,
-    function(curr_chain){curr_chain$settings$nrChains})  |>
+    function(curr_chain){curr_chain$settings$startValue})  |>
+    # function(curr_chain){length(curr_chain$chain)})  |>
     unlist() |>
     unique() |>
     paste0(collapse = "-")
@@ -49,7 +49,7 @@ get_calibration_settings_str <- function(out_calib) {
   # create descriptive string of settings for filename
   return(
     sprintf(
-      "Setup-%s-Sampler-%s-%siterations_ofwhich%sburnin_chains_%sx%s_",
+      "%s_%s_%s-%siter_%sx%schains",
       out_calib$name,
       sampler_name,
       nrIterations,
