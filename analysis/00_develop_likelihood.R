@@ -178,189 +178,189 @@ test_obs     <- bigD13C_vj_gpp_obs     |> filter(sitename %in% sites_test$sitena
 
 
 
-## Compute loglikelihood ----
-source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
-## Calibrate parameters ----
-
-# Define calibration settings for three targets
-settings_joint_likelihood_bigD13C_vj_gpp <- list(
-  method = "BayesianTools",
-  metric = cost_likelihood_pmodel_bigD13C_vj_gpp,
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 1,    # kept artificially low
-      iterations = 5 # kept artificially low
-    )),
-  par = list(kc_jmax = list(lower = 0.2,  upper = 0.6, init = 0.41),  # uniform priors
-             # TODO: add further parameters
-             # TODO: error parameters must come last
-             err_gpp     = list(lower = 0.001, upper = 0.6, init = 0.3),
-             err_bigD13C = list(lower = 0.001, upper = 0.6, init = 0.3),
-             err_vj      = list(lower = 0.001, upper = 0.6, init = 0.3))
-)
-
-# Run the calibration on all data:
-par_calib_join_bigD13C_vj_gpp <- calib_sofun(
-  drivers  = train_drivers,
-  obs      = train_obs,
-  settings = settings_joint_likelihood_bigD13C_vj_gpp,
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kphio              = 0.04998,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-    # kc_jmax            = 0.41
-  )
-)
-#plot(par_calib_join_bigD13C_vj_gpp$mod)
-
-
-
-
-
-# subset different combination of target variables
-# for easier handling do this in combined drivobs-object
-drivobs_bigD13C_vj_gpp <- dplyr::inner_join(
-  # TODO: check if combined drivobs is computationally more efficient for calib_sofun()
-  train_drivers,
-  train_obs,
-  by = join_by(sitename, run_model))
-
-# case 1: no gpp provided, only bigD13C,vj
-drivobs_bigD13CZZZZZ13ZZZZZc_vj <- drivobs_bigD13C_vj_gpp |>
-  unnest_wider(targets) |>
-  filter(bigD13C | vj) |>
-  nest(targets = c(vj, bigD13C, gpp))
-
-# case 2: only bigD13C provided
-drivobs_bigD13C <- drivobs_bigD13C_vj_gpp |>
-  unnest_wider(targets) |>
-  filter(bigD13C) |>
-  nest(targets = c(vj, bigD13C, gpp))
-
-# case 3: only vj provided
-drivobs_vj <- drivobs_bigD13C_vj_gpp |>
-  unnest_wider(targets) |>
-  filter(vj) |>
-  nest(targets = c(vj, bigD13C, gpp))
-
-# case 4: only gpp provided
-drivobs_gpp <- drivobs_bigD13C_vj_gpp |>
-  unnest_wider(targets) |>
-  filter(gpp) |>
-  nest(targets = c(vj, bigD13C, gpp))
-
-
-# case 1:
-par_calib_join_bigD13C_vj_gpp2 <- calib_sofun(
-  drivers  = select(drivobs_bigD13C_vj_gpp, sitename, run_model, params_siml, site_info, forcing),
-  obs      = select(drivobs_bigD13C_vj_gpp, sitename, run_model, targets, data),
-  settings = settings_joint_likelihood_bigD13C_vj_gpp,
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kphio              = 0.04998,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-    # kc_jmax            = 0.41
-  )
-)
-# plot(par_calib_join_bigD13C_vj_gpp2$mod)
-par_calib_join_bigD13C_vj_gpp2$mod |> summary() # DEzs(1,5) takes ~ 41.0s
-
-# case 1:
-par_calib_join_bigD13C_vj <- calib_sofun(
-  drivers  = select(drivobs_bigD13C_vj, sitename, run_model, params_siml, site_info, forcing),
-  obs      = select(drivobs_bigD13C_vj, sitename, run_model, targets, data),
-  settings = settings_joint_likelihood_bigD13C_vj_gpp,
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kphio              = 0.04998,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-    # kc_jmax            = 0.41
-  )
-)
-# plot(par_calib_join_bigD13C_vj$mod)
-par_calib_join_bigD13C_vj$mod |> summary() # DEzs(1,5) takes ~ 19.8s
-
-# case 2:
-par_calib_join_bigD13C <- calib_sofun(
-  drivers  = select(drivobs_bigD13C, sitename, run_model, params_siml, site_info, forcing),
-  obs      = select(drivobs_bigD13C, sitename, run_model, targets, data),
-  settings = settings_joint_likelihood_bigD13C_vj_gpp,
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kphio              = 0.04998,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-    # kc_jmax            = 0.41
-  )
-)
-# plot(par_calib_join_bigD13C$mod)
-par_calib_join_bigD13C$mod |> summary() # DEzs(1,5) takes ~ 3.5s
-
-# case 3:
-par_calib_join_vj <- calib_sofun(
-  drivers  = select(drivobs_vj, sitename, run_model, params_siml, site_info, forcing),
-  obs      = select(drivobs_vj, sitename, run_model, targets, data),
-  settings = settings_joint_likelihood_bigD13C_vj_gpp,
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kphio              = 0.04998,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-    # kc_jmax            = 0.41
-  )
-)
-# plot(par_calib_join_vj$mod)
-par_calib_join_vj$mod |> summary() # DEzs(1,5) takes ~ 19.7s
-
-# case 4:
-par_calib_join_gpp <- calib_sofun(
-  drivers  = select(drivobs_gpp, sitename, run_model, params_siml, site_info, forcing),
-  obs      = select(drivobs_gpp, sitename, run_model, targets, data),
-  settings = settings_joint_likelihood_bigD13C_vj_gpp,
-  # arguments for the cost function
-  par_fixed = list(         # fix parameter value from previous calibration
-    kphio              = 0.04998,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 1.0,
-    soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
-    rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 30.0
-    # kc_jmax            = 0.41
-  )
-)
-# plot(par_calib_join_gpp$mod)
-par_calib_join_gpp$mod |> summary() # DEzs(1,5) takes ~ 6.9s
+      # ## Compute loglikelihood ----
+      # source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
+      # ## Calibrate parameters ----
+      #
+      # # Define calibration settings for three targets
+      # settings_joint_likelihood_bigD13C_vj_gpp <- list(
+      #   method = "BayesianTools",
+      #   metric = cost_likelihood_pmodel_bigD13C_vj_gpp,
+      #   control = list(
+      #     sampler = "DEzs",
+      #     settings = list(
+      #       burnin = 1,    # kept artificially low
+      #       iterations = 5 # kept artificially low
+      #     )),
+      #   par = list(kc_jmax = list(lower = 0.2,  upper = 0.6, init = 0.41),  # uniform priors
+      #              # TODO: add further parameters
+      #              # TODO: error parameters must come last
+      #              err_gpp     = list(lower = 0.001, upper = 0.6, init = 0.3),
+      #              err_bigD13C = list(lower = 0.001, upper = 0.6, init = 0.3),
+      #              err_vj      = list(lower = 0.001, upper = 0.6, init = 0.3))
+      # )
+      #
+      # # Run the calibration on all data:
+      # par_calib_join_bigD13C_vj_gpp <- calib_sofun(
+      #   drivers  = train_drivers,
+      #   obs      = train_obs,
+      #   settings = settings_joint_likelihood_bigD13C_vj_gpp,
+      #   # arguments for the cost function
+      #   par_fixed = list(         # fix parameter value from previous calibration
+      #     kphio              = 0.04998,
+      #     kphio_par_a        = 0.0,
+      #     kphio_par_b        = 1.0,
+      #     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+      #     soilm_betao        = 0.0,
+      #     beta_unitcostratio = 146.0,
+      #     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+      #     tau_acclim         = 30.0
+      #     # kc_jmax            = 0.41
+      #   )
+      # )
+      # #plot(par_calib_join_bigD13C_vj_gpp$mod)
+      #
+      #
+      #
+      #
+      #
+      # # subset different combination of target variables
+      # # for easier handling do this in combined drivobs-object
+      # drivobs_bigD13C_vj_gpp <- dplyr::inner_join(
+      #   # TODO: check if combined drivobs is computationally more efficient for calib_sofun()
+      #   train_drivers,
+      #   train_obs,
+      #   by = join_by(sitename, run_model))
+      #
+      # # case 1: no gpp provided, only bigD13C,vj
+      # drivobs_bigD13C_vj <- drivobs_bigD13C_vj_gpp |>
+      #   unnest_wider(targets) |>
+      #   filter(bigD13C | vj) |>
+      #   nest(targets = c(vj, bigD13C, gpp))
+      #
+      # # case 2: only bigD13C provided
+      # drivobs_bigD13C <- drivobs_bigD13C_vj_gpp |>
+      #   unnest_wider(targets) |>
+      #   filter(bigD13C) |>
+      #   nest(targets = c(vj, bigD13C, gpp))
+      #
+      # # case 3: only vj provided
+      # drivobs_vj <- drivobs_bigD13C_vj_gpp |>
+      #   unnest_wider(targets) |>
+      #   filter(vj) |>
+      #   nest(targets = c(vj, bigD13C, gpp))
+      #
+      # # case 4: only gpp provided
+      # drivobs_gpp <- drivobs_bigD13C_vj_gpp |>
+      #   unnest_wider(targets) |>
+      #   filter(gpp) |>
+      #   nest(targets = c(vj, bigD13C, gpp))
+      #
+      #
+      # # case 0:
+      # par_calib_join_bigD13C_vj_gpp2 <- calib_sofun(
+      #   drivers  = select(drivobs_bigD13C_vj_gpp, sitename, run_model, params_siml, site_info, forcing),
+      #   obs      = select(drivobs_bigD13C_vj_gpp, sitename, run_model, targets, data),
+      #   settings = settings_joint_likelihood_bigD13C_vj_gpp,
+      #   # arguments for the cost function
+      #   par_fixed = list(         # fix parameter value from previous calibration
+      #     kphio              = 0.04998,
+      #     kphio_par_a        = 0.0,
+      #     kphio_par_b        = 1.0,
+      #     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+      #     soilm_betao        = 0.0,
+      #     beta_unitcostratio = 146.0,
+      #     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+      #     tau_acclim         = 30.0
+      #     # kc_jmax            = 0.41
+      #   )
+      # )
+      # # plot(par_calib_join_bigD13C_vj_gpp2$mod)
+      # par_calib_join_bigD13C_vj_gpp2$mod |> summary() # DEzs(1,5) takes ~ 11.35s
+      #
+      # # case 1:
+      # par_calib_join_bigD13C_vj <- calib_sofun(
+      #   drivers  = select(drivobs_bigD13C_vj, sitename, run_model, params_siml, site_info, forcing),
+      #   obs      = select(drivobs_bigD13C_vj, sitename, run_model, targets, data),
+      #   settings = settings_joint_likelihood_bigD13C_vj_gpp,
+      #   # arguments for the cost function
+      #   par_fixed = list(         # fix parameter value from previous calibration
+      #     kphio              = 0.04998,
+      #     kphio_par_a        = 0.0,
+      #     kphio_par_b        = 1.0,
+      #     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+      #     soilm_betao        = 0.0,
+      #     beta_unitcostratio = 146.0,
+      #     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+      #     tau_acclim         = 30.0
+      #     # kc_jmax            = 0.41
+      #   )
+      # )
+      # # plot(par_calib_join_bigD13C_vj$mod)
+      # par_calib_join_bigD13C_vj$mod |> summary() # DEzs(1,5) takes ~ 7.96s
+      #
+      # # case 2:
+      # par_calib_join_bigD13C <- calib_sofun(
+      #   drivers  = select(drivobs_bigD13C, sitename, run_model, params_siml, site_info, forcing),
+      #   obs      = select(drivobs_bigD13C, sitename, run_model, targets, data),
+      #   settings = settings_joint_likelihood_bigD13C_vj_gpp,
+      #   # arguments for the cost function
+      #   par_fixed = list(         # fix parameter value from previous calibration
+      #     kphio              = 0.04998,
+      #     kphio_par_a        = 0.0,
+      #     kphio_par_b        = 1.0,
+      #     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+      #     soilm_betao        = 0.0,
+      #     beta_unitcostratio = 146.0,
+      #     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+      #     tau_acclim         = 30.0
+      #     # kc_jmax            = 0.41
+      #   )
+      # )
+      # # plot(par_calib_join_bigD13C$mod)
+      # par_calib_join_bigD13C$mod |> summary() # DEzs(1,5) takes ~ 1.81s
+      #
+      # # case 3:
+      # par_calib_join_vj <- calib_sofun(
+      #   drivers  = select(drivobs_vj, sitename, run_model, params_siml, site_info, forcing),
+      #   obs      = select(drivobs_vj, sitename, run_model, targets, data),
+      #   settings = settings_joint_likelihood_bigD13C_vj_gpp,
+      #   # arguments for the cost function
+      #   par_fixed = list(         # fix parameter value from previous calibration
+      #     kphio              = 0.04998,
+      #     kphio_par_a        = 0.0,
+      #     kphio_par_b        = 1.0,
+      #     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+      #     soilm_betao        = 0.0,
+      #     beta_unitcostratio = 146.0,
+      #     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+      #     tau_acclim         = 30.0
+      #     # kc_jmax            = 0.41
+      #   )
+      # )
+      # # plot(par_calib_join_vj$mod)
+      # par_calib_join_vj$mod |> summary() # DEzs(1,5) takes ~ 8.634
+      #
+      # # case 4:
+      # par_calib_join_gpp <- calib_sofun(
+      #   drivers  = select(drivobs_gpp, sitename, run_model, params_siml, site_info, forcing),
+      #   obs      = select(drivobs_gpp, sitename, run_model, targets, data),
+      #   settings = settings_joint_likelihood_bigD13C_vj_gpp,
+      #   # arguments for the cost function
+      #   par_fixed = list(         # fix parameter value from previous calibration
+      #     kphio              = 0.04998,
+      #     kphio_par_a        = 0.0,
+      #     kphio_par_b        = 1.0,
+      #     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
+      #     soilm_betao        = 0.0,
+      #     beta_unitcostratio = 146.0,
+      #     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
+      #     tau_acclim         = 30.0
+      #     # kc_jmax            = 0.41
+      #   )
+      # )
+      # # plot(par_calib_join_gpp$mod)
+      # par_calib_join_gpp$mod |> summary() # DEzs(1,5) takes ~ 6.1s
 
 
 
@@ -413,7 +413,7 @@ par_setup1 <- list(
   soilm_thetastar = list(lower = 1, upper = 250, init = 40),
   soilm_betao     = list(lower = 0.0, upper = 1.0, init = 0.0),
   err_gpp         = list(lower = 0.1, upper = 3, init = 0.8),
-  err_bigD13C         = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
+  err_bigD13C     = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
   err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
 )
 
@@ -428,9 +428,9 @@ par_setup23 <- list(
   rd_to_vcmax        = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.014),      # 0.014 value from Atkin et al. 2015 for C3 herbaceous
   tau_acclim         = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*20.0),
   kc_jmax            = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.41),
-  err_gpp         = list(lower = 0.1, upper = 3, init = 0.8),
-  err_bigD13C         = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
-  err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
+  err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
+  err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
+  err_vj          = list(lower = 0.01, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
 )
         # From 02_sensitivity_analysis.R:
         # # best parameter values (initial values)
@@ -505,9 +505,10 @@ drivobs_setup3 <- drivobs_bigD13C_vj_gpp
 
 
 ## Calibrate parameters ----
-
-in_calib_setup1  <- create_settings_and_par_fixed(par_setup1, burnin=10000, iterations=50000)
-in_calib_setup23 <- create_settings_and_par_fixed(par_setup23, burnin=10000/3, iterations=50000/3) # TODO: remove /3
+# in_calib_setup1  <- create_settings_and_par_fixed(par_setup1, burnin=10000, iterations=50000)
+in_calib_setup1  <- create_settings_and_par_fixed(par_setup1, burnin=1001, iterations=5001)
+# in_calib_setup23 <- create_settings_and_par_fixed(par_setup23, burnin=10000/3, iterations=50000/3) # TODO: remove /3
+in_calib_setup23 <- create_settings_and_par_fixed(par_setup23, burnin=1001, iterations=5001)
 
 # Run setup1:
 out_calib_setup1 <- calib_sofun(
@@ -519,8 +520,11 @@ out_calib_setup1 <- calib_sofun(
 )
 plot(out_calib_setup1$mod)
 summary(out_calib_setup1$mod)
-# setup1: DEzs(1,5) takes ~ 20.9 seconds
-# setup1: DEzs(10000,50000) takes ~ 150'000 seconds = 42h
+# setup1: DEzs(1,5) takes ~ 12.24 seconds (previously 20.9)
+# setup1: DEzs(10,50) takes ~ 13.2 seconds
+# setup1: DEzs(100,500) takes ~ 529 seconds
+# setup1: DEzs(1001,5001) takes ~ 8844 seconds
+# setup1: DEzs(10000,50000) takes ~ xxx seconds (previously 150'000 seconds = 42h)
 
 
 # Store intermediate results
@@ -529,7 +533,7 @@ settings_string <- get_calibration_settings_str(out_calib_setup1)
 write_rds(out_calib_setup1,
         file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
         compress = "xz")
-
+# read_rds(here::here(paste0("data/out_calib_Setup-s1-Sampler-DEzs-5001iterations_ofwhich1001burnin_chains_3x1_.rds")))$mod |> summary()
 
 # Run setup2:
 out_calib_setup2 <- calib_sofun(
@@ -541,8 +545,11 @@ out_calib_setup2 <- calib_sofun(
 )
 #plot(out_calib_setup2$mod)
 summary(out_calib_setup2$mod)
-# setup2: DEzs(1,5) takes ~ 22.7 seconds
-# setup2: DEzs(10000/3, 50000/3) takes ~ 43000 seconds = 12 hours
+# setup2: DEzs(1,5) takes ~ 10.1 seconds (previously 22.7 seconds)
+# setup2: DEzs(10,50) takes ~ 28.6 seconds
+# setup2: DEzs(100,500) takes ~ 495 seconds
+# setup2: DEzs(1001,5001) takes ~ 6502 seconds
+# setup2: DEzs(10000/3, 50000/3) takes ~ xxx seconds (previously 43000 seconds = 12 hours)
 
 # Store intermediate results
 out_calib_setup2$name <- "s2"
@@ -550,10 +557,10 @@ settings_string <- get_calibration_settings_str(out_calib_setup2)
 write_rds(out_calib_setup2,
         file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
         compress = "xz")
+# read_rds(here::here(paste0("data/out_calib_Setup-s2-Sampler-DEzs-5001iterations_ofwhich1001burnin_chains_3x1_.rds")))$mod |> summary()
 
 
 # Run setup3:
-in_calib_setup23 <- create_settings_and_par_fixed(par_setup23, burnin=1000, iterations=5000) # TODO: remove /3
 out_calib_setup3 <- calib_sofun(
   drivers   = select(drivobs_setup3, sitename, run_model, params_siml, site_info, forcing),
   obs       = select(drivobs_setup3, sitename, run_model, targets, data),
@@ -563,8 +570,10 @@ out_calib_setup3 <- calib_sofun(
 )
 #plot(out_calib_setup3$mod)
 summary(out_calib_setup3$mod)
-# setup3: DEzs(1,5) takes ~ 100 seconds (makecheck=TRUE) and 100 seconds (makecheck=FALSE)
-# setup3: DEzs(10000/10, 50000/10) takes ~ 80'000 seconds = 22 hours
+# setup3: DEzs(1,5) takes ~ 31.7 seconds (previously 100 seconds (makecheck=TRUE) and 100 seconds (makecheck=FALSE))
+# setup3: DEzs(10,50) takes ~ 117.5 seconds
+# setup2: DEzs(100,500) takes ~ 2218 seconds
+# setup3: DEzs(10000/10, 50000/10) takes ~ xxx seconds (previously 80'000 seconds = 22 hours)
 
 # Store intermediate results
 out_calib_setup3$name <- "s3"
@@ -572,8 +581,7 @@ settings_string <- get_calibration_settings_str(out_calib_setup3)
 write_rds(out_calib_setup3,
         file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
         compress = "xz")
-
-
+# read_rds(here::here(paste0("data/out_calib_Setup-s3-Sampler-DEzs-5001iterations_ofwhich1001burnin_chains_3x1_.rds")))$mod |> summary()
 
 
 
