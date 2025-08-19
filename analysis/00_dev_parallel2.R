@@ -64,7 +64,7 @@ source(here::here("R/test_mcmc_parallelization.R"), echo = TRUE)
 
 # for testing
 timings_it <- tibble()
-for(iter in c(4,5)){
+for(iter in c(5,15,50,100,200,400)){
   timings_it <- test_mcmc_parallelization_rsofun(
     iterations = iter, burnin = 0,
     n_chains_independent      = 1,
@@ -72,7 +72,7 @@ for(iter in c(4,5)){
     # parallelization
     n_parallel_independent    = 1,
     n_parallel_within_sampler = FALSE
-  ) |> bind_rows(timings_it)
+  ) |> mutate(config = "single-chain") |> bind_rows(timings_it)
   # M4:   XX.X seconds
   # WS02: XX.X seconds
   # UBLX: XX.X seconds
@@ -84,7 +84,7 @@ for(iter in c(4,5)){
     # parallelization
     n_parallel_independent    = 1,
     n_parallel_within_sampler = FALSE
-  ) |> bind_rows(timings_it)
+  ) |> mutate(config = "3x-chain") |> bind_rows(timings_it)
   # M4:  XX.X seconds
   # WS02: XX.X seconds
   # UBLX: XX.X seconds
@@ -96,14 +96,17 @@ for(iter in c(4,5)){
     # parallelization
     n_parallel_independent    = 3,     # now the 3 chains are run in parallel
     n_parallel_within_sampler = FALSE
-  ) |> bind_rows(timings_it)
+  ) |> mutate(config = "3x-chain-parallel") |> bind_rows(timings_it)
   # M4:   XX.X seconds
   # WS02: XX.X seconds
   # UBLX: XX.X seconds
+
+  # store
+  hostname <- Sys.info()['nodename']
+  timings_it <- timings_it |> mutate(machine = hostname)
+  write_rds(timings_it, paste0("timings_",hostname,".rds"))
+  write_csv(timings_it, paste0("timings_",hostname,".csv"))
 }
 
-timings_it |>
-  mutate(machine = Sys.info()['nodename']) |>
-  write_rds("timings_dash.rds")
 
 
