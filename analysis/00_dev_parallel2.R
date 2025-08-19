@@ -101,6 +101,19 @@ for(iter in c(5,15,50,100,200,400)){
   # WS02: XX.X seconds
   # UBLX: XX.X seconds
 
+  timings_it <- test_mcmc_parallelization_rsofun(
+    iterations = iter, burnin = 0,
+    n_chains_independent      = 9,
+    n_chains_within_sampler   = 3,
+    # parallelization
+    n_parallel_independent    = 9,     # now the 9 chains are run in parallel
+    n_parallel_within_sampler = FALSE
+  ) |> mutate(config = "9x-chain-parallel") |> bind_rows(timings_it)
+  # M4:   XX.X seconds
+  # WS02: XX.X seconds
+  # UBLX: XX.X seconds
+
+
   # store
   hostname <- Sys.info()['nodename']
   timings_it <- timings_it |> mutate(machine = hostname)
