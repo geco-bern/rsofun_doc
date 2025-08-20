@@ -68,7 +68,7 @@ source(here::here("R/test_mcmc_parallelization.R"), echo = TRUE)
 # for testing
 timings_it <- tibble()
 for(iter in c(400)){
-  timings_it <- test_mcmc_parallelization_rsofun(
+  timings_it <- run_mcmc_rsofun(
     curr_calibration_setup    = 3,
     iterations = iter, burnin = floor(iter/4),
     n_chains_independent      = 1,
@@ -81,7 +81,7 @@ for(iter in c(400)){
   # WS02: XX.X seconds
   # UBLX: XX.X seconds
 
-  timings_it <- test_mcmc_parallelization_rsofun(
+  timings_it <- run_mcmc_rsofun(
     curr_calibration_setup    = 3,
     iterations = iter, burnin = floor(iter/4),
     n_chains_independent      = 3,
@@ -94,7 +94,7 @@ for(iter in c(400)){
   # WS02: XX.X seconds
   # UBLX: XX.X seconds
 
-  timings_it <- test_mcmc_parallelization_rsofun(
+  timings_it <- run_mcmc_rsofun(
     curr_calibration_setup    = 3,
     iterations = iter, burnin = floor(iter/4),
     n_chains_independent      = 3,
@@ -107,7 +107,7 @@ for(iter in c(400)){
   # WS02: XX.X seconds
   # UBLX: XX.X seconds
 
-  timings_it <- test_mcmc_parallelization_rsofun(
+  timings_it <- run_mcmc_rsofun(
     curr_calibration_setup    = 3,
     iterations = iter, burnin = floor(iter/4),
     n_chains_independent      = 9,
@@ -131,7 +131,7 @@ for(iter in c(400)){
 
 
 iter <- 3750 # might this take 2h? If 50 iterations take 100seconds x 75 = 7500seconds
-timings_it <- test_mcmc_parallelization_rsofun(
+timings_it <- run_mcmc_rsofun(
   curr_calibration_setup    = 3,
   iterations = iter, burnin = floor(iter/4),
   n_chains_independent      = 18,

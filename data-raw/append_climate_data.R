@@ -371,6 +371,7 @@ df_worldclim <-
     nest(data = -c(sitename))
 
 # Illustrate temporal disaggregation of monthly climate values
+set.seed(1982)
 df_for_plot_monthly <- df_worldclim_monthly |> slice_sample(n=10) |> unnest(data) |> mutate(date = make_date(month = month, day = 1))
 df_for_plot_daily   <- df_worldclim |> unnest(data) |> filter(sitename %in% df_for_plot_monthly$sitename)
 

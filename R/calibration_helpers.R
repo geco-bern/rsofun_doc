@@ -126,3 +126,17 @@ plot_prior_posterior_density <- function(x){
 
   return(gg)
 }
+
+get_runtime <- function(out_calib) {# function(settings_calib){
+  total_time_secs <- sum(unlist(lapply(
+    out_calib$mod,
+    function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))
+  return(sprintf("Total runtime: %.0f secs", total_time_secs))
+}
+get_runtime_numeric <- function(out_calib) {# function(settings_calib){
+  total_time_secs <- sum(unlist(lapply(
+    out_calib$mod,
+    function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))
+  return(structure(total_time_secs, class = "difftime", units = "secs"))
+}
+get_walltime <- function(out_calib){out_calib$walltime}

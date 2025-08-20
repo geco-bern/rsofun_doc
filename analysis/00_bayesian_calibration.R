@@ -9,9 +9,10 @@ library(tidyr)
 library(dplyr)
 library(readr)
 
-source(here::here("R/test_mcmc_parallelization.R"), echo = TRUE)
+source(here::here("R/run_mcmc_rsofun.R"), echo = TRUE)
 
 # setup output function
+path <- format(Sys.time(), "timings_FB_%Y-%m-%d_%Hh%M")
 timings_to_rds_csv <- function(timings, path = "timings_FB"){
   # to *.rds
   timings |> readr::write_rds(paste0(path,".rds"))
@@ -26,13 +27,12 @@ timings_to_rds_csv <- function(timings, path = "timings_FB"){
 }
 
 # run MCMC
-
-burnin     <- 100#00
-iterations <- 500#00
+burnin     <- 10000
+iterations <- 50000
 timings <- tibble()
 
 ## Scenario 3:
-curr_timings <- test_mcmc_parallelization_rsofun(
+curr_timings <- run_mcmc_rsofun(
   # calibration scenario:
   curr_calibration_setup    = 3,
   # mcmc setup:
@@ -43,10 +43,10 @@ curr_timings <- test_mcmc_parallelization_rsofun(
   n_parallel_independent    = 3,     # now the 3 chains are run in parallel
   n_parallel_within_sampler = FALSE
 )
-timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings)
+timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
 
 ## Scenario 2:
-curr_timings <- test_mcmc_parallelization_rsofun(
+curr_timings <- run_mcmc_rsofun(
   # calibration scenario:
   curr_calibration_setup    = 2,
   # mcmc setup:
@@ -57,10 +57,10 @@ curr_timings <- test_mcmc_parallelization_rsofun(
   n_parallel_independent    = 3,     # now the 3 chains are run in parallel
   n_parallel_within_sampler = FALSE
 )
-timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings)
+timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
 
 ## Scenario 1:
-curr_timings <- test_mcmc_parallelization_rsofun(
+curr_timings <- run_mcmc_rsofun(
   # calibration scenario:
   curr_calibration_setup    = 1,
   # mcmc setup:
@@ -71,13 +71,10 @@ curr_timings <- test_mcmc_parallelization_rsofun(
   n_parallel_independent    = 3,     # now the 3 chains are run in parallel
   n_parallel_within_sampler = FALSE
 )
-timings <- bind_rows(timings, curr_timings)
-
-
-
+timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
 
 ## Scenario 0: ( is only FR-Pue like in initial submission)
-curr_timings <- test_mcmc_parallelization_rsofun(
+curr_timings <- run_mcmc_rsofun(
   # calibration scenario:
   curr_calibration_setup    = 0,
   # mcmc setup:
@@ -88,4 +85,4 @@ curr_timings <- test_mcmc_parallelization_rsofun(
   n_parallel_independent    = 3,     # now the 3 chains are run in parallel
   n_parallel_within_sampler = FALSE
 )
-timings <- bind_rows(timings, curr_timings)
+timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
