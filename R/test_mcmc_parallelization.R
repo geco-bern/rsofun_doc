@@ -142,57 +142,7 @@ setup_rsofun_calibration <- function(setup = 3){
       by = join_by(sitename, run_model))
 
   ## Preprocess observation data (gpp) ----
-
-  ### Verify issues visually: ----
-  # # some observations of gpp are negative (keep them)
-  # plot_issue_gpp_value <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-  #   unnest(data) |>
-  #   ggplot(aes(x=gpp, color = sitename)) + geom_density() + facet_grid(dataset~.) +
-  #   theme_classic()
-  # plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "train") /
-  # plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "test")
-
-
-  # remove lower quality gpp and NA
-  browser()
-  bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-    unnest(data) |>
-    group_by(sitename) |> filter(any(is.na(gpp)))
-  bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-    unnest(data) |> filter(gpp_qc < 0.8)
-  bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-    unnest(data) |> filter(gpp_qc < 0.8)
-  read_rds(here::here("data/00_gpp_forcingtarget.rds")) |>
-    unnest(forcing) |>
-    filter(gpp_qc < 0.8)
-
-  bigD13C_vj_gpp_obs <- bind_rows(
-
-    # for gpp keep only high-quality
-    bigD13C_vj_gpp_obs |>
-      filter(run_model == "daily") |>
-      mutate(data = purrr::map(data, \(nstdf){
-        nstdf |>
-          # keep only high quality gpp
-          filter(gpp_qc >= 0.8) |>
-          # and non-NA:
-          filter(!is.na(gpp))
-        }
-      )
-    ),
-
-    # for non-gpp keep all:
-    bigD13C_vj_gpp_obs |>
-      filter(run_model != "daily")
-  )
-
-  ### Verify issues visually: ----
-  pl_issue_gpp_all_afterQC <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-    unnest(data) |>
-    ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
-    theme_classic() +
-    facet_grid(dataset~., scales = "free_y", space = "free")
-
+  ## # no additinal QC needed
 
   ## Apply test-train split to data ----
   train_drivers <- bigD13C_vj_gpp_drivers |> filter(dataset == "train") |> select(-dataset)
@@ -257,7 +207,6 @@ setup_rsofun_calibration <- function(setup = 3){
     train_obs,
     by = join_by(sitename, run_model))
 
-  # TODO: check if passing combined drivobs is computationally more efficient for calib_sofun()
   if (setup %in% c(1,2)){
     drivobs <- drivobs_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
@@ -274,6 +223,7 @@ setup_rsofun_calibration <- function(setup = 3){
     drivobs = drivobs,
     # driver    = tibble(),
     # obs       = tibble(),
+    # # TODO: check if passing combined drivobs is computationally more efficient for calib_sofun()
     par_fixed = par_to_fix,
     par = par_to_estimate
     )
@@ -284,7 +234,7 @@ calib_sofun_parallelized <- function(
     drivers,
     obs,
     settings,
-    optim_out = TRUE,
+    optim_out = TRUE, # whether to return chains
     suffix = "", # for storing rds
     ...
 ){
@@ -365,7 +315,7 @@ calib_sofun_parallelized <- function(
         )
       }
       stopCluster(cl)
-      out <- createMcmcSamplerList(indep_chains) # combine the independent chains
+      mcmc_out <- createMcmcSamplerList(indep_chains) # combine the independent chains
 
     } else { # sequential MCMC sampler:
 
@@ -379,56 +329,66 @@ calib_sofun_parallelized <- function(
       # since sequential sampling, let runMCMC handle the actual number of chains
       settings$control$settings$nrChains <- settings$control$n_chains_independent
       # calculate the runs
-      out <- BayesianTools::runMCMC(
+      mcmc_out <- BayesianTools::runMCMC(
         bayesianSetup = bayesianSetup,
         sampler       = settings$control$sampler,
         settings      = settings$control$settings
       )
     }
 
+
     ## Postprocess: ----
 
-    # ensure return value 'out' is a mcmcSamplerList even if n_chains_independent==1
-    # by default runMCMC returns only a mcmcSampler if n_chains_independent==1
-    if(is(out, "mcmcSampler")){
-      out <- createMcmcSamplerList(list(out)) # now out is a mcmcSamplerList
+    # ensure return value 'mcmc_out' is a mcmcSamplerList even if n_chains_independent==1
+    # (by default runMCMC returns only a mcmcSampler if n_chains_independent==1)
+    if(is(mcmc_out, "mcmcSampler")){
+      mcmc_out <- createMcmcSamplerList(list(mcmc_out)) # now mcmc_out is a mcmcSamplerList
     }
-
-    # drop last value
-    bt_par <- BayesianTools::MAP(out)$parametersMAP
-    bt_par <- bt_par[1:(length(bt_par))]
-
-    if (optim_out){
-      out_optim <- list(par = bt_par, mod = out)
-    } else {
-      out_optim <- list(par = bt_par)
-    }
-
-    names(out_optim$par) <- names(settings$par)
 
     end_time <- Sys.time()
-    out_optim$walltime <- end_time - start_time
-    out_optim$runtime <- get_runtime_numeric(out_optim)
-    # print(walltime)
-    # summary(out_optim)
-    # plot(out_optim$mod)
-    print(get_runtime_numeric(out_optim))
-    print(get_walltime(out_optim))
 
-    # Store intermediate results
-    out_optim$name <- suffix
-    out_optim$fpath <- here::here(paste0("data/out_calib_", suffix, ".rds"))
-    write_rds(out_optim, file = out_optim$fpath, compress = "xz")
+
+    ## Build return object: 'return_value' ----
+
+    # Extract MAP (maximum a posteriori value) of parameters
+    bt_par <- BayesianTools::MAP(mcmc_out)$parametersMAP
+
+    return_value <- list(par = bt_par)
+
+    if (optim_out){ # append raw MCMC chains
+      return_value <- c(return_value, list(mod = mcmc_out))
+    }
+    # if (input_out){ # append MCMC input
+    #   return_value <- c(return_value,
+    #                     list(bayesianSetup = bayesianSetup,             # unneded: return_value$mod[[1]]$setup
+    #                          sampler       = settings$control$sampler,  # unneded: return_value$mod[[1]]$sampler
+    #                          settings      = settings$control$settings))# unneded: return_value$mod[[1]]$settings
+    # }
+
+    # append timing information
+    return_value$walltime <- end_time - start_time
+    return_value$runtime  <- get_runtime_numeric(return_value)
+    # summary(return_value)
+    # plot(return_value$mod)
+    print(get_runtime_numeric(return_value))
+    print(get_walltime(return_value))
+
+    return_value$name <- suffix
+
+    ## Store results to file: ----
+    return_value$fpath <- here::here(paste0("data/out_calib_", suffix, ".rds"))
+    write_rds(return_value, file = return_value$fpath, compress = "xz")
 
   } else {
     stop("Unknown method passed to calib_sofun().")
   }
 
-  return(out_optim)
+  return(return_value)
 }
 
 # #### MAKE TEST FUNCTION
 test_mcmc_parallelization_rsofun <- function(
+    curr_calibration_setup,
     # MCMC setup:
     iterations = 3,
     burnin = 0,
@@ -441,8 +401,7 @@ test_mcmc_parallelization_rsofun <- function(
 ){
 
   # Setup simulation model
-  curr_setup <- 3
-  res <- setup_rsofun_calibration(setup = curr_setup)
+  res <- setup_rsofun_calibration(setup = curr_calibration_setup)
   # res$drivobs
   # res$par_fixed
   # res$par
@@ -450,10 +409,10 @@ test_mcmc_parallelization_rsofun <- function(
   # Load loglikelihood
   source(here::here("R/calibration_helpers.R"), echo = TRUE)
   source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = TRUE)
-
-  # cost_likelihood_pmodel_bigD13C_vj_gpp
-  # cost_likelihood_pmodel_bigD13C_vj_gpp_v2
-  # cost_likelihood_pmodel_bigD13C_vj_gpp_v3
+  # loads:
+  #   cost_likelihood_pmodel_bigD13C_vj_gpp
+  #   cost_likelihood_pmodel_bigD13C_vj_gpp_v2
+  #   cost_likelihood_pmodel_bigD13C_vj_gpp_v3
 
   # Setup MCMC
   calib_sofun_settings <- list(
@@ -477,7 +436,7 @@ test_mcmc_parallelization_rsofun <- function(
   # Run calibration in parallel
   timings <- tibble(
     #
-    setup          = curr_setup,
+    setup          = curr_calibration_setup,
     # sampling options:
     sampler        = calib_sofun_settings$control$sampler,
     burnin         = burnin,
@@ -504,10 +463,10 @@ test_mcmc_parallelization_rsofun <- function(
     settings  = calib_sofun_settings,
     # other arguments for the cost function
     par_fixed = res$par_fixed,
-    suffix = suffix_str
-  )
+    suffix    = suffix_str
+  ) # this stores the whole out_calib in an rds object odentified by "suffix_str"
 
-  # store performance results
+  # append performance results to return object
   timings$runtime    <- out_calib$runtime
   timings$walltime   <- out_calib$walltime
   timings$resultfile <- out_calib$fpath
