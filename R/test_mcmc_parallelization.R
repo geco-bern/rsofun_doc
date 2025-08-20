@@ -99,9 +99,9 @@ get_walltime <- function(out_calib){out_calib$walltime}
 
 
 
-################################################################################
-################################################################################
-################################################################################
+################################################################################ -
+################################################################################ -
+################################################################################ -
 
 #### SETUP RSOFUN
 setup_rsofun_calibration <- function(setup = 3){
@@ -130,52 +130,73 @@ setup_rsofun_calibration <- function(setup = 3){
   sites_train <- df_test_train_split |> filter(dataset == "train")
   sites_test  <- df_test_train_split |> filter(dataset == "test")
 
-  ## Preprocess observation data (gpp)
+  ## Append test-train split ----
+  bigD13C_vj_gpp_drivers <- bigD13C_vj_gpp_drivers |>
+    inner_join(
+      select(bind_rows(sites_train,sites_test), sitename, run_model, dataset),
+      by = join_by(sitename, run_model))
 
-  # some observations of gpp are negative TODO: filter them out
-  ## for training sites
-  bigD13C_vj_gpp_obs |> filter(sitename %in% sites_train$sitename) |>
-    filter(run_model == "daily") |> unnest(data) |>
-    ggplot(aes(x=gpp, color = sitename)) + geom_density()# + facet_wrap(~sitename)
-  ## for testing sites
-  bigD13C_vj_gpp_obs |> filter(sitename %in% sites_test$sitename) |>
-    filter(run_model == "daily") |> unnest(data) |>
-    ggplot(aes(x=gpp, color = sitename)) + geom_density()# + facet_wrap(~sitename)
+  bigD13C_vj_gpp_obs <- bigD13C_vj_gpp_obs |>
+    inner_join(
+      select(bind_rows(sites_train,sites_test), sitename, run_model, dataset),
+      by = join_by(sitename, run_model))
 
-  # some observations of gpp are NA, filter them out:
-  # some observations of gpp are negative, filter those below -2 out
+  ## Preprocess observation data (gpp) ----
+
+  ### Verify issues visually: ----
+  # TODO: remove quality check filter here (and add to gpp_data.R:67)
+  # some observations of gpp are NA
+  pl_issue_gpp_NA <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
+    unnest(data) |>
+    group_by(sitename) |> filter(any(is.na(gpp))) |>
+    ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
+    theme_classic() +
+    facet_grid(dataset~., scales = "free_y", space = "free")
+
+  # some observations of gpp are negative (keep them)
+  plot_issue_gpp_value <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
+    unnest(data) |>
+    ggplot(aes(x=gpp, color = sitename)) + geom_density() + facet_grid(dataset~.) +
+    theme_classic()
+  plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "train") /
+  plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "test")
+
+
+  # remove lower quality gpp and NA
   bigD13C_vj_gpp_obs <- bind_rows(
-    # filter out NAs in gpp observations
-    bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-      unnest(data) |>
-      filter(!is.na(gpp)) |>
-      filter(gpp > -2) |>
-      nest(data = -c(sitename, run_model, targets)),
-    # do not filter out anything from the other observations
-    bigD13C_vj_gpp_obs |> filter(run_model != "daily")
+
+    # for gpp keep only high-quality
+    bigD13C_vj_gpp_obs |>
+      filter(run_model == "daily") |>
+      mutate(data = purrr::map(data, \(nstdf){
+        nstdf |>
+          # keep only high quality gpp
+          filter(gpp_qc >= 0.8) |>
+          # and non-NA:
+          filter(!is.na(gpp))
+        }
+      )
+    ),
+
+    # for non-gpp keep all:
+    bigD13C_vj_gpp_obs |>
+      filter(run_model != "daily")
   )
 
-  # some model input leads to NA in modeled gpp, filter them out:
-  bigD13C_vj_gpp_drivers2 <- bind_rows(
-    # correct missing ccov
-    bigD13C_vj_gpp_drivers |> filter(sitename == "US-Bar") |>
-      unnest(forcing) |>
-      mutate(ccov = if_else(is.na(ccov), 0, ccov)) |>
-      nest(forcing = -c(sitename, run_model, params_siml, site_info)),
-    # keep other unchanged
-    bigD13C_vj_gpp_drivers |> filter(sitename != "US-Bar")
-  )
-  bigD13C_vj_gpp_drivers |>
-    group_by(sitename) |>
-    filter(sitename %in% c("US-Bar", "US-Ton")) |>
-    unnest(forcing) |> slice(1:10)
+  ### Verify issues visually: ----
+  pl_issue_gpp_all_afterQC <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
+    unnest(data) |>
+    ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
+    theme_classic() +
+    facet_grid(dataset~., scales = "free_y", space = "free")
+
 
   ## Apply test-train split to data ----
-  train_drivers <- bigD13C_vj_gpp_drivers2 |> filter(sitename %in% sites_train$sitename)
-  train_obs     <- bigD13C_vj_gpp_obs     |> filter(sitename %in% sites_train$sitename)
+  train_drivers <- bigD13C_vj_gpp_drivers |> filter(dataset == "train") |> select(-dataset)
+  train_obs     <- bigD13C_vj_gpp_obs     |> filter(dataset == "train") |> select(-dataset)
 
-  test_drivers <- bigD13C_vj_gpp_drivers2 |> filter(sitename %in% sites_test$sitename)
-  test_obs     <- bigD13C_vj_gpp_obs     |> filter(sitename %in% sites_test$sitename)
+  test_drivers <- bigD13C_vj_gpp_drivers |> filter(dataset == "test") |> select(-dataset)
+  test_obs     <- bigD13C_vj_gpp_obs     |> filter(dataset == "test") |> select(-dataset)
 
   ## Setup the settings for the three calibration setups ----
   ## Define parameter
