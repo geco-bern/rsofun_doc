@@ -52,6 +52,11 @@ df_gpp_forcingtarget <- gpp_sites_to_use |>
   select(sitename, params_siml, site_info, forcing)
 
 
+## Quality check gpp data ----
+# NOTE that based on: https://github.com/geco-bern/FluxDataKit/blob/43fb25847bb99ab8b02abf943fa82933c5a5315b/R/fdk_format_drivers.R#L118
+#     gpp = GPP_NT_VUT_REF,    i.e. "Gross Primary Production, from Nighttime partition ing method, reference selected from GPP versions using model efficiency (MEF). The MEF analysis is repeated for each time aggregation" https://fluxnet.org/data/fluxnet2015-dataset/fullset-data-product/
+#     gpp_qc = NEE_VUT_REF_QC, i.e. "fraction between 0-1, indicating percentage of me asured and good quality gapfill data" https://fluxnet.org/data/fluxnet2015-dataset/fullset-data-product/
+
 # only keep years with good quality data
 df_gpp_forcingtarget_cropped <- df_gpp_forcingtarget |>
   unnest(c(site_info, forcing)) |>
@@ -62,22 +67,37 @@ df_gpp_forcingtarget_cropped <- df_gpp_forcingtarget |>
   nest(site_info = 'lon':'FDK_igbp_land_use') |>
   select(sitename, params_siml, site_info, forcing)
 
-# NOTE that gpp is GPP_NT_VUT_REF
 
-# TODO: add quality check filter here
-
-write_rds(df_gpp_forcingtarget_cropped,
-          here::here("data/00_gpp_forcingtarget.rds"),
-          compress = "xz")
-
-
-
+# overwrite remaining low quality gpp (QC < 0.8) with NAs
+# NOTE: since forcing and target observations are combined, we cannot remove
+#       the corresponding days from the data.frame(). Thus we overwrite with NA.
+df_gpp_forcingtarget_cropped_qc <- df_gpp_forcingtarget_cropped |>
+  mutate(forcing = purrr::map(forcing, \(nested_df){
+    mutate(nested_df, gpp = ifelse(gpp_qc >= 0.8, gpp, NA_real_))
+  }))
 
 
-# # TODO: illustrate issue with GF-Guy in FDK:
+
+### Verify issues visually: ----
 # # drivers |> filter(sitename == "GF-Guy") |> unnest(forcing)
 # # df_old |> filter(sitename == "GF-Guy") |> unnest(forcing)
-# redr::read_rds("data/00_gpp_forcingtarget.rds") |> unnest(forcing) |>
+# df_gpp_forcingtarget |> unnest(forcing) |>
 #   group_by(sitename) |> filter(any(is.na(gpp))) |>
 #   ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
 #   theme_classic()
+# df_gpp_forcingtarget_cropped |> unnest(forcing) |>
+#   group_by(sitename) |> filter(any(is.na(gpp))) |>
+#   ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
+#   theme_classic() # cropping helped a bit
+# df_gpp_forcingtarget_cropped_qc |> unnest(forcing) |>
+#   group_by(sitename) |> filter(any(is.na(gpp))) |>
+#   ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
+#   theme_classic()
+
+
+
+
+write_rds(df_gpp_forcingtarget_cropped_qc,
+          here::here("data/00_gpp_forcingtarget.rds"),
+          compress = "xz")
+

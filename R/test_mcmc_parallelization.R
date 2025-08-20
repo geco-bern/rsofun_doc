@@ -130,7 +130,7 @@ setup_rsofun_calibration <- function(setup = 3){
   sites_train <- df_test_train_split |> filter(dataset == "train")
   sites_test  <- df_test_train_split |> filter(dataset == "test")
 
-  ## Append test-train split ----
+  ## Append test-train split thereby subsetting to only test and train sites ----
   bigD13C_vj_gpp_drivers <- bigD13C_vj_gpp_drivers |>
     inner_join(
       select(bind_rows(sites_train,sites_test), sitename, run_model, dataset),
@@ -144,25 +144,28 @@ setup_rsofun_calibration <- function(setup = 3){
   ## Preprocess observation data (gpp) ----
 
   ### Verify issues visually: ----
-  # TODO: remove quality check filter here (and add to gpp_data.R:67)
-  # some observations of gpp are NA
-  pl_issue_gpp_NA <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-    unnest(data) |>
-    group_by(sitename) |> filter(any(is.na(gpp))) |>
-    ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
-    theme_classic() +
-    facet_grid(dataset~., scales = "free_y", space = "free")
-
-  # some observations of gpp are negative (keep them)
-  plot_issue_gpp_value <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
-    unnest(data) |>
-    ggplot(aes(x=gpp, color = sitename)) + geom_density() + facet_grid(dataset~.) +
-    theme_classic()
-  plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "train") /
-  plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "test")
+  # # some observations of gpp are negative (keep them)
+  # plot_issue_gpp_value <- bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
+  #   unnest(data) |>
+  #   ggplot(aes(x=gpp, color = sitename)) + geom_density() + facet_grid(dataset~.) +
+  #   theme_classic()
+  # plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "train") /
+  # plot_issue_gpp_value %+% filter(plot_issue_gpp_value$data, dataset == "test")
 
 
   # remove lower quality gpp and NA
+  browser()
+  bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
+    unnest(data) |>
+    group_by(sitename) |> filter(any(is.na(gpp)))
+  bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
+    unnest(data) |> filter(gpp_qc < 0.8)
+  bigD13C_vj_gpp_obs |> filter(run_model == "daily") |>
+    unnest(data) |> filter(gpp_qc < 0.8)
+  read_rds(here::here("data/00_gpp_forcingtarget.rds")) |>
+    unnest(forcing) |>
+    filter(gpp_qc < 0.8)
+
   bigD13C_vj_gpp_obs <- bind_rows(
 
     # for gpp keep only high-quality

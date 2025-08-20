@@ -5,8 +5,8 @@ These data sets will be (are) provided in the rsofun package as example data
 sets.
 
 Output data set:
-- data/bigD13C-vj-gpp_calibsofun_drivers.rds
-- data/bigD13C-vj-gpp_calibsofun_obs.rds
+- data/01_bigD13C-vj-gpp_calibsofun_drivers.rds
+- data/01_bigD13C-vj-gpp_calibsofun_obs.rds
 
 
 To recreate the data set run:

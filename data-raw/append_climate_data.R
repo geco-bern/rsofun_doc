@@ -18,6 +18,7 @@ library(purrr)
 library(ingestr)
 library(terra)
 library(patchwork)
+library(ggplot2)
 
 
 # Load data --------------------------------------------------------------------
@@ -635,7 +636,7 @@ pl_grow_season <- rgeco:::plot_map_simpl() +
     mapping = aes(lon, lat, color = growing_season_length)) +
   labs(color = "Length of\ngrowing\nseason\n(days)")
 pl_grow_season
-ggsave(here::here("fig/fig_01_append_climate.png"), pl_grow_season, width=7.2, height=3.6, units="in")
+ggsave(here::here("fig/00_fig_B_append_climate_MaplengthGrowSeason.png"), pl_grow_season, width=7.2, height=3.6, units="in")
 
 
 # Check all input data
@@ -653,7 +654,7 @@ p4 <- plot_clim("vpd",  "VPD\nmean(\n  f(Tmin),\n  f(Tmax)\n)\n(Pa)")
 pl_all_climate <-
   (p1+p2)/
   (p3+p4)
-ggsave(here::here("fig/fig_02_append_climate.png"), pl_all_climate, width=7.2*2, height=3.6*2, units="in")
+ggsave(here::here("fig/00_fig_C_append_climate_MapClimateVars.png"), pl_all_climate, width=7.2*2, height=3.6*2, units="in")
 
 plot_hist <- function(colname_to_plot, label = NULL){
   unnest(df_trait_forcing_filled, c(clim,patm,co2)) |>
@@ -683,10 +684,8 @@ pl_all_climate_and_target_hist <-
   (p9+p10)/
   (p11+p12)
 ggsave(
-  here::here("fig/fig_03_append_climate.png"),
+  here::here("fig/00_fig_D_append_climate_HistOnestepSites.png"),
   pl_all_climate_and_target_hist, width=3.6 * 2, height=1.8 * 5, units="in")
-
-
 
 
 
@@ -806,10 +805,16 @@ bigD13C_vj_obs <- bigD13C_vj_targets |>
 gpp_drivers <- gpp_forcingtarget |>
   mutate(run_model = "daily") |> # either "onestep" or "daily"
   # order
-  select(sitename, run_model, params_siml, site_info, forcing)
+  select(sitename, run_model, params_siml, site_info, forcing) |>
+  # reduce columns in forcing:
+  mutate(forcing = purrr::map(forcing, \(nested_forcing_df){
+    nested_forcing_df |>
+      select(date, temp, vpd, ppfd, netrad, patm, snow, rain, tmin, tmax, vwind, fapar, co2, ccov)
+      # thereby unselecting: select(-c(gpp, gpp_qc, nee, nee_qc, le, le_qc))
+  }))
 
 # format gpp_forcingtarget similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
-gpp_obs <- gpp_forcingtarget |>
+gpp_obs_nonQC <- gpp_forcingtarget |>
   select(sitename, forcing) |> unnest(forcing) |>
   select(sitename, date, gpp, gpp_qc, nee, nee_qc, le, le_qc) |>
   nest(data = -c(sitename)) |>
@@ -821,6 +826,48 @@ gpp_obs <- gpp_forcingtarget |>
          ))) |>
   # order
   select(sitename, run_model, targets, data)
+gpp_obs <- gpp_obs_nonQC |>
+  # remove rows corresponding to low quality gpp observations
+  # previously low quality gpp were overwritten with NA
+  # since we couldn't remove the rows due to the forcing
+  # Now that this is split we can remove those rows
+  mutate(data = purrr::map(data, \(nested_forcing_df){
+    nested_forcing_df |> filter(!is.na(gpp))
+  }))
+
+# Visualize QC operation:
+# pl_QC_a <- gpp_forcingtarget |> unnest(forcing) |>
+#   group_by(sitename) |> filter(any(is.na(gpp))) |>
+#   mutate(flag = case_when(gpp_qc<0.8~"low_quality",
+#                           is.na(gpp)~"NA",
+#                           TRUE~"good_quality")) |>
+#   ggplot(aes(x=date,y=sitename, color = flag)) + geom_point() +
+#   theme_classic()
+pl_QC_b <- gpp_obs_nonQC |> unnest(data) |>
+  group_by(sitename) |> filter(any(is.na(gpp))) |>
+  mutate(flag = case_when(gpp_qc<0.8~"low_quality",
+                          is.na(gpp)~"NA",
+                          TRUE~"good_quality")) |>
+  ggplot(aes(x=date,y=sitename, color = flag)) + geom_point() +
+  theme_classic()
+# gpp_obs |> unnest(data) |>
+#   group_by(sitename) |> filter(any(is.na(gpp))) |>
+#   mutate(flag = case_when(gpp_qc<0.8~"low_quality",
+#                           is.na(gpp)~"NA",
+#                           TRUE~"good_quality")) |>
+#   ggplot(aes(x=date,y=sitename, color = flag)) + geom_point() +
+#   theme_classic()
+stopifnot(
+  gpp_obs |>
+    unnest(data) |>
+    group_by(sitename) |>
+    filter(any(is.na(gpp))) |>
+    nrow() == 0)
+
+ggsave(here::here("fig/00_fig_E_append_climate_GPP-QC.png"),
+       pl_QC_b, width=7.2, height=7.2, units="in", scale = 1.5)
+
+
 
 
 ## Combine bigD13C, vj, gpp data (drivers and targets) ----
@@ -856,24 +903,24 @@ pl1 <- rgeco:::plot_map_simpl() +
     data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
       filter(vj) |>
       left_join(coordinates),
-    mapping = aes(lon, lat)) + ggtitle("V/J sites")
+    mapping = aes(lon, lat)) + ggtitle("Vcmax/Jmax sites")
 pl2 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
     data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
       filter(bigD13C) |>
       left_join(coordinates),
-    mapping = aes(lon, lat)) + ggtitle("bigD13C sites")
+    mapping = aes(lon, lat)) + ggtitle("Δ13C sites")
 pl3 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
     data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
       filter(gpp) |>
       left_join(coordinates),
     mapping = aes(lon, lat)) + ggtitle("GPP flux sites")
+
 pl_targets <-
   (pl1 + theme(axis.text.x = element_blank()))/
   (pl2 + theme(axis.text.x = element_blank()))/
   pl3
-
 ggsave(
-  here::here("fig/fig_05_append_climate.png"),
+  here::here("fig/00_fig_F_append_climate_MapTargetSites.png"),
   pl_targets, width=3.6, height=1.8 * 3, units="in")
