@@ -7,7 +7,7 @@ library(sf)
 drivers <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_drivers.rds"))
 obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_obs.rds"))
 
-# add information to driver vj or bigD13C is fitted
+# add information to driver if gpp, vj, or bigD13C is fitted
 drivers <- drivers |>
   left_join(
     obs |> unnest_wider(targets,  names_sep = "_") |> select(sitename, starts_with("targets")),
