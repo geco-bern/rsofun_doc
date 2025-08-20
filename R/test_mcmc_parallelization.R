@@ -125,7 +125,16 @@ setup_rsofun_calibration <- function(setup = 3){
   bigD13C_vj_gpp_obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_obs.rds"))
 
   ## Read test-train split ----
-  df_test_train_split <- read_csv(here::here("data/01_test_train_split.csv"))
+  df_test_train_split <- read_csv(
+    here::here("data/01_test_train_split.csv"),
+    col_types = cols(
+      sitename = col_character(),
+      run_model = col_character(),
+      targets_vj = col_logical(),
+      targets_bigD13C = col_logical(),
+      targets_gpp = col_logical(),
+      dataset = col_character()
+    ))
 
   sites_train <- df_test_train_split |> filter(dataset == "train")
   sites_test  <- df_test_train_split |> filter(dataset == "test")
@@ -407,8 +416,8 @@ test_mcmc_parallelization_rsofun <- function(
   # res$par
 
   # Load loglikelihood
-  source(here::here("R/calibration_helpers.R"), echo = TRUE)
-  source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = TRUE)
+  source(here::here("R/calibration_helpers.R"), echo = FALSE)
+  source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = FALSE)
   # loads:
   #   cost_likelihood_pmodel_bigD13C_vj_gpp
   #   cost_likelihood_pmodel_bigD13C_vj_gpp_v2

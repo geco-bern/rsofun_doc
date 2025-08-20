@@ -31,7 +31,7 @@ renv::run("data-raw/append_climate_data.R")
 renv::run("analysis/01_subset_test_train_sites.R")
 
 # run calibration scenarions
-renv::run() # TODO
+renv::run("analysis/00_bayesian_calibration.R") # to run the scenarios in sequential order
 
 # run sensitivity analysis
 # renv::run() # TODO
