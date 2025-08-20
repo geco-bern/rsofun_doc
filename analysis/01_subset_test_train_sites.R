@@ -133,7 +133,7 @@ drivers2 <- drivers |>
     by = join_by(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp)
   ) |>
   # TODO
-  mutate(dataset2 = if_else(is.na(dataset), "unused", dataset))
+  mutate(dataset = if_else(is.na(dataset), "unused", dataset))
 
 
 # Plot the distribution of training and testing sites --------------------------
@@ -152,8 +152,6 @@ dat_to_plot <- drivers2 |>
     target == "FALSE FALSE FALSE" ~ "none",
     TRUE ~ NA_character_)) |>
   select(target, everything())
-
-filter(dat_to_plot, target == "none") |> magrittr::extract2("sitename") # "lon_+151.14_lat_-033.69" "lon_-079.10_lat_+035.97" "lon_-083.81_lat_+042.27"
 
 
 ## Fig A: Plot a map of test train data:
@@ -205,12 +203,14 @@ fig_A_test_train_map <- ggplot(dat_to_plot) +
   map_layout_modifications +
   # add data
   geom_point(aes(x=lon,y=lat)) +
-  facet_grid(target~dataset2)
+  facet_grid(target~dataset)
 
 
 ggsave(
   here::here("fig/01_fig_A_test_train_map.png"),
   fig_A_test_train_map, width=7.2, height=4.8, units="in", scale = 2)
+
+
 
 
 
@@ -222,7 +222,7 @@ dat_to_plot2b <- pivot_longer(dat_to_plot, c(FDK_koeppen_code, FDK_igbp_land_use
 fig_B_test_train_hist <- ggplot(dat_to_plot2a |> filter(!is.na(target))) +
   theme_bw() +
   # add data
-  geom_density(aes(x=value, color = dataset2)) +
+  geom_density(aes(x=value, color = dataset)) +
   facet_grid(target~name, scales = "free")
 
 ggsave(
@@ -233,9 +233,78 @@ ggsave(
 # fig_B2_test_train_hist <- ggplot(dat_to_plot2b |> filter(!is.na(target), target != "gpp") |> drop_na(value)) +
 #   theme_bw() +
 #   # add data
-#   geom_histogram(aes(x=value, color = dataset2)) +
+#   geom_histogram(aes(x=value, color = dataset)) +
 #   facet_grid(target~name, scales = "free")
 # fig_B2_test_train_hist
 # ggsave(
 #   here::here("fig/01_fig_B2_test_train_hist.png"),
 #   fig_B2_test_train_hist, width=7.2, height=4.8, units="in", scale = 2)
+
+
+
+# gpp_qc is Fluxnet2015::NEE_VUT_REF_QC, which is "fraction between 0-1, indicating percentage of measured and good quality gapfill data"
+
+## Fig C: Plot histograms of targets of of test train data:
+dat_to_plot2 <- obs |>
+  left_join(
+    select(dat_to_plot, sitename, target, dataset, lat) |> distinct(),
+    by = join_by(sitename)) |>
+  # ensure ordering of lines in ggplot
+  arrange(dataset) |> mutate(sitename = forcats::as_factor(sitename))
+
+# gpp (with and without QC 0.8 removed)
+dat_to_plot2_gpp <- dat_to_plot2 |> filter(run_model == "daily") |> unnest(data) |> mutate(doy = yday(date), week = lubridate::week(date))
+dat_to_plot2_gpp_stats <- dat_to_plot2_gpp |> group_by(dataset, sitename, lat, week, run_model) |> summarise(gpp = mean(gpp))
+
+# col_scale <- scale_color_manual(NULL, aesthetics = c("colour", "fill"), values = c("test" = "#29a274ff", "train" = "#777055ff")) # GECO colors
+cols <- scales::hue_pal()(2)
+col_scale <- scale_color_manual(
+  NULL,
+  aesthetics = c("colour", "fill"),
+  values = c("test" = cols[1], "train" = cols[2]))
+
+dat_to_plot2_gpp_stats_QC <- dat_to_plot2_gpp |>
+  filter(gpp_qc >= 0.8) |>
+  group_by(dataset, sitename, lat, week, run_model) |> summarise(gpp = mean(gpp))
+
+fig_B_test_train_targethist_gpp <-
+  ggplot(dat_to_plot2_gpp_stats |> filter(dataset %in% c("test","train")), # remove "unused"
+         aes(x=week*7, y=gpp, group = sitename, color=dataset)) +
+  geom_line() + theme_classic() +
+  theme(legend.position = "none") +
+  ggtitle("GPP (all obs)") + labs(y="GPP (gC m-2 d-1)", x="DOY")
+
+fig_B_test_train_targethist_gpp_QC <-
+  ggplot(dat_to_plot2_gpp_stats_QC |> filter(dataset %in% c("test","train")), # remove "unused"
+         aes(x=week*7, y=gpp, group = sitename, color=dataset)) +
+  geom_line() + theme_classic() +
+  theme(legend.position = "none") +
+  ggtitle("GPP (only QC>0.8)") + labs(y="GPP (gC m-2 d-1)", x="DOY")
+
+# vcmax/jmax
+fig_B_test_train_targethist_vj <-
+  dat_to_plot2 |> filter(run_model == "onestep") |> unnest(data) |> unnest(vj) |>
+  filter(dataset %in% c("test","train")) |>  # remove "unused"
+  ggplot(aes(x=vj_obs__, color = dataset)) +
+  geom_density() + theme_classic() + col_scale +
+  theme(legend.position = "none") +
+  ggtitle("Vcmax/Jmax") + labs(x="Vcmax/Jmax (-)", y=NULL)
+# bigD13C
+fig_B_test_train_targethist_bigD13C <-
+  dat_to_plot2 |> filter(run_model == "onestep") |> unnest(data) |> unnest(bigD13C) |>
+  filter(dataset %in% c("test","train")) |>  # remove "unused"
+  ggplot(aes(x=bigD13C_obs_permil, color = dataset)) +
+  geom_density() + theme_classic() + col_scale +
+  theme(legend.position = c(0.95, 0.95), legend.justification = c(1,1)) +
+  ggtitle("Δ13C") + labs(x="Δ13C (‰)", y=NULL)
+
+library(patchwork)
+fig_B_test_train_targethist <-
+  (fig_B_test_train_targethist_gpp + fig_B_test_train_targethist_gpp_QC) /
+  (fig_B_test_train_targethist_vj + fig_B_test_train_targethist_bigD13C)
+
+ggsave(
+  here::here("fig/01_fig_C_test_train_targethist.png"),
+  fig_B_test_train_targethist, width=7.2, height=4.8, units="in", scale = 1)
+
+
