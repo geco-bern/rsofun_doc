@@ -88,6 +88,9 @@ t_col <- function(color, percent = 50, name = NULL) {
 }
 plot_prior_posterior_density <- function(x){
   require(BayesianTools)
+  require(dplyr)
+  require(tidyr)
+  require(ggplot2)
 
   # Get matrices of prior and posterior samples
   posteriorMat <- getSample(x, parametersOnly = TRUE)

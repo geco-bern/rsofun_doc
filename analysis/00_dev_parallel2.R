@@ -1,8 +1,11 @@
+# renv::restore()
+
 library(BayesianTools)
 library(foreach)
 library(doParallel)
 library(tidyr)
 library(dplyr)
+library(readr)
 
 source(here::here("R/test_mcmc_parallelization.R"), echo = TRUE)
 
@@ -64,7 +67,7 @@ source(here::here("R/test_mcmc_parallelization.R"), echo = TRUE)
 
 # for testing
 timings_it <- tibble()
-for(iter in c(5,15,50,100,200,400)){
+for(iter in c(400)){
   timings_it <- test_mcmc_parallelization_rsofun(
     iterations = iter, burnin = floor(iter/4),
     n_chains_independent      = 1,

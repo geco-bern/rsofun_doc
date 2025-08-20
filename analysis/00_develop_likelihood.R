@@ -19,7 +19,6 @@ df_test_train_split <- read_csv(here::here("data/01_test_train_split.csv"))
 sites_train <- df_test_train_split |> filter(dataset == "train")
 sites_test  <- df_test_train_split |> filter(dataset == "test")
 
-
         # Test run pmodel --------------------------------------------------------------
         # ## Apply one-step P-model function on each row ----
         # ### Define constant model parameters
@@ -173,10 +172,6 @@ train_obs     <- bigD13C_vj_gpp_obs     |> filter(sitename %in% sites_train$site
 
 test_drivers <- bigD13C_vj_gpp_drivers2 |> filter(sitename %in% sites_test$sitename)
 test_obs     <- bigD13C_vj_gpp_obs     |> filter(sitename %in% sites_test$sitename)
-
-
-
-
 
       # ## Compute loglikelihood ----
       # source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
@@ -587,7 +582,6 @@ write_rds(out_calib_setup3,
 
 
 # Make some comparison plots:
-
 pl1 <- plot_prior_posterior_density(out_calib_setup1$mod) + ggtitle("Setup 1 10k/50k")
 pl2 <- plot_prior_posterior_density(out_calib_setup2$mod) + ggtitle("Setup 2 3k/13k")
 pl3 <- plot_prior_posterior_density(out_calib_setup3$mod) + ggtitle("Setup 3 1k/5k")

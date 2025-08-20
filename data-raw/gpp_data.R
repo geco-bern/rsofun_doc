@@ -62,6 +62,22 @@ df_gpp_forcingtarget_cropped <- df_gpp_forcingtarget |>
   nest(site_info = 'lon':'FDK_igbp_land_use') |>
   select(sitename, params_siml, site_info, forcing)
 
+# NOTE that gpp is GPP_NT_VUT_REF
+
+# TODO: add quality check filter here
+
 write_rds(df_gpp_forcingtarget_cropped,
           here::here("data/00_gpp_forcingtarget.rds"),
           compress = "xz")
+
+
+
+
+
+# # TODO: illustrate issue with GF-Guy in FDK:
+# # drivers |> filter(sitename == "GF-Guy") |> unnest(forcing)
+# # df_old |> filter(sitename == "GF-Guy") |> unnest(forcing)
+# redr::read_rds("data/00_gpp_forcingtarget.rds") |> unnest(forcing) |>
+#   group_by(sitename) |> filter(any(is.na(gpp))) |>
+#   ggplot(aes(x=date,y=sitename, color = is.na(gpp))) + geom_point() + # TODO: discuss issue
+#   theme_classic()
