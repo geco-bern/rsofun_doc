@@ -21,17 +21,17 @@ renv::restore()        # instantiate the correct environment
 
 # process data
 dir.create("data")
-renv::run("data-raw/bigD13C_data.R")        
-renv::run("data-raw/vj_data.R")            
-renv::run("data-raw/gpp_data.R")            
+renv::run("data-raw/bigD13C_data.R",        name = "bigD13C_data")
+renv::run("data-raw/vj_data.R",             name = "vj_data")
+renv::run("data-raw/gpp_data.R",            name = "gpp_data")
 # wait for the earlier scripts to finish, then run:
-renv::run("data-raw/append_climate_data.R")
+renv::run("data-raw/append_climate_data.R", name = "append_climate_data")
 
 # setup data split into training and testing
-renv::run("analysis/01_subset_test_train_sites.R")
+renv::run("analysis/01_subset_test_train_sites.R", name = "subset_test_train_sites")
 
-# run calibration scenarions
-renv::run("analysis/00_bayesian_calibration.R") # to run the scenarios in sequential order
+# run calibration scenarions in sequential order:
+renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration")
 
 # run sensitivity analysis
 # renv::run() # TODO

@@ -12,7 +12,7 @@ library(readr)
 source(here::here("R/test_mcmc_parallelization.R"), echo = TRUE)
 
 # setup output function
-timings_to_rds_csv <- function(timings, path = "timings_FB.csv"){
+timings_to_rds_csv <- function(timings, path = "timings_FB"){
   # to *.rds
   timings |> readr::write_rds(paste0(path,".rds"))
 
@@ -63,6 +63,23 @@ timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings)
 curr_timings <- test_mcmc_parallelization_rsofun(
   # calibration scenario:
   curr_calibration_setup    = 1,
+  # mcmc setup:
+  iterations = iterations, burnin = burnin,
+  n_chains_independent      = 3,
+  n_chains_within_sampler   = 3,
+  # parallelization
+  n_parallel_independent    = 3,     # now the 3 chains are run in parallel
+  n_parallel_within_sampler = FALSE
+)
+timings <- bind_rows(timings, curr_timings)
+
+
+
+
+## Scenario 0: ( is only FR-Pue like in initial submission)
+curr_timings <- test_mcmc_parallelization_rsofun(
+  # calibration scenario:
+  curr_calibration_setup    = 0,
   # mcmc setup:
   iterations = iterations, burnin = burnin,
   n_chains_independent      = 3,
