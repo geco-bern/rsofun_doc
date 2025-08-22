@@ -15,7 +15,7 @@ library(rsofun)
 source(here::here("R/run_mcmc_rsofun.R"), echo = TRUE)
 
 # setup output function
-path <- format(Sys.time(), "timings_FB_%Y-%m-%d_%Hh%M")
+path <- format(Sys.time(), "timings_FB_%Y-%m-%d_%Hh%Mm%Ss")
 timings_to_rds_csv <- function(timings, path = "timings_FB"){
   # to *.rds
   timings |> readr::write_rds(paste0(path,".rds"))
@@ -23,7 +23,7 @@ timings_to_rds_csv <- function(timings, path = "timings_FB"){
   # to *.csv
   timings |>
     mutate(across(
-      where(is.difftime),
+      where(lubridate::is.difftime),
       ~sprintf("%8.1fmin", round(as.numeric(.x, "mins"),1))
     )) |>
     readr::write_csv(paste0(path,".csv"))

@@ -166,6 +166,8 @@ calib_sofun_parallelized <- function(
     suffix = "", # for storing rds
     ...
 ){
+  print(paste0(Sys.time(),": start sampling of ", suffix))
+
   # backwards compatibility: set default values of parallelization options
   # by default do three chains
   if(is.null(settings$control$n_chains_independent)){    settings$control$n_chains_independent <- 3}
@@ -310,6 +312,9 @@ calib_sofun_parallelized <- function(
   } else {
     stop("Unknown method passed to calib_sofun().")
   }
+
+  print(paste0(Sys.time(),": end sampling of ", suffix,
+               ". Written *.rds-output to: ", here::here(return_value$fpath)))
 
   return(return_value)
 }
