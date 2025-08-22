@@ -1,6 +1,6 @@
 source(here::here("R/calibration_helpers.R"))
 
-setup_rsofun_calibration <- function(setup = 3){
+setup_rsofun_calibration <- function(scenario = 3){
   # FROM THE REVISION PLAN:
   # Setup 1: global, reduced parameter set (as in initial manuscript version), only GPP as target
   # Setup 2: global, full parameter set, only GPP as target
@@ -56,7 +56,7 @@ setup_rsofun_calibration <- function(setup = 3){
   test_drivers <- bigD13C_vj_gpp_drivers |> filter(dataset == "test") |> select(-dataset)
   test_obs     <- bigD13C_vj_gpp_obs     |> filter(dataset == "test") |> select(-dataset)
 
-  ## Setup the settings for the three calibration setups ----
+  ## Setup the settings for the three calibration scenarios ----
   ## Define parameter
   default_par_fixed <- list(# fix parameter value from previous calibration
     kphio              = 0.04998,
@@ -69,7 +69,7 @@ setup_rsofun_calibration <- function(setup = 3){
     tau_acclim         = 20.0,
     kc_jmax            = 0.41
   )
-  if (setup %in% c(1)){
+  if (scenario %in% c(1)){
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -82,7 +82,7 @@ setup_rsofun_calibration <- function(setup = 3){
     )
     par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
 
-  } else if (setup %in% c(2,3)) {
+  } else if (scenario %in% c(2,3)) {
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -99,7 +99,7 @@ setup_rsofun_calibration <- function(setup = 3){
     )
     par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
 
-  } else if (setup %in% c(0)) {
+  } else if (scenario %in% c(0)) {
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -112,10 +112,10 @@ setup_rsofun_calibration <- function(setup = 3){
     )
     par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
   } else {
-    stop(sprintf("Unsupported setup: %d", setup))
+    stop(sprintf("Unsupported scenario: %d", scenario))
   }
 
-  ## Setup the data (drivers and obs) for the three calibration setups ----
+  ## Setup the data (drivers and obs) for the three calibration scenarios ----
 
   # subset different combination of target variables
   # for easier handling do this in combined drivobs-object
@@ -124,14 +124,14 @@ setup_rsofun_calibration <- function(setup = 3){
     train_obs,
     by = join_by(sitename, run_model))
 
-  if (setup %in% c(1,2)){
+  if (scenario %in% c(1,2)){
     drivobs <- drivobs_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
-  } else if (setup %in% c(3)) {
+  } else if (scenario %in% c(3)) {
     drivobs <- drivobs_bigD13C_vj_gpp
-  } else if (setup %in% c(0)) {
+  } else if (scenario %in% c(0)) {
     drivobs <- tibble( # load it based on FR-Pue data:
       sitename    = rsofun::p_model_drivers$sitename,
       run_model   = "daily",
@@ -143,7 +143,7 @@ setup_rsofun_calibration <- function(setup = 3){
     )
   } else {
     browser()
-    stop(sprintf("Unsupported setup: %d", setup))
+    stop(sprintf("Unsupported scenario: %d", scenario))
   }
 
   ## return ---
@@ -232,7 +232,11 @@ calib_sofun_parallelized <- function(
       # since parallel sampling, fix the number of chains of runMCMC to 1, but call it multiple times
       settings$control$settings$nrChains <- 1
 
-      indep_chains <- foreach(i = 1:settings$control$n_parallel_independent, .packages=c('BayesianTools','rsofun','dplyr','tidyr')) %dopar% { #%dopar% {
+      indep_chains <- foreach(
+          i = 1:settings$control$n_parallel_independent,
+          .packages=c('BayesianTools','rsofun','dplyr','tidyr'),
+          .verbose = TRUE
+          ) %dopar% {
         bayesianSetup <- createBayesianSetup(
           likelihood = ll_factory(obs, drivers, parnames, ...), # inside worker: rebuild the closure so it picks up 'obs', 'drivers', 'parnames'
           prior      = priors,
@@ -320,7 +324,7 @@ calib_sofun_parallelized <- function(
 }
 
 run_mcmc_rsofun <- function(
-    curr_calibration_setup,
+    curr_calibration_scenario,
     # MCMC setup:
     iterations = 3,
     burnin = 0,
@@ -333,7 +337,7 @@ run_mcmc_rsofun <- function(
 ){
 
   # Setup simulation model
-  res <- setup_rsofun_calibration(setup = curr_calibration_setup)
+  res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
   # res$drivobs
   # res$par_fixed
   # res$par
@@ -368,7 +372,7 @@ run_mcmc_rsofun <- function(
   # Run calibration in parallel
   timings <- tibble(
     #
-    setup          = curr_calibration_setup,
+    scenario       = curr_calibration_scenario,
     # sampling options:
     sampler        = calib_sofun_settings$control$sampler,
     burnin         = burnin,
@@ -385,8 +389,8 @@ run_mcmc_rsofun <- function(
   suffix_str <- with(
     timings,
     sprintf(
-      "_setup%d_%s-%d-%diter_%dx%dchains_on_CPU%dx%d",
-      setup, sampler, iterations, burnin, n_chains, n_chains_inner, cores,
+      "_scen%d_%s-%d-%diter_%dx%dchains_on_CPU%dx%d",
+      scenario, sampler, iterations, burnin, n_chains, n_chains_inner, cores,
       ifelse(cores_inner, cores_inner, 1))
   )
 
