@@ -1,5 +1,7 @@
 # Script running Bayesian calibration
 
+pak::pkg_install("geco-bern/rsofun@ebb6b208e72f83d7cb13c5802239b122f6853a52")
+
 # Load libraries
 # renv::restore()
 library(BayesianTools)
@@ -8,6 +10,7 @@ library(doParallel)
 library(tidyr)
 library(dplyr)
 library(readr)
+library(rsofun)
 
 source(here::here("R/run_mcmc_rsofun.R"), echo = TRUE)
 

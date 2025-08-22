@@ -151,9 +151,7 @@ rgeco:::plot_map_simpl() +
 
 # TODO: below is just a test.
 
-library(rsofun)  # install from branch simple_pmodel_v2
-# pak::pkg_install("geco-bern/rsofun@simple_pmodel_v2")
-
+library(rsofun)
 # Apply one-step P-model function on each row of df_vj
 # Define constant model parameters
 params_modl <- list(
