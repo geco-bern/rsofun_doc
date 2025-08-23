@@ -82,7 +82,7 @@ if(3 %in% args["scenario"]){
     n_chains_independent      = 3,
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 3,     # now the 3 chains are run in parallel
+    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
@@ -97,7 +97,7 @@ if(2 %in% args["scenario"]){
     n_chains_independent      = 3,
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 3,     # now the 3 chains are run in parallel
+    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
@@ -112,7 +112,7 @@ if(1 %in% args["scenario"]){
     n_chains_independent      = 3,
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 3,     # now the 3 chains are run in parallel
+    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
@@ -127,7 +127,7 @@ if(0 %in% args["scenario"]){
     n_chains_independent      = 3,
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 3,     # now the 3 chains are run in parallel
+    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
