@@ -244,6 +244,8 @@ calib_sofun_parallelized <- function(
           .packages=c('BayesianTools','rsofun','dplyr','tidyr'),
           .verbose = TRUE
           ) %dopar% {
+
+        set.seed(1982 + i) # set a different seed on each worker
         bayesianSetup <- createBayesianSetup(
           likelihood = ll_factory(obs, drivers, parnames, ...), # inside worker: rebuild the closure so it picks up 'obs', 'drivers', 'parnames'
           prior      = priors,
