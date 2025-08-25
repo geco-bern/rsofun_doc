@@ -579,25 +579,76 @@ df_worldclim_agg <-
       # plot_comparison # THIS LOOKS GOOD
       # # END TODO
 
+
+
+
+## Subset vj and bigD13C sites ----
+# - do not use croplands and wetlands
+# - do not use
+
+classes_to_remove_from_vj_bigD13C <- c(
+  "Bare areas",
+  "Cropland, irrigated or post-flooding",
+  "Cropland, rainfed",
+  "Mosaic cropland (>50%) / natural vegetation (tree, shrub, herbaceous cover) (<50%)",
+  "Lichens and mosses",
+  "Permanent snow and ice",
+  "Water bodies",
+  "Urban areas",
+  "Tree cover, flooded, fresh or brackish water", "Tree cover, flooded, saline water", "Shrub or herbaceous cover, flooded, fresh/saline/brackish water"
+)
+siteinfo |>
+  mutate(to_remove = Defourny_LCCS %in% classes_to_remove_from_vj_bigD13C) |>
+  group_by(to_remove, Defourny_LCCS) |> summarise(n()) |> print(n=100)
+
+sites_to_remove2 <- siteinfo |>
+  mutate(to_remove = Defourny_LCCS %in% classes_to_remove_from_vj_bigD13C) |>
+  filter(to_remove) |>
+  magrittr::extract2("sitename")
+
+      # gpp_sites_to_use <- fdk_site_info |>
+      #   filter(!(igbp_land_use %in% c("CRO", "WET"))) |>
+      #   left_join(
+      #     fdk_site_fullyearsequence,
+      #     by = "sitename"
+      #   ) |>
+      #   filter(nyears_gpp > 5)
+      #
+      # df_gpp_forcingtarget <- gpp_sites_to_use |>
+      #   select(sitename, nyears_gpp,
+      #          FDK_koeppen_code = koeppen_code, FDK_igbp_land_use = igbp_land_use,
+      #          year_start_gpp, year_end_gpp) |>
+      #   left_join(drivers, by = join_by(sitename)) |>
+      #   # nest the additional columns into site_info
+      #   unnest(site_info) |>
+      #   nest(site_info = c(
+      #     lon, lat, elv, whc, canopy_height, reference_height,
+      #     nyears_gpp, FDK_koeppen_code, FDK_igbp_land_use, year_start_gpp, year_end_gpp)) |>
+      #   select(sitename, params_siml, site_info, forcing)
+      #
+      #
+
 # Combine and output
 
 # since we did not get worldclim data for 10 sites
 # and only 0 temperature for another 1 sites:
 # `df_trait_forcing_filled` is missing these 11 sites
 # anti_join(df_co2_agg, df_worldclim_agg)$sitename |> dput()
-sites_to_remove <- c(
+sites_to_remove1 <- c(
   "lon_+158.80_lat_-054.50", "lon_-041.75_lat_-022.38", "lon_-063.80_lat_-064.80",
   "lon_-063.82_lat_-064.82", "lon_-069.83_lat_+011.61", "lon_-072.38_lat_+078.53",
   "lon_-074.60_lat_+078.58", "lon_-075.92_lat_+078.88", "lon_-079.38_lat_+008.97",
   "lon_-086.70_lat_+076.35", "lon_+113.83_lat_+004.18"
 )
-sites_to_remove
+
+sites_to_remove <- c(sites_to_remove1, sites_to_remove2)
+
 
 df_trait_forcing_filled <-
   dplyr::full_join(df_etopo_agg |> nest(patm = c(elv_masl, patm_Pa)) |> filter(!(sitename %in% sites_to_remove)),
                     df_co2_agg  |> nest(co2  = c(co2_ppm))           |> filter(!(sitename %in% sites_to_remove)),
                     by = join_by(sitename)) |>
-  dplyr::full_join(df_worldclim_agg |> nest(clim = c(growing_season_length,temp,vpd,ppfd)),
+  dplyr::full_join(df_worldclim_agg |> nest(clim = c(growing_season_length,temp,vpd,ppfd)) |> filter(!(sitename %in% sites_to_remove)),
                     by = join_by(sitename)) |>
   # re-append lon, lat
   dplyr::left_join(siteinfo, by = join_by(sitename)) |>
@@ -607,7 +658,7 @@ df_trait_forcing_filled <-
 df_trait_targets <-
   dplyr::full_join(
     df_bigD13C_target |> select(-c(lon,lat)) |> nest(bigD13C = -sitename) |> filter(!(sitename %in% sites_to_remove)),
-    df_vj_target  |> select(-c(lon,lat)) |> nest(vj  = -sitename) |> filter(!(sitename %in% sites_to_remove)),
+    df_vj_target      |> select(-c(lon,lat)) |> nest(vj  = -sitename) |> filter(!(sitename %in% sites_to_remove)),
     by = join_by(sitename)) |>
   select(sitename, bigD13C, vj) |>
   ungroup() |>
