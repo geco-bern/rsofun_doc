@@ -127,6 +127,36 @@ plot_prior_posterior_density <- function(x){
   return(gg)
 }
 
+plot_mcmc_trace <- function(x, nr_internal_chains){
+  # browser()
+  # x <- getSample(x, coda = T, thin = "auto") # TODO: check if we need to scale x-axis
+  curr_thin <- 1
+  x <- getSample(x, coda = T, thin = curr_thin)
+
+  # nr_internal_chains will have same color
+  dat_to_plot <- lapply(x, function(single_chain){as_tibble(single_chain) |> mutate(iteration = 1:n())}) |>
+    bind_rows(.id = "chain_id") |>
+    pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
+    # mark inner and outer chains (assumes DEzs):
+    mutate(outerChain = as.factor(ceiling(as.numeric(chain_id)/3)),
+           innerChain = (as.numeric(chain_id)+2)%%3 + 1,
+           innerChain_str = letters[innerChain],
+           chain_id_str = paste0(outerChain, letters[innerChain])) |>
+    # fix order: in order of appearance
+    mutate(variable = forcats::as_factor(variable))
+  # dat_to_plot |> select(chain_id, innerChain, outerChain, chain_id_str) |> distinct()
+
+  ggplot(dat_to_plot,
+         aes(x=iteration, y=value, color = outerChain, linetype = innerChain_str)) + geom_line() +
+    # geom_rug(sides = "r") +
+    theme_classic() +
+    facet_wrap(~variable,  nrow = 2, scales = "free_y") +
+    theme(
+      legend.position = "bottom"
+    ) +
+    labs(y="", color = "chain", linetype = "internal\nchains")
+}
+
 get_runtime <- function(out_calib) {# function(settings_calib){
   total_time_secs <- sum(unlist(lapply(
     out_calib$mod,
@@ -140,3 +170,90 @@ get_runtime_numeric <- function(out_calib) {# function(settings_calib){
   return(structure(total_time_secs, class = "difftime", units = "secs"))
 }
 get_walltime <- function(out_calib){out_calib$walltime}
+
+
+
+
+
+
+#
+# my_own_coda_plotmcmclist <- function (x, trace = TRUE, density = TRUE, smooth = TRUE, bwf,
+#                                  auto.layout = TRUE, ask = par("ask"), ...) {
+#   ## RGA fixed to use default ask value.
+#   oldpar <- NULL
+#   on.exit(par(oldpar))
+#   if (auto.layout) {
+#     mfrow <- coda:::set.mfrow(Nchains = nchain(x), Nparms = coda::nvar(x),
+#                               nplots = trace + density)
+#     oldpar <- par(mfrow = mfrow)
+#   }
+#   # browser()
+#   for (i in 1:coda::nvar(x)) {
+#     if (trace)
+#       ## RGA fixed to propagate ... argument.
+#       # browser()
+#       # length(x) # internal x external chains
+#     lapply(x, function(single_chain){as_tibble(single_chain) |> mutate(iteration = 1:n())}) |>
+#       bind_rows(.id = "chain_id") |>
+#       pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
+#       # fix order: in order of appearance
+#       mutate(variable = forcats::as_factor(variable)) |>
+#       ggplot(aes(x=iteration, y=value, color = chain_id)) + geom_line() +
+#       facet_wrap(~variable, scales = "free_y") + theme_classic()
+#
+#       # coda::traceplot(x[, i, drop = FALSE], smooth = smooth, ...)
+#       my_own_codatraceplot(x[, i, drop = FALSE], smooth = smooth, ...)
+#     if (density) {
+#       if (missing(bwf))
+#         ## RGA fixed to propagate ... argument.
+#         coda::densplot(x[, i, drop = FALSE], ...)
+#       else densplot(x[, i, drop = FALSE], bwf = bwf, ...)
+#     }
+#     if (i==1)
+#       oldpar <- c(oldpar, par(ask = ask))
+#   }
+# }
+# # my_own_codadenseplot <- function (x, smooth = FALSE, col = 1:6, type = "l", xlab = "Iterations", ylab = "", ...){
+# #   x <- mcmc.list(x)
+# #   args <- list(...)
+# #   for (j in 1:nvar(x)) {
+# #     xp <- as.vector(time(x))
+# #     yp <- if (nvar(x) > 1)
+# #       x[, j, drop = TRUE]
+# #     else x
+# #     yp <- do.call("cbind", yp)
+# #     matplot(xp, yp, xlab = xlab, ylab = ylab, type = type,
+# #             col = col, ...)
+# #     if (!is.null(varnames(x)) && is.null(list(...)$main))
+# #       title(paste("Trace of", varnames(x)[j]))
+# #     if (smooth) {
+# #       scol <- rep(col, length = nchain(x))
+# #       for (k in 1:nchain(x)) lines(lowess(xp, yp[, k]),
+# #                                    col = scol[k])
+# #     }
+# #   }
+# # }
+#
+# my_own_codatraceplot <- function (x, smooth = FALSE, col = 1:6, type = "l", xlab = "Iterations", ylab = "", ...) {
+#   # browser()
+#   x <- coda:::mcmc.list(x)
+#   args <- list(...)
+#   for (j in 1:coda::nvar(x)) {
+#     xp <- as.vector(time(x))
+#     # yp <- if (coda::nvar(x) > 1)
+#     #   x[, j, drop = TRUE]
+#     # else x
+#     # yp <- do.call("cbind", yp)
+#     yp <- do.call("cbind", x)
+#     matplot(xp, yp, xlab = xlab, ylab = ylab, type = type,
+#             col = col, ...)
+#     if (!is.null(coda::varnames(x)) && is.null(list(...)$main))
+#       title(paste("Trace of", coda::varnames(x)[j]))
+#     if (smooth) {
+#       scol <- rep(col, length = nchain(x))
+#       for (k in 1:nchain(x)) lines(lowess(xp, yp[, k]),
+#                                    col = scol[k])
+#     }
+#   }
+# }
+

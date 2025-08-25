@@ -15,23 +15,27 @@
 # Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(3,11,51))'
 
 # # When using this script directly from RStudio, not from the shell, specify
-# args <- c("3", "11", "51")
+# args <- c("3", "11", "51", "3")
+# args <- c("0", "11", "51", "3")
 
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)
-stopifnot(length(args)==3)
+stopifnot(length(args) %in% c(3,4))
+if(length(args)==3) {args <- c(args, "1")}
 args <- as.integer(args)
-names(args) <- c("scenario","burnin","iterations")
+names(args) <- c("scenario","burnin","iterations","parallel")
 
 stopifnot(length(args[["scenario"]])>=1)
 stopifnot(length(args[["burnin"]])==1)
 stopifnot(length(args[["iterations"]])==1)
+stopifnot(length(args[["parallel"]])==1)
 
 print(sprintf(
-  "Requested scenario #%d, for (%d-%d) iterations",
+  "Requested scenario #%d, for (%d-%d) iterations (on %d core(s))",
   args[["scenario"]],
   args[["iterations"]],
-  args[["burnin"]]
+  args[["burnin"]],
+  args[["parallel"]]
 ))
 
 # pak::pkg_install("geco-bern/rsofun@ebb6b208e72f83d7cb13c5802239b122f6853a52")
@@ -79,11 +83,12 @@ if(3 %in% args["scenario"]){
     curr_calibration_scenario    = 3,
     # mcmc setup:
     iterations = args[["iterations"]], burnin = args[["burnin"]],
-    n_chains_independent      = 3,
+    n_chains_independent      = args[["parallel"]],
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
-    n_parallel_within_sampler = FALSE
+    n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
+    n_parallel_within_sampler = FALSE,
+    logpath = paste0(path, "_log.txt")
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
 }
@@ -94,11 +99,12 @@ if(2 %in% args["scenario"]){
     curr_calibration_scenario    = 2,
     # mcmc setup:
     iterations = args[["iterations"]], burnin = args[["burnin"]],
-    n_chains_independent      = 3,
+    n_chains_independent      = args[["parallel"]],
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
-    n_parallel_within_sampler = FALSE
+    n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
+    n_parallel_within_sampler = FALSE,
+    logpath = paste0(path, "_log.txt")
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
 }
@@ -109,11 +115,12 @@ if(1 %in% args["scenario"]){
     curr_calibration_scenario    = 1,
     # mcmc setup:
     iterations = args[["iterations"]], burnin = args[["burnin"]],
-    n_chains_independent      = 3,
+    n_chains_independent      = args[["parallel"]],
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
-    n_parallel_within_sampler = FALSE
+    n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
+    n_parallel_within_sampler = FALSE,
+    logpath = paste0(path, "_log.txt")
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
 }
@@ -124,11 +131,12 @@ if(0 %in% args["scenario"]){
     curr_calibration_scenario    = 0,
     # mcmc setup:
     iterations = args[["iterations"]], burnin = args[["burnin"]],
-    n_chains_independent      = 3,
+    n_chains_independent      = args[["parallel"]],
     n_chains_within_sampler   = 3,
     # parallelization
-    n_parallel_independent    = 1,     # now the 3 chains are run in sequence (set to 3 if you want in parallel)
-    n_parallel_within_sampler = FALSE
+    n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
+    n_parallel_within_sampler = FALSE,
+    logpath = paste0(path, "_log.txt")
   )
   timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
 }

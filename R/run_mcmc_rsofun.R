@@ -139,7 +139,9 @@ setup_rsofun_calibration <- function(scenario = 3){
       site_info   = rsofun::p_model_drivers$site_info,
       forcing     = rsofun::p_model_drivers$forcing,
       targets     = list(list(vj = FALSE, bigD13C = FALSE, gpp = TRUE)),
-      data        = list(rsofun::p_model_validation$data[[1]] |> mutate(gpp_qc = 0.90)) # assume bigger than 0.8
+      data        = list(rsofun::p_model_validation$data[[1]] |>
+                           mutate(gpp_qc = 0.90) |> # assume bigger than 0.8
+                           filter(!is.na(gpp)))
     )
   } else {
     browser()
@@ -164,6 +166,7 @@ calib_sofun_parallelized <- function(
     settings,
     optim_out = TRUE, # whether to return chains
     suffix = "", # for storing rds
+    logpath = "",
     ...
 ){
   print(paste0(Sys.time(),": start sampling of ", suffix))
@@ -220,7 +223,11 @@ calib_sofun_parallelized <- function(
 
     if (settings$control$n_parallel_independent > 1){ # parallel MCMC sampler:
 
-      cl <- makeCluster(settings$control$n_parallel_independent)
+      if (logpath != "") {
+        cl <- makeCluster(settings$control$n_parallel_independent, outfile = logpath)
+      } else {
+        cl <- makeCluster(settings$control$n_parallel_independent)
+      }
       registerDoParallel(cl)
 
       if (settings$control$n_parallel_independent != settings$control$n_chains_independent){
@@ -333,7 +340,8 @@ run_mcmc_rsofun <- function(
 
     # parallelization:
     n_parallel_independent  = 3,      # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
-    n_parallel_within_sampler = FALSE # number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
+    n_parallel_within_sampler = FALSE,# number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
+    logpath = ""
 ){
 
   # Setup simulation model
@@ -400,7 +408,8 @@ run_mcmc_rsofun <- function(
     settings  = calib_sofun_settings,
     # other arguments for the cost function
     par_fixed = res$par_fixed,
-    suffix    = suffix_str
+    suffix    = suffix_str,
+    logpath   = logpath
   ) # this stores the whole out_calib in an rds object odentified by "suffix_str"
 
   # append performance results to return object

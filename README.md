@@ -31,20 +31,20 @@ renv::run("data-raw/append_climate_data.R", name = "append_climate_data")
 renv::run("analysis/01_subset_test_train_sites.R", name = "subset_test_train_sites")
 
 # run calibration scenarions in sequential order:
-renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 3", args = c(3,11,51))
-renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 2", args = c(2,11,51))
-renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 1", args = c(1,11,51))
-renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 0", args = c(0,11,51))
+renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 3", args = c(3,11,51,3))
+renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 2", args = c(2,11,51,3))
+renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 1", args = c(1,11,51,3))
+renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 0", args = c(0,11,51,3))
 
 
 # or alternatively (running outside of RStudio directly from shell can be more robust):
 #   cd GitHub/geco-bern/rsofun_doc/
 #   tmux
 #   # open multiple tmux windows to run:
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(3,1000,5000))'
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(2,1000,5000))'
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(1,1000,5000))'
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(0,1000,5000))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(3,1000,5000,10))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(2,1000,5000,10))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(1,1000,5000,10))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(0,1000,5000,10))'
 
 
 # run sensitivity analysis
