@@ -166,7 +166,7 @@ calib_sofun_parallelized <- function(
     settings,
     optim_out = TRUE, # whether to return chains
     suffix = "", # for storing rds
-    logpath = "",
+    outpath = here::here("data"), logpath = "",
     ...
 ){
   print(paste0(Sys.time(),": start sampling of ", suffix))
@@ -317,15 +317,16 @@ calib_sofun_parallelized <- function(
     return_value$name <- suffix
 
     ## Store results to file: ----
-    return_value$fpath <- paste0("data/out_calib_", suffix, ".rds")
-    write_rds(return_value, file = here::here(return_value$fpath), compress = "xz")
+    return_value$fpath <- file.path(outpath, paste0("out_calib_", suffix, ".rds"))
+    write_rds(return_value, file = return_value$fpath, compress = "xz")
+
 
   } else {
     stop("Unknown method passed to calib_sofun().")
   }
 
   print(paste0(Sys.time(),": end sampling of ", suffix,
-               ". Written *.rds-output to: ", here::here(return_value$fpath)))
+               ". Written *.rds-output to: ", return_value$fpath))
 
   return(return_value)
 }
@@ -341,9 +342,8 @@ run_mcmc_rsofun <- function(
     # parallelization:
     n_parallel_independent  = 3,      # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
     n_parallel_within_sampler = FALSE,# number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
-    logpath = ""
+    outpath = here::here("data"), logpath = ""
 ){
-
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
   # res$drivobs
@@ -409,8 +409,8 @@ run_mcmc_rsofun <- function(
     # other arguments for the cost function
     par_fixed = res$par_fixed,
     suffix    = suffix_str,
-    logpath   = logpath
-  ) # this stores the whole out_calib in an rds object odentified by "suffix_str"
+    outpath = outpath, logpath = logpath
+  ) # this stores the whole out_calib in an rds object identified by "suffix_str" into outpath
 
   # append performance results to return object
   timings$runtime    <- out_calib$runtime

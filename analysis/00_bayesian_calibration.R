@@ -56,12 +56,13 @@ source(here::here("R/run_mcmc_rsofun.R"), echo = TRUE)
 fname <- sprintf("timings_scen%s_%s",
                  paste0(args, collapse="-"),
                  format(Sys.time(), "%Y-%m-%d_%Hh%Mm%Ss"))
-path <- here::here("data", "timings", fname)
-dir.create(here::here("data", "timings"), showWarnings = FALSE)
+# outpath <- here::here("data")
+outpath <- file.path("/data_2/scratch/fbernhard/rsofun_doc_outputs","data")
+dir.create(dirname(outpath), showWarnings = FALSE, recursive = TRUE)
 
-timings_to_rds_csv <- function(timings, path = "timings_FB"){
+timings_to_rds_csv <- function(timings, filename = here::here("data","timings","timings_FB")){
   # to *.rds
-  timings |> readr::write_rds(paste0(path,".rds"))
+  timings |> readr::write_rds(paste0(filename,".rds"))
 
   # to *.csv
   timings |>
@@ -69,12 +70,12 @@ timings_to_rds_csv <- function(timings, path = "timings_FB"){
       where(lubridate::is.difftime),
       ~sprintf("%8.1fmin", round(as.numeric(.x, "mins"),1))
     )) |>
-    readr::write_csv(paste0(path,".csv"))
+    readr::write_csv(paste0(filename,".csv"))
 }
 
 
 # run MCMC
-timings <- tibble(); timings_to_rds_csv(timings, path)
+timings <- tibble(); timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 
 ## Scenario 3:
 if(3 %in% args["scenario"]){
@@ -88,9 +89,9 @@ if(3 %in% args["scenario"]){
     # parallelization
     n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE,
-    logpath = paste0(path, "_log.txt")
+    outpath = outpath, logpath = file.path(outpath, "timings", paste0(fname,"_log.txt"))
   )
-  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
+  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 }
 ## Scenario 2:
 if(2 %in% args["scenario"]){
@@ -104,9 +105,9 @@ if(2 %in% args["scenario"]){
     # parallelization
     n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE,
-    logpath = paste0(path, "_log.txt")
+    outpath = outpath, logpath = file.path(outpath, "timings", paste0(fname,"_log.txt"))
   )
-  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
+  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 }
 ## Scenario 1:
 if(1 %in% args["scenario"]){
@@ -120,9 +121,9 @@ if(1 %in% args["scenario"]){
     # parallelization
     n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE,
-    logpath = paste0(path, "_log.txt")
+    outpath = outpath, logpath = file.path(outpath, "timings", paste0(fname,"_log.txt"))
   )
-  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
+  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 }
 ## Scenario 0: ( is only FR-Pue like in initial submission)
 if(0 %in% args["scenario"]){
@@ -136,7 +137,7 @@ if(0 %in% args["scenario"]){
     # parallelization
     n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
     n_parallel_within_sampler = FALSE,
-    logpath = paste0(path, "_log.txt")
+    outpath = outpath, logpath = file.path(outpath, "timings", paste0(fname,"_log.txt"))
   )
-  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, path)
+  timings <- bind_rows(timings, curr_timings); timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 }
