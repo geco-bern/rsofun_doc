@@ -1,5 +1,0 @@
-setup,sampler,burnin,iterations,n_chains,n_chains_inner,cores,cores_inner,runtime,walltime,resultfile
-3,DEzs,10,50,3,3,3,FALSE,     2.7min,     1.3min,data/out_calib__setup3_DEzs-50-10iter_3x3chains_on_CPU3x1.rds
-2,DEzs,10,50,3,3,3,FALSE,     0.6min,     0.3min,data/out_calib__setup2_DEzs-50-10iter_3x3chains_on_CPU3x1.rds
-1,DEzs,10,50,3,3,3,FALSE,     0.7min,     0.5min,data/out_calib__setup1_DEzs-50-10iter_3x3chains_on_CPU3x1.rds
-0,DEzs,10,50,3,3,3,FALSE,     0.1min,     0.3min,data/out_calib__setup0_DEzs-50-10iter_3x3chains_on_CPU3x1.rds
