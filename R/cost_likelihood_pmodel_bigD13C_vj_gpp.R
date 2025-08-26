@@ -325,7 +325,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
   df_mod_obs <- bind_rows(
     df_mod_obs_daily |> unnest(modobs) |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(gpp_mod = numeric(), gpp = numeric())) |>
+      ensure_cols_defined(tibble(gpp_mod = numeric(), gpp = numeric(), date = Date())) |>
       rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
       mutate(target  = "gpp",#curr_target,
              err_par = params_modl_and_err[["err_gpp"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
@@ -338,11 +338,12 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       ensure_cols_defined(tibble(bigD13C = list(), bigD13C_mod_permil = numeric())) |>
       unnest(bigD13C) |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(bigD13C_obs_permil = numeric())) |>
+      ensure_cols_defined(tibble(bigD13C_obs_permil = numeric(),
+                                 species = character(), year = integer())) |>
       rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
       mutate(target  = "bigD13C",#curr_target,
              err_par = params_modl_and_err[["err_bigD13C"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
-      nest(obs_metadata = c(species, year, Nobs, Nyears, Ndates)) |>
+      nest(obs_metadata = c(species, year)) |> # , Nobs, Nyears, Ndates
       select(sitename, run_model, target, obs_metadata, mod, obs, err_par),
 
     df_mod_obs_onestep |>
@@ -351,11 +352,12 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       ensure_cols_defined(tibble(vj = list(), vj_mod__ = numeric())) |>
       unnest(vj) |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(vj_obs__ = numeric())) |>
+      ensure_cols_defined(tibble(vj_obs__ = numeric(),
+                                 genus = character(), species = character(), year = integer())) |>
       rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
       mutate(target  = "vj",#curr_target,
              err_par = params_modl_and_err[["err_vj"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
-      nest(obs_metadata = c(genus, species, year, Nobs, Nyears, Ndates)) |>
+      nest(obs_metadata = c(genus, species, year)) |> # , Nobs, Nyears, Ndates
       select(sitename, run_model, target, obs_metadata, mod, obs, err_par)
   )
   stopifnot(all(targets %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case

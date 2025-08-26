@@ -80,6 +80,7 @@ calib_sofun_parallelized <- function(
       indep_chains <- foreach(
         i = 1:settings$control$n_parallel_independent,
         .packages=c('BayesianTools','rsofun','dplyr','tidyr'),
+        .export = get_mod_obs_pmodel_bigD13C_vj_gpp,
         .verbose = TRUE
       ) %dopar% {
 
