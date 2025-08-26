@@ -19,37 +19,29 @@ predict_sofun_parallelized <- function(
     # Function that runs the P-model for a sample of parameters
     # but does not add the observation error
 
-    # tryCatch({
+    # Taken from cost_likelihood_pmodel_bigD13C_vj_gpp()
+    stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
+    stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
 
-      # Taken from cost_likelihood_pmodel_bigD13C_vj_gpp()
-      stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
-      stopifnot(nrow(drivers) > 0) # ensure some driver data are provided
+    # A) Include current parameters ----
+    stopifnot(length(intersect(names(par), names(par_fixed))) == 0) # no overlap
+    params_modl <- c(par, par_fixed)
 
-      # A) Include current parameters ----
-      stopifnot(length(intersect(names(par), names(par_fixed))) == 0) # no overlap
-      params_modl <- c(par, par_fixed)
+    # B,C) Run model and bring together with observed ----
+    ## run the time series model for gpp/et/... time series
+    ## run the onestep model for traits
+    df_pred_vs_obs <- get_mod_obs_pmodel_bigD13C_vj_gpp(drivers, obs, params_modl, parallel=FALSE, ncores=1, return_continuous_timeseries = TRUE)
 
-      # B,C) Run model and bring together with observed ----
-      ## run the time series model for gpp/et/... time series
-      ## run the onestep model for traits
-      df_pred_vs_obs <- get_mod_obs_pmodel_bigD13C_vj_gpp(drivers, obs, params_modl, parallel=FALSE, ncores=1, return_continuous_timeseries = TRUE)
+    # D) (DON'T) Sample error model ----
+    # NOTE: sampling is not done here, but can optionally be done before plotting
+    #       Here we rename to clarify that no error model has yet been applied.
+    df_pred_vs_obs <- df_pred_vs_obs |>
+      # clarify name of model output (containing not yet any error model term)
+      rename(mod_no_err = mod) |>
+      relocate(c(mod_no_err, err_par), .after = last_col())
 
-      # D) (DON'T) Sample error model ----
-      # NOTE: sampling is not done here, but can optionally be done before plotting
-      #       Here we rename to clarify that no error model has yet been applied.
-      df_pred_vs_obs <- df_pred_vs_obs |>
-        # clarify name of model output (containing not yet any error model term)
-        rename(mod_no_err = mod) |>
-        relocate(c(mod_no_err, err_par), .after = last_col())
-
-      return(df_pred_vs_obs)
-
-    # }, error = function(e) {
-    #   warning(paste("Error in sample", i, ":", e$message))
-    #   return(NULL)
-    # })
+    return(df_pred_vs_obs)
   }
-
 
   # Run the P-model predictions for each set of parameters
   if (settings$n_cores > 1 && nrow(par_df) > 1) {
