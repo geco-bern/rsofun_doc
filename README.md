@@ -41,10 +41,10 @@ renv::run("analysis/00_bayesian_calibration.R",    name = "bayesian_calibration 
 #   cd GitHub/geco-bern/rsofun_doc/
 #   tmux
 #   # open multiple tmux windows to run:
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(3,1000,5000,10))'
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(2,1000,5000,10))'
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(1,1000,5000,10))'
-#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(0,1000,5000,10))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(3,0,5000,8))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(2,0,5000,8))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(1,0,5000,8))'
+#   Rscript -e 'renv::run("analysis/00_bayesian_calibration.R", project = "../rsofun_doc", args = c(0,0,5000,8))'
 
 
 # run sensitivity analysis

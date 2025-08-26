@@ -41,3 +41,5 @@ vignettes/*.pdf
 
 # manually defined
 data-previous*/
+timings*
+data/*.rds
