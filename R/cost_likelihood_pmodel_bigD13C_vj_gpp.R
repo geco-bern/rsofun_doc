@@ -77,7 +77,8 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
     drivers,
     par_fixed = NULL,   # non-calibrated model parameters
     parallel  = FALSE,
-    ncores    = 1
+    ncores    = 1,
+    get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp # default argument needed to make this function easily avaialable on parallel workers
 ){
 
   stopifnot(nrow(obs) > 0)     # ensure some observation data are provided
@@ -91,7 +92,7 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   # B,C) Run model and bring together with observed ----
   ## run the time series model for gpp/et/... time series
   ## run the onestep model for traits
-  df_mod_obs <- get_mod_obs_pmodel_bigD13C_vj_gpp(drivers, obs, params_modl_and_err, parallel, ncores)
+  df_mod_obs <- get_mod_obs(drivers, obs, params_modl_and_err, parallel, ncores)
 
   # D) Compute likelihood ----
   ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par must be positive

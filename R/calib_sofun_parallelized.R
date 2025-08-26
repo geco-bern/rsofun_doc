@@ -45,14 +45,20 @@ calib_sofun_parallelized <- function(
     # sampler needs a function ll(random_par) for the likelihood,
     # since data is provided as a closure (drivers, obs) we need a function factory to be able
     # create this function on each worker
-    ll_factory <- function(obs, drivers, parnames, ...){
+
+    # make available get_mod_obs_pmodel_bigD13C_vj_gpp so we can export it to workers
+    source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
+
+    ll_factory <- function(obs, drivers, parnames, get_mod_obs, ...){
       function(random_par){
         eval(settings$metric)(par = setNames(random_par, parnames),
                               obs = obs,
                               drivers = drivers,
+                              get_mod_obs = get_mod_obs,
                               ...)
       }
     }
+
 
     ## Run the MCMC sampler: ----
 
@@ -80,13 +86,15 @@ calib_sofun_parallelized <- function(
       indep_chains <- foreach(
         i = 1:settings$control$n_parallel_independent,
         .packages=c('BayesianTools','rsofun','dplyr','tidyr'),
-        .export = get_mod_obs_pmodel_bigD13C_vj_gpp,
+        .export = c('get_mod_obs_pmodel_bigD13C_vj_gpp'),
         .verbose = TRUE
       ) %dopar% {
 
         set.seed(1982 + i) # set a different seed on each worker
         bayesianSetup <- createBayesianSetup(
-          likelihood = ll_factory(obs, drivers, parnames, ...), # inside worker: rebuild the closure so it picks up 'obs', 'drivers', 'parnames'
+
+          # inside worker: rebuild the closure so it picks up 'obs', 'drivers', 'parnames', 'get_mod_obs_pmodel_bigD13C_vj_gpp'
+          likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, ...),
           prior      = priors,
           names      = parnames,
           parallel   = settings$control$n_parallel_within_sampler)
@@ -103,7 +111,7 @@ calib_sofun_parallelized <- function(
 
       # setup the bayesian sampling
       bayesianSetup <- createBayesianSetup(
-        likelihood = ll_factory(obs, drivers, parnames, ...),
+        likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp, ...),
         prior      = priors,
         names      = parnames,
         parallel   = settings$control$n_parallel_within_sampler)
