@@ -1,5 +1,6 @@
 source(here::here("R/calibration_helpers.R"))
 
+# TODO: potentially move this to "analysis/00_define_scenarios.R" (and source("analysis/...") wherever needed)
 setup_rsofun_calibration <- function(scenario = 3){
   # FROM THE REVISION PLAN:
   # Setup 1: global, reduced parameter set (as in initial manuscript version), only GPP as target
@@ -119,18 +120,30 @@ setup_rsofun_calibration <- function(scenario = 3){
 
   # subset different combination of target variables
   # for easier handling do this in combined drivobs-object
-  drivobs_bigD13C_vj_gpp <- dplyr::inner_join(
+  drivobs_train_bigD13C_vj_gpp <- dplyr::inner_join(
     train_drivers,
     train_obs,
     by = join_by(sitename, run_model))
 
+  drivobs_test_bigD13C_vj_gpp <- dplyr::inner_join(
+    test_drivers,
+    test_obs,
+    by = join_by(sitename, run_model))
+
   if (scenario %in% c(1,2)){
-    drivobs <- drivobs_bigD13C_vj_gpp |>
+    drivobs <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
+    drivobs_test <- drivobs_test_bigD13C_vj_gpp |>
+      unnest_wider(targets) |>
+      filter(gpp) |>
+      nest(targets = c(vj, bigD13C, gpp))
+
   } else if (scenario %in% c(3)) {
-    drivobs <- drivobs_bigD13C_vj_gpp
+    drivobs <- drivobs_train_bigD13C_vj_gpp
+    drivobs_test <- drivobs_test_bigD13C_vj_gpp
+
   } else if (scenario %in% c(0)) {
     drivobs <- tibble( # load it based on FR-Pue data:
       sitename    = rsofun::p_model_drivers$sitename,
@@ -143,6 +156,9 @@ setup_rsofun_calibration <- function(scenario = 3){
                            mutate(gpp_qc = 0.90) |> # assume bigger than 0.8
                            filter(!is.na(gpp)))
     )
+
+    drivobs_test <- drivobs |> dplyr::slice(0)
+
   } else {
     browser()
     stop(sprintf("Unsupported scenario: %d", scenario))
@@ -151,6 +167,7 @@ setup_rsofun_calibration <- function(scenario = 3){
   ## return ---
   return(list(
     drivobs = drivobs,
+    drivobs_test = drivobs_test,
     # driver    = tibble(),
     # obs       = tibble(),
     # # TODO: check if passing combined drivobs is computationally more efficient for calib_sofun()
