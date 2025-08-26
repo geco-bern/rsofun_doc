@@ -6,6 +6,7 @@ library(ggplot2)
 library(patchwork)
 
 source(here::here("R/calibration_helpers.R"))
+source(here::here("analysis/00_define_scenarios.R"))
 
 # timings <- readr::read_rds(here::here("timings_FB_2025-08-20_21h25.rds"))
 # timing_files <- list.files(here::here("data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)
@@ -44,7 +45,8 @@ out_calib_s2 <- longest_chains |> filter(scenario == 2, cores == 3) |> magrittr:
 # out_calib_s2b <- longest_chains |> filter(scenario == 2, cores == 10) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 out_calib_s3 <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 out_calib_s3b <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s3c <- longest_chains |> filter(scenario == 3, cores == 10) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s3d <- longest_chains |> filter(scenario == 3, cores == 8) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s4d <- longest_chains |> filter(scenario == 4, cores == 8) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 
 # reload non-parallel versions, to see if there is an issue with parallelization (or if it is with the likelihood)
 out_calib_s0_serial <- longest_chains |> filter(scenario == 0, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
@@ -86,40 +88,57 @@ ggsave(here::here("fig/fig_E_MCMCconvergence_posterior_s3.png"), pl_posterior_s3
 ## TBD: correlation plots, Gelman-Rubin (r.1.1)
 
 # coda::gelman.diag(chain)
-BayesianTools::gelmanDiagnostics(out_calib_s3$mod) # 87.5 not converged
+BayesianTools::gelmanDiagnostics(out_calib_s3$mod) # 535 not converged
 BayesianTools::gelmanDiagnostics(out_calib_s2$mod) # 151 not converged
-BayesianTools::gelmanDiagnostics(out_calib_s1$mod) # 1.52 close to converging
+BayesianTools::gelmanDiagnostics(out_calib_s1$mod) # 1.02 looks converged
+BayesianTools::gelmanDiagnostics(out_calib_s4d$mod) # 11.1 not yet converged
+
 
 # BayesianTools::gelmanDiagnostics(out_calib_s3_serial$mod) # 87.5 not converged
-BayesianTools::gelmanDiagnostics(out_calib_s2_serial$mod) # 70.8 not converged
-BayesianTools::gelmanDiagnostics(out_calib_s1_serial$mod) # 1.05 looks converged
-BayesianTools::gelmanDiagnostics(out_calib_s0_serial$mod) # 1.04 looks converged
+# BayesianTools::gelmanDiagnostics(out_calib_s2_serial$mod) # 70.8 not converged
+# BayesianTools::gelmanDiagnostics(out_calib_s1_serial$mod) # 1.05 looks converged
+# BayesianTools::gelmanDiagnostics(out_calib_s0_serial$mod) # 1.04 looks converged
 
 # chains:
-# BayesianTools::tracePlot(out_calib_s3_serial$mod)
-BayesianTools::tracePlot(out_calib_s2_serial$mod)
-BayesianTools::tracePlot(out_calib_s1_serial$mod)
-BayesianTools::tracePlot(out_calib_s0_serial$mod)
-
-# what the above does is:
+burnin_to_skip = 4000
+# what BayesianTools::tracePlot(out_calib_s0_serial$mod) does is:
+# BayesianTools::tracePlot(out_calib_s0_serial$mod, start = burnin_to_skip)
 out_calib_s0_serial$mod |>
-  getSample(coda = T, thin = "auto") |>
+  getSample(coda = T, thin = "auto", start = burnin_to_skip) |>
   coda:::plot.mcmc.list(density = FALSE)
 out_calib_s1_serial$mod |>
-  getSample(coda = T, thin = "auto") |>
+  getSample(coda = T, thin = "auto", start = burnin_to_skip) |>
   coda:::plot.mcmc.list(density = FALSE)
 out_calib_s2_serial$mod |>
-  getSample(coda = T, thin = "auto") |>
+  getSample(coda = T, thin = "auto", start = burnin_to_skip) |>
   coda:::plot.mcmc.list(density = FALSE)
 # out_calib_s3_serial$mod |>
-#   getSample(coda = T, thin = "auto") |>
+#   getSample(coda = T, thin = "auto", start = burnin_to_skip) |>
 #   coda:::plot.mcmc.list(density = FALSE)
 
-# debug(my_own_coda_plotmcmclist)
-pl_trace_s0 <- plot_mcmc_trace(out_calib_s0_serial$mod, nr_internal_chains = 3) + ggtitle(out_calib_s0_serial$fpath)
-pl_trace_s1 <- plot_mcmc_trace(out_calib_s1_serial$mod, nr_internal_chains = 3) + ggtitle(out_calib_s1_serial$fpath)
-pl_trace_s2 <- plot_mcmc_trace(out_calib_s2_serial$mod, nr_internal_chains = 3) + ggtitle(out_calib_s2_serial$fpath)
-pl_trace_s3 <- plot_mcmc_trace(out_calib_s3$mod, nr_internal_chains = 3) + ggtitle(out_calib_s3$fpath) # TODO
+# out_calib_s1$mod |>
+#   getSample(coda = T, thin = "auto", start = burnin_to_skip) |>
+#   coda:::plot.mcmc.list(density = FALSE)
+# out_calib_s1$mod |>
+#   getSample(coda = T, thin = "auto") |>
+#   coda:::plot.mcmc.list(density = FALSE)
+# out_calib_s4d$mod |>
+#   getSample(coda = T, thin = "auto", start = burnin_to_skip) |>
+#   coda:::plot.mcmc.list(density = FALSE)
+
+
+# debug(plot_mcmc_trace)
+pl_trace_s0_with_burnin <- plot_mcmc_trace(out_calib_s0_serial$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s0_serial$fpath)
+pl_trace_s1_with_burnin <- plot_mcmc_trace(out_calib_s1$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s1$fpath)
+pl_trace_s2_with_burnin <- plot_mcmc_trace(out_calib_s2$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s2$fpath)
+pl_trace_s3_with_burnin <- plot_mcmc_trace(out_calib_s3$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s3$fpath) # TODO
+pl_trace_s4d_with_burnin <- plot_mcmc_trace(out_calib_s4d$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s3$fpath) # TODO
+
+pl_trace_s0 <- plot_mcmc_trace(out_calib_s0_serial$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s0_serial$fpath)
+pl_trace_s1 <- plot_mcmc_trace(out_calib_s1$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s1$fpath)
+pl_trace_s2 <- plot_mcmc_trace(out_calib_s2$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s2$fpath)
+pl_trace_s3 <- plot_mcmc_trace(out_calib_s3$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s3$fpath) # TODO
+pl_trace_s4d <- plot_mcmc_trace(out_calib_s4d$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s3$fpath) # TODO
 
 ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s1.png"), pl_trace_s1, width=7.2, height=3.6, units="in", scale = 1.6)
 # ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s1.pdf"), pl_trace_s1, width=7.2, height=3.6, units="in", scale = 1.6)
@@ -135,36 +154,30 @@ ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s3.png"), pl_trace_s3, width=
 
 
 
-# check
-check1 <- timings1|>filter(burnin==0,iterations==24) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-check2 <- timings1|>filter(burnin==4,iterations==24) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-plot_mcmc_trace(check1$mod, nr_internal_chains = 10)
-plot_mcmc_trace(check2$mod, nr_internal_chains = 10)
+# # check burnin
+# check1 <- timings1|>filter(burnin==0,iterations==24) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# check2 <- timings1|>filter(burnin==4,iterations==24) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# plot_mcmc_trace(check1$mod, nr_internal_chains = 10, burnin_to_skip = 0)
+# plot_mcmc_trace(check2$mod, nr_internal_chains = 10, burnin_to_skip = 0)
 
 curr_thin <- 1
 x <- getSample(check2$mod, coda = T, thin = curr_thin)
 
-# nr_internal_chains will have same color
-dat_to_plot <- lapply(x, function(single_chain){as_tibble(single_chain) |> mutate(iteration = 1:n())}) |>
-  bind_rows(.id = "chain_id") |>
-  pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
-  # mark inner and outer chains (assumes DEzs):
-  mutate(outerChain = as.factor(ceiling(as.numeric(chain_id)/3)),
-         innerChain = (as.numeric(chain_id)+2)%%3 + 1,
-         innerChain_str = letters[innerChain],
-         chain_id_str = paste0(outerChain, letters[innerChain])) |>
-  # fix order: in order of appearance
-  mutate(variable = forcats::as_factor(variable))
-# dat_to_plot |> select(chain_id, innerChain, outerChain, chain_id_str) |> distinct()
-tail(dat_to_plot)
 
 
 
 # Parameter correlation analysis
-correlationPlot(out_calib_s3$mod, thin = 1) # TODO: error
+# correlationPlot(out_calib_s0_serial$mod, thin = 1) # the scatter plots with burnin do not make much sense
+correlationPlot(out_calib_s0_serial$mod, thin = 1, start = burnin_to_skip)
+
+correlationPlot(out_calib_s1$mod, thin = 1, start = burnin_to_skip)
+correlationPlot(out_calib_s2$mod, thin = 1, start = burnin_to_skip)
+correlationPlot(out_calib_s3$mod, thin = 1, start = burnin_to_skip)
+correlationPlot(out_calib_s4$mod, thin = 1, start = burnin_to_skip)
+
 
 # Check which parameters are most correlated
-samples_s3 <- getSample(out_calib_s3$mod)
+samples_s3 <- getSample(out_calib_s3$mod, thin = 1, start = burnin_to_skip)
 cor_matrix <- cor(samples_s3)
 print("Highly correlated parameters (|r| > 0.7):")
 high_cor <- which(abs(cor_matrix) > 0.7 & abs(cor_matrix) < 1, arr.ind = TRUE)

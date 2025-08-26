@@ -127,14 +127,22 @@ plot_prior_posterior_density <- function(x){
   return(gg)
 }
 
-plot_mcmc_trace <- function(x, nr_internal_chains){
+plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FALSE){
   # browser()
   # x <- getSample(x, coda = T, thin = "auto") # TODO: check if we need to scale x-axis
-  curr_thin <- 1
-  x <- getSample(x, coda = T, thin = curr_thin)
+  curr_iter <- x[[1]]$settings$iterations
+  if(dont_thin || curr_iter < 10000){
+    curr_thin <- 1
+  } else {
+    curr_thin <- floor(curr_iter / 10000)
+  }
+
+  xsample <- getSample(x, coda = T, thin = curr_thin, start = burnin_to_skip)
 
   # nr_internal_chains will have same color
-  dat_to_plot <- lapply(x, function(single_chain){as_tibble(single_chain) |> mutate(iteration = 1:n())}) |>
+  dat_to_plot <- lapply(xsample, function(single_chain){
+      as_tibble(single_chain) |> mutate(iteration = burnin_to_skip + curr_thin*(1:n()))
+    }) |>
     bind_rows(.id = "chain_id") |>
     pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
     # mark inner and outer chains (assumes DEzs):
