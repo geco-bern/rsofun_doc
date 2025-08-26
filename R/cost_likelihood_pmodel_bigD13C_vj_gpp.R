@@ -85,13 +85,13 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
 
   # A) Include current parameters ----
   stopifnot(length(intersect(names(par), names(par_fixed))) == 0) # no overlap
-  params_modl <- c(par, par_fixed)
+  params_modl_and_err <- c(par, par_fixed)
 
 
   # B,C) Run model and bring together with observed ----
   ## run the time series model for gpp/et/... time series
   ## run the onestep model for traits
-  df_mod_obs <- get_mod_obs_pmodel_bigD13C_vj_gpp(drivers, obs, params_modl, parallel, ncores)
+  df_mod_obs <- get_mod_obs_pmodel_bigD13C_vj_gpp(drivers, obs, params_modl_and_err, parallel, ncores)
 
   # D) Compute likelihood ----
   ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par must be positive
@@ -195,7 +195,9 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
 
 
 
-get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl, parallel, ncores){
+get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl_and_err, parallel, ncores){
+
+  # NOTE: params_modl_and_err contains model and error parameters
 
   # B) Run model ----
   ## run the time series model for gpp/et/... time series
@@ -203,7 +205,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl, paralle
     filter(run_model == "daily") |> # NOTE: this works gracefully even when no simulations are requested
     runread_pmodel_f(
       drivers   = _,
-      par       = params_modl,
+      par       = params_modl_and_err,
       makecheck = FALSE,
       parallel  = parallel,
       ncores    = ncores
@@ -241,7 +243,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl, paralle
                               ppfd = .x$ppfd,
                               co2  = .x$co2,
                               patm = .x$patm),
-        params_modl = params_modl,
+        params_modl = params_modl_and_err,
         makecheck   = FALSE)) |> # TODO: disable check
       rename(vcmax_mod_molm2s   = vcmax,
              jmax_mod_molm2s    = jmax,
@@ -303,7 +305,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl, paralle
     nest(modobs = -c(sitename, run_model, targets))
 
   # combine into single data.frame
-  targets <- grep("^err_", names(par), value = TRUE) # TODO: what is par
+  targets <- grep("^err_", names(params_modl_and_err), value = TRUE)
 
   # for (curr_target in targets){
   #   print(curr_target)
@@ -315,7 +317,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl, paralle
       ensure_cols_defined(tibble(gpp_mod = numeric(), gpp = numeric())) |>
       rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
       mutate(target  = "gpp",#curr_target,
-             err_par = par[["err_gpp"]]) |> #par[[paste0("err_,"curr_target]]) |>
+             err_par = params_modl_and_err[["err_gpp"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
       select(sitename, run_model, target, mod, obs, err_par),
 
     df_mod_obs_onestep |>
@@ -327,7 +329,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl, paralle
       ensure_cols_defined(tibble(bigD13C_obs_permil = numeric())) |>
       rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
       mutate(target  = "bigD13C",#curr_target,
-             err_par = par[["err_bigD13C"]]) |> #par[[paste0("err_,"curr_target]]) |>
+             err_par = params_modl_and_err[["err_bigD13C"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
       select(sitename, run_model, target, mod, obs, err_par),
 
     df_mod_obs_onestep |>
@@ -339,7 +341,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl, paralle
       ensure_cols_defined(tibble(vj_obs__ = numeric())) |>
       rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
       mutate(target  = "vj",#curr_target,
-             err_par = par[["err_vj"]]) |> #par[[paste0("err_,"curr_target]]) |>
+             err_par = params_modl_and_err[["err_vj"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
       select(sitename, run_model, target, mod, obs, err_par)
   )
   stopifnot(all(targets %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
