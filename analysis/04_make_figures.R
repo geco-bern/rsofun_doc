@@ -514,12 +514,13 @@ df_predict_s3 <- run_prediction_rsofun(
   prediction = "train",
   burnin_to_skip = 0,
   n_samples = 2,
-  n_cores = 1)
+  n_cores = 10)
 
 # NOTE: no error term has (yet) been added
 df_predict_s3
-
-
+df_predict_s3
+                # POSTPROCESS
+                # Aggregate across mcmc_samples
 
 
 # Figure B2: error distribution predObs scatter plot ----

@@ -11,11 +11,12 @@ predict_sofun_parallelized <- function(
 
   # Set number of cores if not specified
   if (is.null(settings$n_cores)) {
-    settings$n_cores <- min(30, min(detectCores() - 1, nrow(par %||% data.frame(x = 1))))
+    settings$n_cores <- min(detectCores() - 1, 20) # at most 20
   }
+  settings$n_cores <- min(nrow(par_df), settings$n_cores) # ensure not more than needed
 
   # Function to run prediction for a single parameter set
-  run_pmodel_single_prediction <- function(par) {
+  run_pmodel_single_prediction <- function(par, par_fixed, drivers, obs) {
     # Function that runs the P-model for a sample of parameters
     # but does not add the observation error
 
@@ -44,22 +45,40 @@ predict_sofun_parallelized <- function(
   }
 
   # Run the P-model predictions for each set of parameters
-  if (settings$n_cores > 1 && nrow(par_df) > 1) {
-    # TODO: reactivate
-    # cl <- makeCluster(settings$n_cores) # TODO use: logpath
-    # clusterEvalQ(cl, library(dplyr))
-    # clusterEvalQ(cl, library(rsofun))
-    #
-    # results <- parLapply(cl, 1:nrow(par_df), run_pmodel_single_prediction)
-    # stopCluster(cl)
-    stop("Not set up.")
-    # TODO: setup with mutlidplyr::
-    # df_model_predictions <- par_df |>
-    #   dplyr::mutate(sim = purrr::map(pars, ~run_pmodel_single_prediction(.x)))
+  if (settings$n_cores > 1 && nrow(par_df) > 1) { # parallel version
 
-  } else {
+    cl <- multidplyr::new_cluster(settings$n_cores) |>  # TODO use: logpath for logging messages. NOTE: actually not needed
+      multidplyr::cluster_assign(
+        get_mod_obs_pmodel_bigD13C_vj_gpp = get_mod_obs_pmodel_bigD13C_vj_gpp
+      ) |>
+      multidplyr::cluster_library(packages = c("dplyr", "tidyr", "purrr", "rsofun"))
+
+    df_model_predictions_parallel <- par_df |>
+      multidplyr::partition(cl) |>
+      dplyr::mutate('sim' = purrr::map(
+        pars,
+        ~run_pmodel_single_prediction(
+          par = .x,
+          par_fixed,
+          drivers,
+          obs
+        )
+      )) |>
+      dplyr::collect()
+
+  } else { # sequential version
+
     df_model_predictions <- par_df |>
-      dplyr::mutate(sim = purrr::map(pars, ~run_pmodel_single_prediction(.x)))
+      dplyr::mutate('sim' = purrr::map(
+        pars,
+        ~run_pmodel_single_prediction(
+          par = .x,
+          par_fixed,
+          drivers,
+          obs
+        )
+      ))
+
   }
 
   # Save results
