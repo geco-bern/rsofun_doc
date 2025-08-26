@@ -44,6 +44,7 @@ out_calib_s2 <- longest_chains |> filter(scenario == 2, cores == 3) |> magrittr:
 # out_calib_s2b <- longest_chains |> filter(scenario == 2, cores == 10) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 out_calib_s3 <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 out_calib_s3b <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s3c <- longest_chains |> filter(scenario == 3, cores == 10) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 
 # reload non-parallel versions, to see if there is an issue with parallelization (or if it is with the likelihood)
 out_calib_s0_serial <- longest_chains |> filter(scenario == 0, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
@@ -156,6 +157,27 @@ dat_to_plot <- lapply(x, function(single_chain){as_tibble(single_chain) |> mutat
   mutate(variable = forcats::as_factor(variable))
 # dat_to_plot |> select(chain_id, innerChain, outerChain, chain_id_str) |> distinct()
 tail(dat_to_plot)
+
+
+
+# Parameter correlation analysis
+correlationPlot(out_calib_s3$mod, thin = 1) # TODO: error
+
+# Check which parameters are most correlated
+samples_s3 <- getSample(out_calib_s3$mod)
+cor_matrix <- cor(samples_s3)
+print("Highly correlated parameters (|r| > 0.7):")
+high_cor <- which(abs(cor_matrix) > 0.7 & abs(cor_matrix) < 1, arr.ind = TRUE)
+for(i in 1:nrow(high_cor)) {
+  row_idx <- high_cor[i,1]
+  col_idx <- high_cor[i,2]
+  if(row_idx < col_idx) {  # avoid duplicates
+    cat(sprintf("%s - %s: %.3f\n",
+                rownames(cor_matrix)[row_idx],
+                colnames(cor_matrix)[col_idx],
+                cor_matrix[row_idx, col_idx]))
+  }
+}
 
 
               # `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
@@ -673,7 +695,6 @@ table_b_v1 <- bind_rows(
 table_a |> View()
 table_b_v1 |> View()
 # TODO: make these into a LaTeX table
-
 
 
 

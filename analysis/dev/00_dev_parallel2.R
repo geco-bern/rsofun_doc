@@ -7,7 +7,7 @@ library(tidyr)
 library(dplyr)
 library(readr)
 
-source(here::here("R/test_mcmc_parallelization.R"), echo = TRUE)
+source(here::here("R/dev/test_mcmc_parallelization.R"), echo = TRUE)
 
 # test_mcmc_parallelization_dummyExample(
 #   n_parallel_independent    = 1,
