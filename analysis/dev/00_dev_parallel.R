@@ -218,6 +218,7 @@ source(here::here("R/calibration_helpers.R"))
 
 ## Load loglikelihood ----
 source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
+source(here::here("R/cost_likelihood_pmodel_alternatives.R"))
 
 ## Setup the settings for the three calibration setups ----
 par_setup1 <- list(
