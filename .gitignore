@@ -43,3 +43,4 @@ vignettes/*.pdf
 data-previous*/
 timings*
 data/*.rds
+data/predictions/*.rds

@@ -195,7 +195,15 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
 
 
 
-get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl_and_err, parallel, ncores){
+get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
+    drivers,
+    obs,
+    params_modl_and_err,
+    parallel,
+    ncores,
+    return_continuous_timeseries = FALSE # This gives daily values for time series for plotting purposes
+                                  # Otherwise only values coinciding with observations are returned
+    ){
 
   # NOTE: params_modl_and_err contains model and error parameters
 
@@ -273,6 +281,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl_and_err,
     } else {df}
   }
 
+
+  join_fct <- ifelse(return_continuous_timeseries, full_join, left_join)
   df_mod_obs_daily <- obs |>
     filter(run_model == "daily") |>
     select(sitename, run_model, targets, data) |>
@@ -280,13 +290,14 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl_and_err,
     # make this work gracefully in case nrow=0
     ensure_cols_defined(tibble(date = as.Date(character()))) |>
     # join the modelled data
-    left_join(
+    join_fct( # this is a full_join in if (return_continuous_timeseries), otherwise a left_join
       df_daily |>
         unnest(data) |>
         # make this work gracefully in case nrow=0
         ensure_cols_defined(tibble(date = as.Date(character()),gpp = numeric(),le = numeric())) |>
         select(sitename, date, gpp_mod = gpp, le_mod = le),
       by = join_by(sitename, date)) |>
+    tidyr::fill("run_model") |>
     # nest again
     nest(modobs = -c(sitename, run_model, targets))
 
@@ -318,7 +329,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl_and_err,
       rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
       mutate(target  = "gpp",#curr_target,
              err_par = params_modl_and_err[["err_gpp"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
-      select(sitename, run_model, target, mod, obs, err_par),
+      nest(obs_metadata = c(date)) |>
+      select(sitename, run_model, target, obs_metadata, mod, obs, err_par),
 
     df_mod_obs_onestep |>
       unnest(modobs) |>
@@ -330,7 +342,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl_and_err,
       rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
       mutate(target  = "bigD13C",#curr_target,
              err_par = params_modl_and_err[["err_bigD13C"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
-      select(sitename, run_model, target, mod, obs, err_par),
+      nest(obs_metadata = c(species, year, Nobs, Nyears, Ndates)) |>
+      select(sitename, run_model, target, obs_metadata, mod, obs, err_par),
 
     df_mod_obs_onestep |>
       unnest(modobs) |>
@@ -342,7 +355,8 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(drivers, obs, params_modl_and_err,
       rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
       mutate(target  = "vj",#curr_target,
              err_par = params_modl_and_err[["err_vj"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
-      select(sitename, run_model, target, mod, obs, err_par)
+      nest(obs_metadata = c(genus, species, year, Nobs, Nyears, Ndates)) |>
+      select(sitename, run_model, target, obs_metadata, mod, obs, err_par)
   )
   stopifnot(all(targets %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
   # browser()

@@ -506,9 +506,20 @@ for(i in 1:nrow(high_cor)) {
 
 # Figure B: error distribution density plot ----
 ## for each scenario x target x test+train
-# TODO: sample posteriors, for each sample run model and compute residuals
-#       TODO: check how this was done previously
-#       NOTE: that we run the model now for training data as well as for testing data
+
+# sample posteriors and run model for each sample parameter set
+source(here::here("R/run_prediction_rsofun.R"))
+df_predict_s3 <- run_prediction_rsofun(
+  mcmc_posterior = out_calib_s3,
+  prediction = "train",
+  burnin_to_skip = 0,
+  n_samples = 2,
+  n_cores = 1)
+
+# NOTE: no error term has (yet) been added
+df_predict_s3
+
+
 
 
 # Figure B2: error distribution predObs scatter plot ----
