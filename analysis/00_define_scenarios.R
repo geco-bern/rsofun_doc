@@ -54,8 +54,8 @@ setup_rsofun_calibration <- function(scenario = 3){
   test_drivers <- bigD13C_vj_gpp_drivers |> filter(dataset == "test") |> select(-dataset)
   test_obs     <- bigD13C_vj_gpp_obs     |> filter(dataset == "test") |> select(-dataset)
 
-  ## Setup the settings for the three calibration scenarios ----
-  ## Define parameter
+  ## Setup the settings for the different calibration scenarios ----
+  ## Define default parameter
   default_par_fixed <- list(# fix parameter value from previous calibration
     kphio              = 0.04998,
     kphio_par_a        = 0.0,
@@ -67,44 +67,25 @@ setup_rsofun_calibration <- function(scenario = 3){
     tau_acclim         = 20.0,
     kc_jmax            = 0.41
   )
-  if (scenario %in% c(1,4)){
+
+  ## Define parameters to estimate and their priors
+  if (scenario %in% c(0,1,4, 11)){
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
       kphio_par_b     = list(lower = 10, upper = 30, init = 20),
-      soilm_thetastar = list(lower = 1, upper = 250, init = 40),
+      soilm_thetastar = list(lower = 1, upper = 250, init = 40), # NOTE: scenario 0 was previously: 4.32375, 259.425, 432.375
       soilm_betao     = list(lower = 0.0, upper = 1.0, init = 0.0),
-      err_gpp         = list(lower = 0.1, upper = 3, init = 0.8),
+      # no beta_unitcostratio,
+      # no rd_to_vcmax,
+      # no tau_acclim,
+      # no kc_jmax,
+      err_gpp         = list(lower = 0.1, upper = 3, init = 0.8), # NOTE: scenario 0 was previously: 0.1, 0.8, 3.0
       err_bigD13C     = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
       err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
     )
-    par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
 
-  } else if (scenario %in% c(89,88,87,86)) {
-    par_to_estimate <- list(
-      kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
-      kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
-      kphio_par_b     = list(lower = 10, upper = 30, init = 20),
-      soilm_thetastar = list(lower = 1, upper = 250, init = 40),
-      soilm_betao     = list(lower = 0.0, upper = 1.0, init = 0.0),
-      beta_unitcostratio = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*146.0),
-      rd_to_vcmax        = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.014),      # 0.014 value from Atkin et al. 2015 for C3 herbaceous
-      tau_acclim         = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*20.0),
-      kc_jmax            = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.41),
-      err_gpp         = list(lower = 0.1, upper = 3, init = 0.8),
-      err_bigD13C     = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
-      err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
-    )
-    # test adding only single parameter to estimation:
-    # i.e. out of beta_unitcostratio, rd_to_vcmax, tau_acclim, kc_jmax only add one at a time:
-    if (scenario==89){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio',              'tau_acclim','kc_jmax'))]}
-    if (scenario==88){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax',             'kc_jmax'))]}
-    if (scenario==87){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax','tau_acclim'          ))]}
-    if (scenario==86){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c(                     'rd_to_vcmax','tau_acclim','kc_jmax'))]}
-
-    par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
-
-  } else if (scenario %in% c(2,3)) {
+  } else if (scenario %in% c(2,3, 12,13,89,88,87,86, 14)) {
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -119,23 +100,97 @@ setup_rsofun_calibration <- function(scenario = 3){
       err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
       err_vj          = list(lower = 0.01, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
     )
-    par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
+    if (scenario %in% c(89,88,87,86)) {
+      par_to_estimate$err_gpp$lower     = 0.1
+      par_to_estimate$err_bigD13C$lower = 0.1
+      par_to_estimate$err_vj$lower      = 0.1
 
-  } else if (scenario %in% c(0)) {
-    par_to_estimate <- list(
-      kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
-      kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
-      kphio_par_b     = list(lower = 10, upper = 30, init = 20),
-      soilm_thetastar = list(lower = 1, upper = 250, init = 40),   # 4.32375, 259.425, 432.375
-      soilm_betao     = list(lower = 0.0, upper = 1.0, init = 0.0),
-      err_gpp         = list(lower = 0.01, upper = 3, init = 0.8), # 0.1, 0.8, 3.0
-      err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
-      err_vj          = list(lower = 0.01, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
-    )
-    par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
+      # test adding only single parameter to estimation compared to scenario 4:
+      # i.e. out of beta_unitcostratio, rd_to_vcmax, tau_acclim, kc_jmax only add one at a time:
+      if (scenario==89){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio',              'tau_acclim','kc_jmax'))]}
+      if (scenario==88){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax',             'kc_jmax'))]}
+      if (scenario==87){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax','tau_acclim'          ))]}
+      if (scenario==86){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c(                     'rd_to_vcmax','tau_acclim','kc_jmax'))]}
+    }
+
+    if (scenario %in% c(14)) { # use priors from scenario 1 for kphio, kphio_par_a, kphio_par_b, soilm_thetastar, soilm_betao
+
+      # read in posteriors from scenario 1 as prior for 14
+      calib_scen1 <- readr::read_rds(here::here("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds"))
+
+      # fit a normal    distribution to: kphio, kphio_par_a, kphio_par_b, soilm_thetastar
+      # fit a lognormal distribution to: soilm_betao
+
+      # i) extract samples as a data.frame
+      burnins_scen1 <- 4000
+      samples_scen1 <- getSample(calib_scen1$mod, thin = 1, start = burnins_scen1) %>% as.data.frame()
+
+      # ii) fit normal and lognormal distributions for each parameter
+      param_normals_scen1 <- lapply(setNames(names(samples_scen1), names(samples_scen1)), function(p) {
+        list(mean = mean(samples_scen1[[p]]),
+             sd   = sd(  samples_scen1[[p]]))
+      })[c('kphio', 'kphio_par_a', 'kphio_par_b', 'soilm_thetastar')] # only keep these
+      param_lognormals_scen1 <- lapply(list(soilm_betao = 'soilm_betao'), function(p) { # only for soilm_betao
+        list(meanlog = mean(log(samples_scen1[[p]])),
+             sdlog   = sd(  log(samples_scen1[[p]])))
+      })
+
+              # fit other types of distributions
+              # library(fitdistrplus) # can fit:
+              #   # dbeta,  pbeta,  qbeta
+              #   # dlnorm, plnorm, qlnorm
+              #   # dnorm , pnorm , qnorm
+              # fit <- fitdist(samples_scen1[["soilm_betao"]], "beta", method = "mle")
+              # param_beta_scen1 <- list(soilm_betao = list(
+              #   shape1 = fit$estimate[["shape1"]],
+              #   shape2 = fit$estimate[["shape2"]])
+              # )
+              # fit <- fitdist(samples_scen1[["soilm_betao"]], "norm", method = "mle")
+              # param_norm_scen1 <- list(soilm_betao = list(
+              #   mean = fit$estimate[["mean"]],
+              #   sd = fit$estimate[["sd"]])
+              # )
+
+              # # visual check of normal parameters:
+              # pl_check <- plot_prior_posterior_density(calib_scen1$mod, burnin_to_skip = burnins_scen1) + ggtitle(calib_scen1$fpath)
+              # normals_to_plot_across_facets <- param_normals_scen1 |> as.data.frame() |>
+              #   pivot_longer(everything()) |> separate(name, into=c("variable","measure"), sep = "\\.") |>
+              #   pivot_wider(names_from = measure, values_from = value)
+              # pl_prior_check1 <- pl_check +
+              #   geom_vline(data = normals_to_plot_across_facets, mapping=aes(xintercept=mean), color = "red") +
+              #   geom_vline(data = normals_to_plot_across_facets, mapping=aes(xintercept=mean+sd, linestyle = "dashed"), color = "red") +
+              #   geom_vline(data = normals_to_plot_across_facets, mapping=aes(xintercept=mean-sd, linestyle = "dashed"), color = "red")
+              #
+              # # visual check of soilmbetao:
+              # pl_prior_check2 <- (pl_check %+% filter(pl_check$data, variable == "soilm_betao")) +
+              #   geom_function(fun = function(x) 50/30 * dlnorm(x, mean = param_lognormals_scen1$soilm_betao$meanlog, sd = param_lognormals_scen1$soilm_betao$sdlog), n = 101,
+              #                 mapping = aes(color = "dlnorm")) +
+              #   geom_function(fun = function(x) 20/1500 * dbeta(x, shape1 = param_beta_scen1$soilm_betao$shape1, shape2 = param_beta_scen1$soilm_betao$shape2), n = 500,
+              #                 mapping = aes(color = "beta")) +
+              #   geom_function(fun = function(x) 1/1 * dnorm(x, mean = param_norm_scen1$soilm_betao$mean, sd = param_norm_scen1$soilm_betao$sd), n = 500,
+              #                 mapping = aes(color = "norm"))
+              # pl_prior_check1 / pl_prior_check2
+
+      # then pass on these as prior for these
+      par_to_estimate$kphio           <- param_normals_scen1$kphio
+      par_to_estimate$kphio_par_a     <- param_normals_scen1$kphio_par_a
+      par_to_estimate$kphio_par_b     <- param_normals_scen1$kphio_par_b
+      par_to_estimate$soilm_thetastar <- param_normals_scen1$soilm_thetastar
+      par_to_estimate$soilm_betao     <- param_lognormals_scen1$soilm_betao # NOTE: use lognormal!
+
+      par_to_estimate$kphio           <- list(mean    = 0.0479684950570567,   sd    = 9.75104729575593e-05)
+      par_to_estimate$kphio_par_a     <- list(mean    = -0.00179211384220008, sd    = 2.98616456930556e-05)
+      par_to_estimate$kphio_par_b     <- list(mean    = 18.4293950588911,     sd    = 0.102867468875224)
+      par_to_estimate$soilm_thetastar <- list(mean    = 27.0859346061886,     sd    = 0.762249191490997)
+      par_to_estimate$soilm_betao     <- list(meanlog = -4.65845041863264,    sdlog = 1.31209247435319) # NOTE: use lognormal!
+    }
+
   } else {
     stop(sprintf("Unsupported scenario: %d", scenario))
   }
+
+  # Remove parameters that are defined to be estimated from default_par_fixed
+  par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
 
   ## Setup the data (drivers and obs) for the three calibration scenarios ----
 
@@ -151,7 +206,8 @@ setup_rsofun_calibration <- function(scenario = 3){
     test_obs,
     by = join_by(sitename, run_model))
 
-  if (scenario %in% c(1,2)){
+  if (scenario %in% c(1,2,11,12)){ # only GPP data
+
     drivobs <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
       filter(gpp) |>
@@ -161,11 +217,13 @@ setup_rsofun_calibration <- function(scenario = 3){
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
 
-  } else if (scenario %in% c(3,4,89,88,87,86)) {
+  } else if (scenario %in% c(3,4,89,88,87,86,13,14)) { # GPP and traits data
+
     drivobs      <- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
 
-  } else if (scenario %in% c(0)) {
+  } else if (scenario %in% c(0)) {  # only GPP data from FR-Pue
+
     drivobs <- tibble( # load it based on FR-Pue data:
       sitename    = rsofun::p_model_drivers$sitename,
       run_model   = "daily",
@@ -178,10 +236,9 @@ setup_rsofun_calibration <- function(scenario = 3){
                            filter(!is.na(gpp)))
     )
 
-    drivobs_test <- drivobs |> dplyr::slice(0)
+    drivobs_test <- drivobs |> dplyr::slice(0) # No test dataset
 
   } else {
-    browser()
     stop(sprintf("Unsupported scenario: %d", scenario))
   }
 
@@ -189,11 +246,7 @@ setup_rsofun_calibration <- function(scenario = 3){
   return(list(
     drivobs = drivobs,
     drivobs_test = drivobs_test,
-    # driver    = tibble(),
-    # obs       = tibble(),
-    # # TODO: check if passing combined drivobs is computationally more efficient for calib_sofun()
     par_fixed = par_to_fix,
     par = par_to_estimate
-  )
-  )
+  ))
 }
