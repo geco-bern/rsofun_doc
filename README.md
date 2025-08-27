@@ -36,7 +36,7 @@ renv::run("analysis/03_bayesian_calibration.R",    name = "bayesian_calibration 
 renv::run("analysis/03_bayesian_calibration.R",    name = "bayesian_calibration 1", args = c(1,11,51,3))
 renv::run("analysis/03_bayesian_calibration.R",    name = "bayesian_calibration 0", args = c(0,11,51,3))
 
-renv::run("analysis/03_bayesian_calibration.R",    name = "bayesian_calibration 0", args = c(99,0,12,1))
+renv::run("analysis/03_bayesian_calibration.R",    name = "bayesian_calibration 89", args = c(89,0,12,1))
 
 # or alternatively (running outside of RStudio directly from shell can be more robust):
 #   cd GitHub/geco-bern/rsofun_doc/

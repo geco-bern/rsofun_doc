@@ -86,14 +86,14 @@ t_col <- function(color, percent = 50, name = NULL) {
   ## Save the color
   invisible(t.col)
 }
-plot_prior_posterior_density <- function(x){
+plot_prior_posterior_density <- function(x, burnin_to_skip){
   require(BayesianTools)
   require(dplyr)
   require(tidyr)
   require(ggplot2)
 
   # Get matrices of prior and posterior samples
-  posteriorMat <- getSample(x, parametersOnly = TRUE)
+  posteriorMat <- getSample(x, parametersOnly = TRUE, start = burnin_to_skip)
   priorMat <-  getSetup(x)$prior$sampler(10000) # nPriorDraws = 10000
 
   # Parameter names
@@ -154,7 +154,7 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FAL
     mutate(variable = forcats::as_factor(variable))
   # dat_to_plot |> select(chain_id, innerChain, outerChain, chain_id_str) |> distinct()
 
-  ggplot(dat_to_plot,
+  pl <- ggplot(dat_to_plot,
          aes(x=iteration, y=value, color = outerChain, linetype = innerChain_str)) + geom_line() +
     # geom_rug(sides = "r") +
     theme_classic() +
@@ -163,6 +163,20 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FAL
       legend.position = "bottom"
     ) +
     labs(y="", color = "chain", linetype = "internal\nchains")
+
+  # add Gelman Diagnostics
+  get_gelman_diag <- function(mcmc, burnin_to_skip){
+    gelman_df <- BayesianTools::gelmanDiagnostics(mcmc, start = burnin_to_skip)
+    psrf_values <- gelman_df$psrf[,"Point est."]
+    psrf_strings <- paste0(substr(names(psrf_values),1,3), "..=", sprintf("%.2f", psrf_values))
+    psrf_string <- paste0(psrf_strings, collapse = ",")
+    sprintf("GelmanDiagnostics: mpsrf=%.1f\npsrf:%s",
+            gelman_df$mpsrf,
+            psrf_string)
+  }
+  pl <- pl + ggtitle(NULL, subtitle = get_gelman_diag(x, burnin_to_skip))
+
+  return(pl)
 }
 
 get_runtime <- function(out_calib) {# function(settings_calib){

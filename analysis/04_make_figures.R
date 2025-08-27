@@ -1,3 +1,14 @@
+# TODO: add:
+# _scen99_DEzs-25000-0iter_8x3chains_on_CPU8x1 5.745523 hours
+# _scen3_DEzs-50000-0iter_8x3chains_on_CPU8x1 1.098795 days
+# _scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1 17.9396 hours
+# _scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1 46.79056 mins
+# still running timings_scen3-0-100000-8_2025-08-25_18h48m53s_log
+# and 5k 98,97,96 (now with increased lower bound on err_XXX of 0.1 instead of 0.01)
+
+# TODO: do pred vs obs scatterplots
+# TODO: do parameter correlation plots
+
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -11,23 +22,19 @@ source(here::here("analysis/00_define_scenarios.R"))
 # timings <- readr::read_rds(here::here("timings_FB_2025-08-20_21h25.rds"))
 # timing_files <- list.files(here::here("data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)
 timing_files1 <- list.files(file.path("/data_2/scratch/fbernhard/rsofun_doc_outputs/data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)
-timings1 <- lapply(timing_files1, readr::read_rds) |>
-  bind_rows() |>
-  mutate(scenario = as.factor(scenario),
-         cores    = as.factor(cores))
+timings1 <- lapply(timing_files1, readr::read_rds) |> bind_rows()
 
 timing_files2 <- list.files(file.path("/home/fabian/GitHub/geco-bern/rsofun_doc/data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)
-timings2 <- lapply(timing_files2, readr::read_rds) |>
-  bind_rows() |>
-  mutate(scenario = as.factor(scenario),
-         cores    = as.factor(cores))
+timings2 <- lapply(timing_files2, readr::read_rds) |> bind_rows()
 
-timings <- bind_rows(timings1, timings2)
+timings <- bind_rows(timings1, timings2) |>
+  mutate(scenario = factor(scenario),
+         cores    = factor(cores))
 
 ggplot(
     timings,
     aes(#x=(iterations-burnin)*n_chains*n_chains_inner,
-      x=(iterations-burnin),
+      x=(iterations),
       y=as.numeric(walltime,"secs")/60,
       color = scenario,
       linetype = cores)) +
@@ -37,70 +44,83 @@ ggplot(
   scale_y_log10(minor_breaks=scales::minor_breaks_n(10)) +
   labs(y="walltime (minutes)") + theme_minimal()
 
-longest_chains <- timings |> arrange(-iterations) |> group_by(scenario,cores) |> slice(1)
+longest_chains <- timings |>
+  filter(grepl("/data_2/scratch/.*", resultfile)) |>
+  mutate(nchains_x_iterations = n_chains * iterations) |>
+  arrange(-nchains_x_iterations) |>
+  group_by(scenario) |>
+  slice(1)
 
-out_calib_s0 <- longest_chains |> filter(scenario == 0, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s1 <- longest_chains |> filter(scenario == 1, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s2 <- longest_chains |> filter(scenario == 2, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s0 <- longest_chains |> filter(scenario == 0, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s1 <- longest_chains |> filter(scenario == 1, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s2 <- longest_chains |> filter(scenario == 2, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 # out_calib_s2b <- longest_chains |> filter(scenario == 2, cores == 10) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s3 <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s3b <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s3d <- longest_chains |> filter(scenario == 3, cores == 8) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s4d <- longest_chains |> filter(scenario == 4, cores == 8) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s3 <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s3b <- longest_chains |> filter(scenario == 3, cores == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s3d <- longest_chains |> filter(scenario == 3, cores == 8) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s4d <- longest_chains |> filter(scenario == 4, cores == 8) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 
 # reload non-parallel versions, to see if there is an issue with parallelization (or if it is with the likelihood)
-out_calib_s0_serial <- longest_chains |> filter(scenario == 0, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s1_serial <- longest_chains |> filter(scenario == 1, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-out_calib_s2_serial <- longest_chains |> filter(scenario == 2, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s0_serial <- longest_chains |> filter(scenario == 0, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s1_serial <- longest_chains |> filter(scenario == 1, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+# out_calib_s2_serial <- longest_chains |> filter(scenario == 2, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
 # out_calib_s3_serial <- longest_chains |> filter(scenario == 3, cores == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds() # TODO
 
+out_calib_s0 <- longest_chains |> filter(scenario == 0) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s1 <- longest_chains |> filter(scenario == 1) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s2 <- longest_chains |> filter(scenario == 2) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s3 <- longest_chains |> filter(scenario == 3) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s4 <- longest_chains |> filter(scenario == 4) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s96 <- longest_chains |> filter(scenario == 96) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s97 <- longest_chains |> filter(scenario == 97) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s98 <- longest_chains |> filter(scenario == 98) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+out_calib_s99 <- longest_chains |> filter(scenario == 99) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
+
+
 ########## MCMC PLOTS: ########### -
+burnin_to_skip = 2000
 
 # Figure A: prior, posterior density plot ----
 ## for each scenario x params
-# plot_prior_posterior_density(out_calib_s0$mod) + ggtitle("Scenario 0")
-# plot_prior_posterior_density(out_calib_s1$mod) + ggtitle("Scenario 1") + ggtitle(out_calib_s1$fpath)
-# plot_prior_posterior_density(out_calib_s2$mod) + ggtitle("Scenario 2") + ggtitle(out_calib_s2$fpath)
-pl_posterior_s3 <- plot_prior_posterior_density(out_calib_s3$mod) + ggtitle("Scenario 3") + ggtitle(out_calib_s3$fpath)
-pl_posterior_s3b <- plot_prior_posterior_density(out_calib_s3b$mod) + ggtitle("Scenario 3") + ggtitle(out_calib_s3$fpath)
+pl_posterior_s99<- plot_prior_posterior_density(out_calib_s99$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 99")+ ggtitle(out_calib_s99$fpath)
+pl_posterior_s98<- plot_prior_posterior_density(out_calib_s98$mod,burnin_to_skip = 1000) + ggtitle("Scenario 98")+ ggtitle(out_calib_s98$fpath)
+pl_posterior_s97<- plot_prior_posterior_density(out_calib_s97$mod,burnin_to_skip = 1000) + ggtitle("Scenario 97")+ ggtitle(out_calib_s97$fpath)
+pl_posterior_s96<- plot_prior_posterior_density(out_calib_s96$mod,burnin_to_skip = 1000) + ggtitle("Scenario 96")+ ggtitle(out_calib_s96$fpath)
+pl_posterior_s4 <- plot_prior_posterior_density(out_calib_s4$mod, burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 4") + ggtitle(out_calib_s4$fpath)
+pl_posterior_s3 <- plot_prior_posterior_density(out_calib_s3$mod, burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 3") + ggtitle(out_calib_s3$fpath)
+pl_posterior_s2 <- plot_prior_posterior_density(out_calib_s2$mod, burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 2") + ggtitle(out_calib_s2$fpath)
+pl_posterior_s1 <- plot_prior_posterior_density(out_calib_s1$mod, burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 1") + ggtitle(out_calib_s1$fpath)
+pl_posterior_s0 <- plot_prior_posterior_density(out_calib_s0$mod, burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 0") + ggtitle(out_calib_s0$fpath)
 
-pl_posterior_s0 <- plot_prior_posterior_density(out_calib_s0_serial$mod) + ggtitle("Scenario 0 serial") + ggtitle(out_calib_s0_serial$fpath)
-pl_posterior_s1 <- plot_prior_posterior_density(out_calib_s1_serial$mod) + ggtitle("Scenario 1 serial") + ggtitle(out_calib_s1_serial$fpath)
-pl_posterior_s2 <- plot_prior_posterior_density(out_calib_s2_serial$mod) + ggtitle("Scenario 2 serial") + ggtitle(out_calib_s2_serial$fpath)
-# pl_posterior_s3 <- plot_prior_posterior_density(out_calib_s3_serial$mod) + ggtitle("Scenario 3 serial") + ggtitle(out_calib_s3_serial$fpath)
-# plot_prior_posterior_density(out_calib_s3_serial$mod) + ggtitle("Scenario 3 serial")
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s1.png"), pl_posterior_s1, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s1.pdf"), pl_posterior_s1, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_A_MCMCconvergence_posterior_s1.rds"), x=pl_posterior_s1)
 
-ggsave(here::here("fig/fig_E_MCMCconvergence_posterior_s1.png"), pl_posterior_s1, width=7.2, height=3.6, units="in", scale = 1.6)
-# ggsave(here::here("fig/fig_E_MCMCconvergence_posterior_s1.pdf"), pl_posterior_s1, width=7.2, height=3.6, units="in", scale = 1.6)
-# write_rds(here::here("fig/fig_E_MCMCconvergence_posterior_s1.rds"), x=pl_posterior_s1)
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s2.png"), pl_posterior_s2, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s2.pdf"), pl_posterior_s2, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_A_MCMCconvergence_posterior_s2.rds"), x=pl_posterior_s2)
 
-ggsave(here::here("fig/fig_E_MCMCconvergence_posterior_s2.png"), pl_posterior_s2, width=7.2, height=3.6, units="in", scale = 1.6)
-# ggsave(here::here("fig/fig_E_MCMCconvergence_posterior_s2.pdf"), pl_posterior_s2, width=7.2, height=3.6, units="in", scale = 1.6)
-# write_rds(here::here("fig/fig_E_MCMCconvergence_posterior_s2.rds"), x=pl_posterior_s2)
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s3.png"), pl_posterior_s3, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s3.pdf"), pl_posterior_s3, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_A_MCMCconvergence_posterior_s3.rds"), x=pl_posterior_s3)
 
-ggsave(here::here("fig/fig_E_MCMCconvergence_posterior_s3.png"), pl_posterior_s3, width=7.2, height=3.6, units="in", scale = 1.6)
-# ggsave(here::here("fig/fig_E_MCMCconvergence_posterior_s3.pdf"), pl_posterior_s3, width=7.2, height=3.6, units="in", scale = 1.6)
-# write_rds(here::here("fig/fig_E_MCMCconvergence_posterior_s3.rds"), x=pl_posterior_s3)
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s4.png"), pl_posterior_s4, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s4.pdf"), pl_posterior_s4, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_A_MCMCconvergence_posterior_s4.rds"), x=pl_posterior_s4)
+
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s99.png"), pl_posterior_s99, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s99.pdf"), pl_posterior_s99, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_A_MCMCconvergence_posterior_s99.rds"), x=pl_posterior_s99)
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s98.png"), pl_posterior_s98, width=7.2, height=3.6, units="in", scale = 1.6)
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s97.png"), pl_posterior_s97, width=7.2, height=3.6, units="in", scale = 1.6)
+ggsave(here::here("fig/fig_A_MCMCconvergence_posterior_s96.png"), pl_posterior_s96, width=7.2, height=3.6, units="in", scale = 1.6)
 
 
 
 # Figure E: MCMC convergence diagnostics ----
 ## TBD: correlation plots, Gelman-Rubin (r.1.1)
 
-# coda::gelman.diag(chain)
-BayesianTools::gelmanDiagnostics(out_calib_s3$mod) # 535 not converged
-BayesianTools::gelmanDiagnostics(out_calib_s2$mod) # 151 not converged
-BayesianTools::gelmanDiagnostics(out_calib_s1$mod) # 1.02 looks converged
-BayesianTools::gelmanDiagnostics(out_calib_s4d$mod) # 11.1 not yet converged
-
-
-# BayesianTools::gelmanDiagnostics(out_calib_s3_serial$mod) # 87.5 not converged
-# BayesianTools::gelmanDiagnostics(out_calib_s2_serial$mod) # 70.8 not converged
-# BayesianTools::gelmanDiagnostics(out_calib_s1_serial$mod) # 1.05 looks converged
-# BayesianTools::gelmanDiagnostics(out_calib_s0_serial$mod) # 1.04 looks converged
-
 # chains:
-burnin_to_skip = 4000
 # what BayesianTools::tracePlot(out_calib_s0_serial$mod) does is:
 # BayesianTools::tracePlot(out_calib_s0_serial$mod, start = burnin_to_skip)
 out_calib_s0_serial$mod |>
@@ -128,70 +148,126 @@ out_calib_s2_serial$mod |>
 
 
 # debug(plot_mcmc_trace)
-pl_trace_s0_with_burnin <- plot_mcmc_trace(out_calib_s0_serial$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s0_serial$fpath)
+pl_trace_s0_with_burnin <- plot_mcmc_trace(out_calib_s0$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s0$fpath)
 pl_trace_s1_with_burnin <- plot_mcmc_trace(out_calib_s1$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s1$fpath)
 pl_trace_s2_with_burnin <- plot_mcmc_trace(out_calib_s2$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s2$fpath)
-pl_trace_s3_with_burnin <- plot_mcmc_trace(out_calib_s3$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s3$fpath) # TODO
-pl_trace_s4d_with_burnin <- plot_mcmc_trace(out_calib_s4d$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s3$fpath) # TODO
+pl_trace_s3_with_burnin <- plot_mcmc_trace(out_calib_s3$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s3$fpath)
+pl_trace_s4_with_burnin <- plot_mcmc_trace(out_calib_s4$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s4$fpath)
+pl_trace_s99_with_burnin <- plot_mcmc_trace(out_calib_s99$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s99$fpath)
+pl_trace_s98_with_burnin <- plot_mcmc_trace(out_calib_s98$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s98$fpath)
+pl_trace_s97_with_burnin <- plot_mcmc_trace(out_calib_s97$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s97$fpath)
+pl_trace_s96_with_burnin <- plot_mcmc_trace(out_calib_s96$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s96$fpath)
 
-pl_trace_s0 <- plot_mcmc_trace(out_calib_s0_serial$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s0_serial$fpath)
+pl_trace_s0 <- plot_mcmc_trace(out_calib_s0$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s0$fpath)
 pl_trace_s1 <- plot_mcmc_trace(out_calib_s1$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s1$fpath)
 pl_trace_s2 <- plot_mcmc_trace(out_calib_s2$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s2$fpath)
-pl_trace_s3 <- plot_mcmc_trace(out_calib_s3$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s3$fpath) # TODO
-pl_trace_s4d <- plot_mcmc_trace(out_calib_s4d$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s3$fpath) # TODO
+pl_trace_s3 <- plot_mcmc_trace(out_calib_s3$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s3$fpath)
+pl_trace_s4 <- plot_mcmc_trace(out_calib_s4$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s4$fpath)
+pl_trace_s99 <- plot_mcmc_trace(out_calib_s99$mod, nr_internal_chains = 3, burnin_to_skip = burnin_to_skip) + ggtitle(out_calib_s99$fpath)
+pl_trace_s98 <- plot_mcmc_trace(out_calib_s98$mod, nr_internal_chains = 3, burnin_to_skip = 1000) + ggtitle(out_calib_s98$fpath)
+pl_trace_s97 <- plot_mcmc_trace(out_calib_s97$mod, nr_internal_chains = 3, burnin_to_skip = 1000) + ggtitle(out_calib_s97$fpath)
+pl_trace_s96 <- plot_mcmc_trace(out_calib_s96$mod, nr_internal_chains = 3, burnin_to_skip = 1000) + ggtitle(out_calib_s96$fpath)
 
-ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s1.png"), pl_trace_s1, width=7.2, height=3.6, units="in", scale = 1.6)
-# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s1.pdf"), pl_trace_s1, width=7.2, height=3.6, units="in", scale = 1.6)
-# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s1.rds"), x=pl_trace_s1)
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s1_bi.png"), pl_trace_s1_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s1.pdf"), pl_trace_s1_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s1.rds"), x=pl_trace_s1_with_burnin)
 
-ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s2.png"), pl_trace_s2, width=7.2, height=3.6, units="in", scale = 1.6)
-# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s2.pdf"), pl_trace_s2, width=7.2, height=3.6, units="in", scale = 1.6)
-# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s2.rds"), x=pl_trace_s2)
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s2_bi.png"), pl_trace_s2_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s2.pdf"), pl_trace_s2_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s2.rds"), x=pl_trace_s2_with_burnin)
 
-ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s3.png"), pl_trace_s3, width=7.2, height=3.6, units="in", scale = 1.6)
-# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s3.pdf"), pl_trace_s3, width=7.2, height=3.6, units="in", scale = 1.6)
-# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s3.rds"), x=pl_trace_s3)
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s3_bi.png"), pl_trace_s3_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s3.pdf"), pl_trace_s3_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s3.rds"), x=pl_trace_s3_with_burnin)
+
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s4_bi.png"), pl_trace_s4_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s4.pdf"), pl_trace_s4_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s4.rds"), x=pl_trace_s4_with_burnin)
+
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s99_bi.png"), pl_trace_s99_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s99.pdf"), pl_trace_s99_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+# write_rds(here::here("fig/fig_E_MCMCconvergence_trace_s99.rds"), x=pl_trace_s99_with_burnin)
+
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s0_bi.png"), pl_trace_s0_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s98_bi.png"), pl_trace_s98_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s97_bi.png"), pl_trace_s97_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
+ggsave(here::here("fig/fig_E_MCMCconvergence_trace_s96_bi.png"), pl_trace_s96_with_burnin, width=7.2, height=3.6, units="in", scale = 1.6)
 
 
+# coda::gelman.diag(chain)
+BayesianTools::gelmanDiagnostics(out_calib_s99$mod) # 1.11 did coverge
+BayesianTools::gelmanDiagnostics(out_calib_s4$mod) # 1.45 close to convergence, incrase from 25k to 50. TODO
+BayesianTools::gelmanDiagnostics(out_calib_s3$mod) # 9.58 not yet converged with 50k
+BayesianTools::gelmanDiagnostics(out_calib_s2$mod) # 151 not converged
+BayesianTools::gelmanDiagnostics(out_calib_s1$mod) # 1.02 looks converged
 
-# # check burnin
-# check1 <- timings1|>filter(burnin==0,iterations==24) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-# check2 <- timings1|>filter(burnin==4,iterations==24) |> magrittr::extract2("resultfile") |> here::here() |> readr::read_rds()
-# plot_mcmc_trace(check1$mod, nr_internal_chains = 10, burnin_to_skip = 0)
-# plot_mcmc_trace(check2$mod, nr_internal_chains = 10, burnin_to_skip = 0)
-
-curr_thin <- 1
-x <- getSample(check2$mod, coda = T, thin = curr_thin)
-
+# BayesianTools::gelmanDiagnostics(out_calib_s3_serial$mod) # 87.5 not converged
+# BayesianTools::gelmanDiagnostics(out_calib_s2_serial$mod) # 70.8 not converged
+# BayesianTools::gelmanDiagnostics(out_calib_s1_serial$mod) # 1.05 looks converged
+# BayesianTools::gelmanDiagnostics(out_calib_s0_serial$mod) # 1.04 looks converged
 
 
 
 # Parameter correlation analysis
-# correlationPlot(out_calib_s0_serial$mod, thin = 1) # the scatter plots with burnin do not make much sense
-correlationPlot(out_calib_s0_serial$mod, thin = 1, start = burnin_to_skip)
+if (FALSE){ # This is quite a slow plot:
 
-correlationPlot(out_calib_s1$mod, thin = 1, start = burnin_to_skip)
-correlationPlot(out_calib_s2$mod, thin = 1, start = burnin_to_skip)
-correlationPlot(out_calib_s3$mod, thin = 1, start = burnin_to_skip)
-correlationPlot(out_calib_s4$mod, thin = 1, start = burnin_to_skip)
-
-
-# Check which parameters are most correlated
-samples_s3 <- getSample(out_calib_s3$mod, thin = 1, start = burnin_to_skip)
-cor_matrix <- cor(samples_s3)
-print("Highly correlated parameters (|r| > 0.7):")
-high_cor <- which(abs(cor_matrix) > 0.7 & abs(cor_matrix) < 1, arr.ind = TRUE)
-for(i in 1:nrow(high_cor)) {
-  row_idx <- high_cor[i,1]
-  col_idx <- high_cor[i,2]
-  if(row_idx < col_idx) {  # avoid duplicates
-    cat(sprintf("%s - %s: %.3f\n",
-                rownames(cor_matrix)[row_idx],
-                colnames(cor_matrix)[col_idx],
-                cor_matrix[row_idx, col_idx]))
+  save_corr_plot <- function(out_calib, thin, start, filename){
+    png(filename, width = 7.2, height = 7.2, units = "in", res = 300)
+    correlationPlot(out_calib$mod, thin = thin, start = start)
+    dev.off()
   }
+
+  save_corr_plot(out_calib_s0, thin = 1, start = 0,             filename = here::here("fig/fig_E2_MCMCconvergence_corr_s0_burnin.png")) # the scatter plots with burnin do not make much sense
+  save_corr_plot(out_calib_s0, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s0.png"))
+  save_corr_plot(out_calib_s1, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s1.png"))
+  save_corr_plot(out_calib_s2, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s2.png"))
+  save_corr_plot(out_calib_s3, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s3.png"))
+  save_corr_plot(out_calib_s4, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s4.png"))
+  save_corr_plot(out_calib_s99, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s99.png"))
+  save_corr_plot(out_calib_s98, thin = 1, start = 1000,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s98.png"))
+  save_corr_plot(out_calib_s97, thin = 1, start = 1000,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s97.png"))
+  save_corr_plot(out_calib_s96, thin = 1, start = 1000,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s96.png"))
 }
 
+
+        # # Check which parameters are most correlated
+        # samples_s0 <- getSample(out_calib_s0_serial$mod, thin = 1, start = burnin_to_skip)
+        # cor_matrix <- cor(samples_s0)
+        # high_cor <- which(abs(cor_matrix) > 0.7 & abs(cor_matrix) < 1, arr.ind = TRUE)
+        # if(nrow(high_cor) > 0){
+        #   print("Highly correlated parameters (|r| > 0.7):")
+        #   for(i in 1:nrow(high_cor)) {
+        #     row_idx <- high_cor[i,1]
+        #     col_idx <- high_cor[i,2]
+        #     if(row_idx < col_idx) {  # avoid duplicates
+        #       cat(sprintf("%s - %s: %.3f\n",
+        #                   rownames(cor_matrix)[row_idx],
+        #                   colnames(cor_matrix)[col_idx],
+        #                   cor_matrix[row_idx, col_idx]))
+        #     }
+        #   }
+        # }
+        #
+        # samples_s3 <- getSample(out_calib_s3$mod, thin = 1, start = burnin_to_skip)
+        # cor_matrix <- cor(samples_s3)
+        # high_cor <- which(abs(cor_matrix) > 0.7 & abs(cor_matrix) < 1, arr.ind = TRUE)
+        # if(nrow(high_cor) > 0){
+        #   print("Highly correlated parameters (|r| > 0.7):")
+        #   for(i in 1:nrow(high_cor)) {
+        #     row_idx <- high_cor[i,1]
+        #     col_idx <- high_cor[i,2]
+        #     if(row_idx < col_idx) {  # avoid duplicates
+        #       cat(sprintf("%s - %s: %.3f\n",
+        #                   rownames(cor_matrix)[row_idx],
+        #                   colnames(cor_matrix)[col_idx],
+        #                   cor_matrix[row_idx, col_idx]))
+        #     }
+        #   }
+        # }
+
+            ##### FROM THE PREVIOUS SUBMISSION
+            # autocorrelation plots of chains
+            # predictive plots (including error)
 
               # `BayesianTools` makes it easy to produce the trace plot of the MCMC chains and the posterior density plot for the parameters. Trace plots show the time series of the sampled chains, which should reach a stationary state. One can also choose a burnin visually, to discard the early iterations and keep only the samples from the stationary distribution to which they converge. We set \code{burnin = 3000} above from previous runs, and those iterations are not shown by the following trace plot. The samples after the burnin period should be used for inference.
               # ```{r fig.height = 10, fig.width = 7}
@@ -509,18 +585,175 @@ for(i in 1:nrow(high_cor)) {
 
 # sample posteriors and run model for each sample parameter set
 source(here::here("R/run_prediction_rsofun.R"))
-df_predict_s3 <- run_prediction_rsofun(
-  mcmc_posterior = out_calib_s3,
+df_predict_s0 <- run_prediction_rsofun(
+  mcmc_posterior = out_calib_s0,
   prediction = "train",
   burnin_to_skip = 0,
-  n_samples = 2,
-  n_cores = 10)
+  n_samples = 200,
+  n_cores = 12)
+df_predict_s1 <- run_prediction_rsofun(
+  mcmc_posterior = out_calib_s1,
+  prediction = "train",
+  burnin_to_skip = 0,
+  n_samples = 200,
+  n_cores = 12)
+df_predict_s4 <- run_prediction_rsofun(
+  mcmc_posterior = out_calib_s4,
+  prediction = "train",
+  burnin_to_skip = 0,
+  n_samples = 200,
+  n_cores = 12)
 
 # NOTE: no error term has (yet) been added
-df_predict_s3
-df_predict_s3
+df_predict_s0
+df_predict_s1
+df_predict_s4
+
+
+df_predict_s4 <- run_prediction_rsofun(
+  mcmc_posterior = out_calib_s4,
+  prediction = "train",
+  burnin_to_skip = 0,
+  n_samples = 1,
+  n_cores = 1)
+df_predict_s4 |> unnest(sim) |> group_split(target) # TODO: why only gpp???
+
+# Plot raw predictions
+## gpp:
+df_hexplot_gpp <- df_predict_s4 |> unnest(sim) |> filter(!is.na(obs)) |> filter(target == "gpp")
+lims <- round(max(quantile(df_hexplot_gpp$mod_no_err, 0.9999), quantile(df_hexplot_gpp$obs, 0.9999)))
+
+ggplot(df_hexplot_gpp, aes(x=mod_no_err, y=obs)) +
+  geom_hex(bins = 50, show.legend = FALSE) +
+  facet_wrap(~target) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  coord_fixed() +
+  xlim(0, lims) +
+  ylim(0, lims) +
+  theme_classic() +
+  khroma::scale_fill_batlowW(trans = "log", reverse = TRUE)
+  # khroma::scale_fill_davos(trans = "log", reverse = TRUE)
+
+## others:
+df_predict_s4 |> unnest(sim) |> arrange(desc(target))
+df_hexplot_others <- df_predict_s4 |> unnest(sim) |> filter(target != "gpp")
+ggplot(df_hexplot_others, aes(x=mod_no_err, y=obs)) +
+  geom_point() +
+  facet_wrap(~target) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+  coord_fixed() +
+  xlim(0, lims) +
+  ylim(0, lims) +
+  theme_classic()
+
+## TODO: Aggregate across mcmc_samples
+
                 # POSTPROCESS
                 # Aggregate across mcmc_samples
+                browser()
+                # |>
+                #   # format to obtain 90% credible intervals
+                #   dplyr::select(mcmc_id, sim) |>
+                #   tidyr::unnest(sim) |>
+                #   dplyr::group_by(date) |>
+                #   # compute quantiles for each day
+                #   dplyr::summarise(
+                #     gpp_q05 = quantile(gpp, 0.05, na.rm = TRUE),
+                #     gpp_q50 = quantile(gpp, 0.5, na.rm = TRUE),          # get median
+                #     gpp_q95 = quantile(gpp, 0.95, na.rm = TRUE),
+                #     gpp_pred_q05 = quantile(gpp_pred, 0.05, na.rm = TRUE),
+                #     gpp_pred_q95 = quantile(gpp_pred, 0.95, na.rm = TRUE)
+                #   )
+                # #results <- lapply(1:nrow(par_df), run_pmodel_single_prediction)
+                # pmodel_runs
+                #
+                # # Run model with maximum a posteriori parameter estimates (not shown on plot).
+                # # TODO: rewrite run_prediction_rsofun for the case where mcmc_posterior is a list of parameters
+                MAP(out_calib_s3$mod)$parametersMAP
+                # pmodel_run_map <- run_pmodel(
+                #   MAP(mcmc_posterior$mod)$parametersMAP |>
+                #     t() |>
+                #     as_tibble()
+                # )
+                #
+                # # Plot the credible intervals computed above
+                # # for the first year only
+                # data_to_plot <- pmodel_runs |>
+                #   # Plot only first year
+                #   dplyr::slice(1:365) |>
+                #   dplyr::left_join(
+                #     # Merge GPP validation data (first year)
+                #     p_model_validation$data[[1]][1:365, ] |>
+                #       dplyr::rename(gpp_obs = gpp),
+                #     by = "date") |>
+                #   dplyr::left_join(
+                #     pmodel_run_map |>
+                #       dplyr::select(date, gpp_map = gpp),
+                #     by = "date"
+                #   )
+                #
+                # plot_gpp_error <- ggplot(data = data_to_plot) +
+                #   geom_ribbon(
+                #     aes(
+                #       ymin = gpp_pred_q05,
+                #       ymax = gpp_pred_q95,
+                #       x = date,
+                #       fill = "Model uncertainty"
+                #     )) +
+                #   geom_ribbon(
+                #     aes(
+                #       ymin = gpp_q05,
+                #       ymax = gpp_q95,
+                #       x = date,
+                #       fill = "Parameter uncertainty"
+                #     )) +
+                #   # Include observations in the plot
+                #   geom_point(
+                #     aes(
+                #       x = date,
+                #       y = gpp_obs,
+                #       color = "Observations"
+                #     ),
+                #   ) +
+                #   geom_line(
+                #     aes(
+                #       x = date,
+                #       y = gpp_q50,
+                #       color = "Predictions"
+                #     )
+                #   ) +
+                #   # geom_line(
+                #   #   aes(
+                #   #     x = date,
+                #   #     y = gpp_map,
+                #   #     color = "MAP"
+                #   #   )
+                #   # ) +
+                #   theme_classic() +
+                #   theme(panel.grid.major.y = element_line(),
+                #         legend.position = "bottom") +
+                #   labs(
+                #     x = 'Date',
+                #     y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
+                #   )
+                #
+                # plot_gpp_error <- plot_gpp_error +
+                #   scale_color_manual(NULL,
+                #                      breaks = c("Observations",
+                #                                 "Predictions"),
+                #                      values = c(t_col("black", 0),
+                #                                 t_col("tomato", 0))) +
+                #   scale_fill_manual(NULL,
+                #                     breaks = c("Model uncertainty",
+                #                                "Parameter uncertainty"),
+                #                     values = c(t_col("tomato", 50),
+                #                                t_col("#1b9e77", 0)))
+                # plot_gpp_error
+                #
+                # settings_string <- get_settings_str(mcmc_posterior)
+                #
+                # ggsave(paste0("./analysis/paper_results_files/gpp_predictions_observations.pdf"), plot = plot_gpp_error, width = 6, height = 5)
+                # ggsave(paste0("./analysis/paper_results_files/gpp_predictions_observations.png"), plot = plot_gpp_error, width = 6, height = 5)
 
 
 # Figure B2: error distribution predObs scatter plot ----
@@ -530,6 +763,7 @@ df_predict_s3
 
 # Figure D: sensitivity bar plot ----
 
+# TODO: make sensitivity analysis
 
 ########## GENERAL PLOTS: ########### -
 # s3_output_to_analyze <- out_calib_s3_serial$mod

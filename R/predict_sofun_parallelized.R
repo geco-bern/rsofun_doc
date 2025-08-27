@@ -53,7 +53,7 @@ predict_sofun_parallelized <- function(
       ) |>
       multidplyr::cluster_library(packages = c("dplyr", "tidyr", "purrr", "rsofun"))
 
-    df_model_predictions_parallel <- par_df |>
+    df_model_predictions <- par_df |>
       multidplyr::partition(cl) |>
       dplyr::mutate('sim' = purrr::map(
         pars,
