@@ -80,21 +80,28 @@ setup_rsofun_calibration <- function(scenario = 3){
     )
     par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
 
-  } else if (scenario %in% c(99)) {
+  } else if (scenario %in% c(89,88,87,86)) {
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
       kphio_par_b     = list(lower = 10, upper = 30, init = 20),
       soilm_thetastar = list(lower = 1, upper = 250, init = 40),
       soilm_betao     = list(lower = 0.0, upper = 1.0, init = 0.0),
-      # test adding only single parameter to estimation: beta_unitcostratio = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*146.0),
+      beta_unitcostratio = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*146.0),
       rd_to_vcmax        = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.014),      # 0.014 value from Atkin et al. 2015 for C3 herbaceous
-      # test adding only single parameter to estimation: tau_acclim         = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*20.0),
-      # test adding only single parameter to estimation: kc_jmax            = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.41),
-      err_gpp         = list(lower = 0.01, upper = 3, init = 0.8),
-      err_bigD13C     = list(lower = 0.01, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
-      err_vj          = list(lower = 0.01, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
+      tau_acclim         = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*20.0),
+      kc_jmax            = as.list(c(lower = 0.1, upper = 3.0, init = 1.0)*0.41),
+      err_gpp         = list(lower = 0.1, upper = 3, init = 0.8),
+      err_bigD13C     = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
+      err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
     )
+    # test adding only single parameter to estimation:
+    # i.e. out of beta_unitcostratio, rd_to_vcmax, tau_acclim, kc_jmax only add one at a time:
+    if (scenario==89){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio',              'tau_acclim','kc_jmax'))]}
+    if (scenario==88){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax',             'kc_jmax'))]}
+    if (scenario==87){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax','tau_acclim'          ))]}
+    if (scenario==86){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c(                     'rd_to_vcmax','tau_acclim','kc_jmax'))]}
+
     par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
 
   } else if (scenario %in% c(2,3)) {
@@ -154,8 +161,8 @@ setup_rsofun_calibration <- function(scenario = 3){
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
 
-  } else if (scenario %in% c(3,4)) {
-    drivobs <- drivobs_train_bigD13C_vj_gpp
+  } else if (scenario %in% c(3,4,89,88,87,86)) {
+    drivobs      <- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
 
   } else if (scenario %in% c(0)) {
