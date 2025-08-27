@@ -144,7 +144,7 @@ setup_rsofun_calibration <- function(scenario = 3){
     test_obs,
     by = join_by(sitename, run_model))
 
-  if (scenario %in% c(1,2,4,99)){
+  if (scenario %in% c(1,2)){
     drivobs <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
       filter(gpp) |>
@@ -154,7 +154,7 @@ setup_rsofun_calibration <- function(scenario = 3){
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
 
-  } else if (scenario %in% c(3)) {
+  } else if (scenario %in% c(3,4)) {
     drivobs <- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
 
