@@ -28,15 +28,33 @@ calib_sofun_parallelized <- function(
 
     ## Preprocess: ----
 
-    # reformat parameters
-    pars <- as.data.frame(do.call("rbind", settings$par))
-    parnames <- rownames(pars)
+    # parse prior distributions of parameters
+    parnames <- names(settings$par)
+    source(here::here("R/createMixedPrior.R"))
 
-    priors  <- BayesianTools::createUniformPrior(
-      lower = unlist(pars$lower),
-      upper = unlist(pars$upper),
-      best  = unlist(pars$init)
-    )
+    # PREVIOUSLY PRIORS OF ALL PARAMETERS WERE UNIFORM DISTRIBUTED
+    #    list(lower=...,upper=...,init=...)
+    # NOW THERE ARE DIFFERENT PRIORS ALLOWED: they are distinguished based on the element names:
+    #    lapply(settings$par, names)
+
+    # define if we are in PREVIOUS (uniform) or NEW (mixed) CASE
+    list_unif  <- lapply(settings$par, is_uniform_prior)
+    if (all(unlist(list_unif))) {
+      # PREVIOUS CASE: all uniformly distributed: recover previous behavior
+
+      pars     <- as.data.frame(do.call("rbind", settings$par))
+      priors   <- BayesianTools::createUniformPrior(
+        lower = unlist(pars$lower),
+        upper = unlist(pars$upper),
+        best  = unlist(pars$init)
+      )
+    } else {
+      # NEW CASE: mixed distributions in prior
+      priors  <- createMixedPrior(settings$par)
+
+      # plot_prior_density(priors, parNames = parnames, n=10000)
+      # priors$density(priors$sampler(n=100))
+    }
 
     # Your external data
     # drivers

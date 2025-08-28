@@ -86,6 +86,60 @@ t_col <- function(color, percent = 50, name = NULL) {
   ## Save the color
   invisible(t.col)
 }
+plot_prior_density <- function(priors, parNames, n=1000){
+  priorMat <- priors$sampler(n)
+  colnames(priorMat) <- parNames
+
+  # Create data frame for plotting
+  df_plot <- rbind(
+    # data.frame(posteriorMat, distrib = "posterior"),
+    data.frame(priorMat, distrib = "prior")
+  )
+  df_plot$distrib <- as.factor(df_plot$distrib)
+
+  # Plot with facet wrap
+  df_plot |> tidyr::tibble() |>
+    tidyr::pivot_longer(-c(distrib), names_to = "variable") |>
+    dplyr::mutate(variable = forcats::fct_inorder(variable)) |> # order by appearance
+    ggplot(
+      aes(x = value, fill = distrib)
+    ) +
+    geom_density() +
+    theme_classic() +
+    facet_wrap( ~ variable , nrow = 2, scales = "free") +
+    theme(
+      legend.position = "bottom",
+      axis.title.x = element_text("")
+    ) +
+    scale_fill_manual(NULL, values = c("#29a274ff", "#777055ff")) # GECO colors
+}
+# plot_prior_correlations <- function(priors, parNames, n=1000){
+#   priorMat <- priors$sampler(n)
+#   colnames(priorMat) <- parNames
+#
+#   # Create data frame for plotting
+#   df_plot <- rbind(
+#     # data.frame(posteriorMat, distrib = "posterior"),
+#     data.frame(priorMat, distrib = "prior")
+#   )
+#   df_plot$distrib <- as.factor(df_plot$distrib)
+#
+#   library(GGally)
+#   library(ggplot2)
+#
+#   my_hex_fn <- function(data, mapping, ...) {
+#     ggplot(data = data, mapping = mapping) +
+#       geom_hex()
+#   }
+#
+#   # make scatter plot matrix only for prior
+#   dat_to_plot <- tidyr::tibble(df_plot) |> dplyr::filter(distrib == "prior") |> dplyr::select(-distrib)
+#   p <- ggpairs(dat_to_plot,
+#                lower = list(continuous = my_hex_fn)) +
+#     theme_classic() #+
+#   # scale_color_manual(NULL, values = c("#29a274ff", "#777055ff")) # GECO colors
+#   return(p)
+# }
 plot_prior_posterior_density <- function(x, burnin_to_skip){
   require(BayesianTools)
   require(dplyr)
