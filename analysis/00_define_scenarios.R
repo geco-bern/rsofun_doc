@@ -69,7 +69,7 @@ setup_rsofun_calibration <- function(scenario = 3){
   )
 
   ## Define parameters to estimate and their priors
-  if (scenario %in% c(0,1,4, 11)){
+  if (scenario %in% c(0,1,4, 11, 31,32,33,34,35,36,37,38,39,40,41,42)) { # the 30s and 40s are the multi-site gpp only
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -250,7 +250,26 @@ setup_rsofun_calibration <- function(scenario = 3){
     )
 
     drivobs_test <- drivobs |> dplyr::slice(0) # No test dataset
+  } else if (scenario %in% c(31,32,33,34,35,36,37,38,39,40,41,42)) { # the 30s and 40s are the multi-site gpp only)){ # the 30s and 40s are the multi-site gpp only
+    drivobs <- drivobs_train_bigD13C_vj_gpp |>
+      filter(sitename == case_when(
+        scenario %in% c(31,131) ~ "BE-Vie",
+        scenario %in% c(32,132) ~ "CH-Dav",
+        scenario %in% c(33,133) ~ "CZ-BK1",
+        scenario %in% c(34,134) ~ "DK-Sor",
+        scenario %in% c(35,135) ~ "FI-Hyy",
+        scenario %in% c(36,136) ~ "GF-Guy",
+        scenario %in% c(37,137) ~ "IT-Lav",
+        scenario %in% c(38,138) ~ "US-Ha1",
+        scenario %in% c(39,139) ~ "US-MMS",
+        scenario %in% c(40,140) ~ "US-PFa",
+        scenario %in% c(41,141) ~ "US-Var",
+        scenario %in% c(42,142) ~ "US-Wkg",
+        TRUE~"donotuseany"
+      ))
+    if (nrow(drivobs) == 0){stop(sprintf("Unsupported scenario %d", scenario))}
 
+    drivobs_test <- drivobs |> dplyr::slice(0) # No test dataset
   } else {
     stop(sprintf("Unsupported scenario: %d", scenario))
   }
