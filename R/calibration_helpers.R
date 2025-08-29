@@ -181,9 +181,7 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
   return(gg)
 }
 
-plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FALSE){
-  # browser()
-  # x <- getSample(x, coda = T, thin = "auto") # TODO: check if we need to scale x-axis
+plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FALSE, end = NULL){
   curr_iter <- x[[1]]$settings$iterations
   if(dont_thin || curr_iter < 10000){
     curr_thin <- 1
@@ -191,7 +189,7 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FAL
     curr_thin <- floor(curr_iter / 10000)
   }
 
-  xsample <- getSample(x, coda = T, thin = curr_thin, start = burnin_to_skip)
+  xsample <- getSample(x, coda = T, thin = curr_thin, start = burnin_to_skip, end = end)
 
   # nr_internal_chains will have same color
   dat_to_plot <- lapply(xsample, function(single_chain){
@@ -219,8 +217,8 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FAL
     labs(y="", color = "chain", linetype = "internal\nchains")
 
   # add Gelman Diagnostics
-  get_gelman_diag <- function(mcmc, burnin_to_skip){
-    gelman_df <- BayesianTools::gelmanDiagnostics(mcmc, start = burnin_to_skip)
+  get_gelman_diag <- function(mcmc, burnin_to_skip, end){
+    gelman_df <- BayesianTools::gelmanDiagnostics(mcmc, start = burnin_to_skip, end = end)
     psrf_values <- gelman_df$psrf[,"Point est."]
     psrf_strings <- paste0(substr(names(psrf_values),1,3), "..=", sprintf("%.2f", psrf_values))
     psrf_string <- paste0(psrf_strings, collapse = ",")
@@ -228,7 +226,8 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FAL
             gelman_df$mpsrf,
             psrf_string)
   }
-  pl <- pl + ggtitle(NULL, subtitle = get_gelman_diag(x, burnin_to_skip))
+  subtitle <- tryCatch(get_gelman_diag(x, burnin_to_skip + 1, end = end), error = function(e) {e}) # unsure why min burnin of 1 is needed
+  pl <- pl + ggtitle(NULL, subtitle = subtitle)
 
   return(pl)
 }
