@@ -85,7 +85,7 @@ setup_rsofun_calibration <- function(scenario = 3){
       err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
     )
 
-  } else if (scenario %in% c(2,3, 12,13,89,88,87,86, 14)) {
+  } else if (scenario %in% c(2,3, 12,13,89,88,87,86, 14,15)) {
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -113,7 +113,7 @@ setup_rsofun_calibration <- function(scenario = 3){
       if (scenario==86){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c(                     'rd_to_vcmax','tau_acclim','kc_jmax'))]}
     }
 
-    if (scenario %in% c(14)) { # use priors from scenario 1 for kphio, kphio_par_a, kphio_par_b, soilm_thetastar, soilm_betao
+    if (scenario %in% c(14)) { # use priors from posterior of scenario 1 for kphio, kphio_par_a, kphio_par_b, soilm_thetastar, soilm_betao
 
       # read in posteriors from scenario 1 as prior for 14
       calib_scen1 <- readr::read_rds(here::here("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds"))
@@ -184,13 +184,26 @@ setup_rsofun_calibration <- function(scenario = 3){
       par_to_estimate$soilm_thetastar <- list(mean    = 27.0859346061886,     sd    = 0.762249191490997)
       par_to_estimate$soilm_betao     <- list(meanlog = -4.65845041863264,    sdlog = 1.31209247435319) # NOTE: use lognormal!
     }
-
+    if (scenario %in% c(15)) { # use fixed mean from posterior of scenario 1 for kphio, kphio_par_a, kphio_par_b, soilm_thetastar, soilm_betao
+      par_to_estimate$kphio <- NULL
+      par_to_estimate$kphio_par_a <- NULL
+      par_to_estimate$kphio_par_b <- NULL
+      par_to_estimate$soilm_thetastar <- NULL
+      par_to_estimate$soilm_betao <- NULL
+    }
   } else {
     stop(sprintf("Unsupported scenario: %d", scenario))
   }
 
   # Remove parameters that are defined to be estimated from default_par_fixed
   par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
+  if (scenario %in% c(15)) {
+    par_to_fix$kphio           <- 0.0479684950570567
+    par_to_fix$kphio_par_a     <- -0.00179211384220008
+    par_to_fix$kphio_par_b     <- 18.4293950588911
+    par_to_fix$soilm_thetastar <- 27.0859346061886
+    par_to_fix$soilm_betao     <- exp(-4.65845041863264)
+  }
 
   ## Setup the data (drivers and obs) for the three calibration scenarios ----
 
@@ -217,7 +230,7 @@ setup_rsofun_calibration <- function(scenario = 3){
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
 
-  } else if (scenario %in% c(3,4,89,88,87,86,13,14)) { # GPP and traits data
+  } else if (scenario %in% c(3,4,89,88,87,86,13,14,15)) { # GPP and traits data
 
     drivobs      <- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
