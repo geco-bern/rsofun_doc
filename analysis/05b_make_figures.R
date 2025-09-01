@@ -1,0 +1,288 @@
+# TO investigate gpp only fit per site
+
+library(readr)
+library(dplyr)
+library(tidyr)
+library(BayesianTools)
+library(ggplot2)
+library(patchwork)
+
+source(here::here("R/calibration_helpers.R"))
+source(here::here("analysis/00_define_scenarios.R"))
+
+ggsave_and_return <- function(plot, fname, width=7.2, height=3.6, units = "in", scale = 1.6){
+  ggsave(
+    here::here(file.path("fig/",fname)),
+    plot = plot,
+    width = width,
+    height = height,
+    units = units,
+    scale = scale)
+  return(plot)
+}
+
+
+
+out_calib_s0 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s1 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s14<- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds")
+out_calib_s15<- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen15_DEzs-15000-0iter_8x3chains_on_CPU8x1_continued.rds")
+
+
+out_calib_s31 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen31_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s32 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen32_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
+out_calib_s33 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen33_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s34 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen34_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s35 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen35_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s36 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen36_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s37 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen37_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s38 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen38_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s39 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen39_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s40 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen40_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
+out_calib_s41 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen41_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s42 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen42_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+
+# out_calib_s51 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen51")
+# out_calib_s52 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen52")
+out_calib_s53 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen53_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s54 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen54_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s55 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen55")
+out_calib_s56 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen56_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s57 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen57")
+out_calib_s58 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen58_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s59 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen59")
+out_calib_s60 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen60_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s61 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen61")
+# out_calib_s62 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen62")
+#
+burnin_to_skip = 8000
+burnin_to_skip_50s = 2500
+
+(plot_mcmc_trace(out_calib_s0$mod,  nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s0$fpath)  + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s0.png")
+(plot_mcmc_trace(out_calib_s1$mod,  nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s1$fpath)  + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s1.png")
+(plot_mcmc_trace(out_calib_s14$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s14$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s14.png")
+(plot_mcmc_trace(out_calib_s15$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s15$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s15.png")
+
+(plot_mcmc_trace(out_calib_s31$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s31$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s31.png")
+(plot_mcmc_trace(out_calib_s32$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s32$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s32.png")
+(plot_mcmc_trace(out_calib_s33$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s33$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s33.png")
+(plot_mcmc_trace(out_calib_s34$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s34$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s34.png")
+(plot_mcmc_trace(out_calib_s35$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s35$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s35.png")
+(plot_mcmc_trace(out_calib_s36$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s36$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s36.png")
+(plot_mcmc_trace(out_calib_s37$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s37$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s37.png")
+(plot_mcmc_trace(out_calib_s38$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s38$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s38.png")
+(plot_mcmc_trace(out_calib_s39$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s39$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s39.png")
+(plot_mcmc_trace(out_calib_s40$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s40$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s40.png")
+(plot_mcmc_trace(out_calib_s41$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s41$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s41.png")
+(plot_mcmc_trace(out_calib_s42$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s42$fpath) + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s42.png")
+
+# (plot_mcmc_trace(out_calib_s51$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s51$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s51.png")
+# (plot_mcmc_trace(out_calib_s52$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s52$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s52.png")
+(plot_mcmc_trace(out_calib_s53$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s53$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s53.png")
+(plot_mcmc_trace(out_calib_s54$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s54$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s54.png")
+# (plot_mcmc_trace(out_calib_s55$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s55$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s55.png")
+(plot_mcmc_trace(out_calib_s56$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s56$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s56.png")
+# (plot_mcmc_trace(out_calib_s57$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s57$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s57.png")
+(plot_mcmc_trace(out_calib_s58$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s58$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s58.png")
+# (plot_mcmc_trace(out_calib_s59$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s59$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s59.png")
+(plot_mcmc_trace(out_calib_s60$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s60$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s60.png")
+# (plot_mcmc_trace(out_calib_s61$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s61$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s61.png")
+# (plot_mcmc_trace(out_calib_s62$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s62$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s62.png")
+
+
+
+pl_post_s0  <- (plot_prior_posterior_density(out_calib_s0$mod,burnin_to_skip  = burnin_to_skip) + ggtitle("Scenario 0") + ggtitle(out_calib_s0$fpath))  |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s0.png")
+pl_post_s1  <- (plot_prior_posterior_density(out_calib_s1$mod,burnin_to_skip  = burnin_to_skip) + ggtitle("Scenario 1") + ggtitle(out_calib_s1$fpath))  |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s1.png")
+pl_post_s31 <- (plot_prior_posterior_density(out_calib_s31$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 31")+ ggtitle(out_calib_s31$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s31.png")
+pl_post_s32 <- (plot_prior_posterior_density(out_calib_s32$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 32")+ ggtitle(out_calib_s32$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s32.png")
+pl_post_s33 <- (plot_prior_posterior_density(out_calib_s33$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 33")+ ggtitle(out_calib_s33$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s33.png")
+pl_post_s34 <- (plot_prior_posterior_density(out_calib_s34$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 34")+ ggtitle(out_calib_s34$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s34.png")
+pl_post_s35 <- (plot_prior_posterior_density(out_calib_s35$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 35")+ ggtitle(out_calib_s35$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s35.png")
+pl_post_s36 <- (plot_prior_posterior_density(out_calib_s36$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 36")+ ggtitle(out_calib_s36$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s36.png")
+pl_post_s37 <- (plot_prior_posterior_density(out_calib_s37$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 37")+ ggtitle(out_calib_s37$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s37.png")
+pl_post_s38 <- (plot_prior_posterior_density(out_calib_s38$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 38")+ ggtitle(out_calib_s38$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s38.png")
+pl_post_s39 <- (plot_prior_posterior_density(out_calib_s39$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 39")+ ggtitle(out_calib_s39$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s39.png")
+pl_post_s40 <- (plot_prior_posterior_density(out_calib_s40$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 40")+ ggtitle(out_calib_s40$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s40.png")
+pl_post_s41 <- (plot_prior_posterior_density(out_calib_s41$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 41")+ ggtitle(out_calib_s41$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s41.png")
+pl_post_s42 <- (plot_prior_posterior_density(out_calib_s42$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 42")+ ggtitle(out_calib_s42$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s42.png")
+
+# compare them:
+# cowplot::plot_grid(
+#   pl_post_s1 + theme(legend.position = "none"),
+#   pl_post_s0 + theme(legend.position = "none"),
+#   pl_post_s33 + theme(legend.position = "none"),
+#   pl_post_s35 + theme(legend.position = "none"),
+#   ncol=1)
+scenarios_to_compare <- list("BE-Vie (s31)" = out_calib_s31$mod,
+                             "CH-Dav (s32)" = out_calib_s32$mod,
+                             "CZ-BK1 (s33)" = out_calib_s33$mod,
+                             "DK-Sor (s34)" = out_calib_s34$mod,
+                             "FI-Hyy (s35)" = out_calib_s35$mod,
+                             "GF-Guy (s36)" = out_calib_s36$mod,
+                             "IT-Lav (s37)" = out_calib_s37$mod,
+                             "US-Ha1 (s38)" = out_calib_s38$mod,
+                             "US-MMS (s39)" = out_calib_s39$mod,
+                             "US-PFa (s40)" = out_calib_s40$mod,
+                             "US-Var (s41)" = out_calib_s41$mod,
+                             "US-Wkg (s42)" = out_calib_s42$mod)
+scenarios_to_compare <- list(#"BE-Vie (s51)" = out_calib_s51$mod,
+                             # "CH-Dav (s52)" = out_calib_s52$mod,
+                             "CZ-BK1 (s53)" = out_calib_s53$mod,
+                             "DK-Sor (s54)" = out_calib_s54$mod,
+                             # "FI-Hyy (s55)" = out_calib_s55$mod,
+                             "GF-Guy (s56)" = out_calib_s56$mod,
+                             # "IT-Lav (s57)" = out_calib_s57$mod,
+                             "US-Ha1 (s58)" = out_calib_s58$mod,
+                             # "US-MMS (s59)" = out_calib_s59$mod,
+                             "US-PFa (s60)" = out_calib_s60$mod#,
+                             # "US-Var (s61)" = out_calib_s61$mod,
+                             # "US-Wkg (s62)" = out_calib_s62$mod
+                             )
+
+# pl_post_comparison <- plot_prior_posterior_density_compare(
+#   named_list_scen =  c(list("prior" = out_calib_s31$mod), scenarios_to_compare),
+#   burnin_to_skip = burnin_to_skip)
+# ggsave_and_return(pl_post_comparison, "fig_A_MCMCconvergence_posterior_all.png")
+
+pl_post_comparison2 <- plot_prior_posterior_density_compare(
+  named_list_scen =  c(list("prior" = out_calib_s53$mod), scenarios_to_compare),
+  burnin_to_skip  = burnin_to_skip_50s)
+ggsave_and_return(pl_post_comparison2, "fig_A_MCMCconvergence_posterior_all2.png")
+
+# Analyze estimated (MAP) of soilm_betastar vs whc:
+get_MAP <- function(mod){
+  as.data.frame(BayesianTools::MAP(mod)$parametersMAP) |>
+    as_tibble(rownames = "param") |>
+    rename(c("param"=1,"MAP"=2))
+}
+get_distr <- function(mod, N=1000, burnin_to_skip){
+  as_tibble(BayesianTools::getSample(mod, start = burnin_to_skip, thin = 1, numSamples = N)) |>
+    mutate(sample_id = 1:n()) |>
+    select(sample_id, soilm_thetastar) |>
+    pivot_longer(soilm_thetastar, names_to = "param", values_to = "param_sample")
+}
+df_MAP <- lapply(scenarios_to_compare, get_MAP) |> bind_rows(.id = "scenario")
+df_dis <- lapply(scenarios_to_compare, \(mod){get_distr(mod, burnin_to_skip = burnin_to_skip_50s)}) |> bind_rows(.id = "scenario")
+
+res1 <- setup_rsofun_calibration(scenario = 1)
+
+# dat_to_plot <- df_MAP |> filter(param == "soilm_thetastar") |>
+#   pivot_wider(names_from = "param", values_from = "MAP", names_prefix = "MAP_") |>
+#   mutate(sitename = substr(scenario,1,6)) |>
+#   left_join(res1$drivobs |> select(sitename, site_info) |> unnest(site_info))
+# pl_soilmthetastar_whc <- ggplot(dat_to_plot, aes(x=whc, y=MAP_soilm_thetastar)) + geom_point() +
+#   geom_abline(slope = 0.2, linetype = "dashed")
+# ggsave_and_return(pl_soilmthetastar_whc, "fig_Z_MCMCpost_thetastarMAP-vs-whc.png")
+
+dat_to_plot2 <- df_dis |> filter(param == "soilm_thetastar") |>
+  pivot_wider(id_cols = c(sample_id, scenario), names_from = "param", values_from = "param_sample") |>
+  mutate(sitename = substr(scenario,1,6)) |>
+  left_join(res1$drivobs |> select(sitename, site_info) |> unnest(site_info))
+pl_soilmthetastar_whc2 <- ggplot(dat_to_plot2, aes(x=whc, y=soilm_thetastar, colour = scenario)) +
+  geom_violin(scale = "width", width = 10) +
+  geom_abline(slope = 0.2, linetype = "dashed")
+ggsave_and_return(pl_soilmthetastar_whc2, "fig_Z_MCMCpost_thetastar-vs-whc2.png")
+
+
+
+# Parameter correlation analysis
+if (TRUE){ # This is quite a slow plot:
+
+  save_corr_plot <- function(out_calib, thin, numSamples, start, filename){
+    png(filename, width = 7.2, height = 7.2, units = "in", res = 300)
+    correlationPlot(out_calib$mod, thin = thin, numSamples = numSamples, start = start)
+    dev.off()
+  }
+
+  save_corr_plot(out_calib_s31, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s31.png"))
+  save_corr_plot(out_calib_s32, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s32.png"))
+  save_corr_plot(out_calib_s33, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s33.png"))
+  save_corr_plot(out_calib_s34, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s34.png"))
+  save_corr_plot(out_calib_s35, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s35.png"))
+  save_corr_plot(out_calib_s36, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s36.png"))
+  # save_corr_plot(out_calib_s37, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s37.png"))
+  save_corr_plot(out_calib_s38, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s38.png"))
+  save_corr_plot(out_calib_s39, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s39.png"))
+  save_corr_plot(out_calib_s40, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s40.png"))
+  save_corr_plot(out_calib_s41, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s41.png"))
+  save_corr_plot(out_calib_s42, thin = 1, numSamples = 5000, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s42.png"))
+}
+
+
+
+# sample posteriors and run model for each sample parameter set
+source(here::here("R/run_prediction_rsofun.R"))
+t0 <- Sys.time()
+# df_predict_s1  <- readRDS("df_predict_s1.RDS")
+df_predict_s31 <- run_prediction_rsofun(out_calib_s31, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s31,"df_predict_s31.RDS") # 500 samples on 12 cores: 5 minutes
+df_predict_s32 <- run_prediction_rsofun(out_calib_s32, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s32,"df_predict_s32.RDS") # 500 samples on 12 cores: 5 minutes
+df_predict_s33 <- run_prediction_rsofun(out_calib_s33, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s33,"df_predict_s33.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s34 <- run_prediction_rsofun(out_calib_s34, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s34,"df_predict_s34.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s35 <- run_prediction_rsofun(out_calib_s35, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s35,"df_predict_s35.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s36 <- run_prediction_rsofun(out_calib_s36, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s36,"df_predict_s36.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s37 <- run_prediction_rsofun(out_calib_s37, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s37,"df_predict_s37.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s38 <- run_prediction_rsofun(out_calib_s38, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s38,"df_predict_s38.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s39 <- run_prediction_rsofun(out_calib_s39, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s39,"df_predict_s39.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s40 <- run_prediction_rsofun(out_calib_s40, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s40,"df_predict_s40.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s41 <- run_prediction_rsofun(out_calib_s41, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s41,"df_predict_s41.RDS") # 500 samples on 12 cores: X minutes
+df_predict_s42 <- run_prediction_rsofun(out_calib_s42, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s42,"df_predict_s42.RDS") # 500 samples on 12 cores: X minutes
+t1 <- Sys.time()
+print(t1-t0)
+# NOTE: no error term has (yet) been added
+
+
+
+
+# Plot raw predictions
+## gpp:
+plot_gpp_predVsObs <- function(df_predict){
+  df_hexplot_gpp <- df_predict |> unnest(sim) |> filter(!is.na(obs)) |> filter(target == "gpp")
+
+  lims <- round(max(quantile(df_hexplot_gpp$mod_no_err, 0.9999), quantile(df_hexplot_gpp$obs, 0.9999)))
+  ggplot(df_hexplot_gpp, aes(x=mod_no_err, y=obs)) +
+    geom_hex(bins = 50, show.legend = FALSE) +
+    facet_wrap(~target) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+    coord_fixed() +
+    xlim(0, lims) +
+    ylim(0, lims) +
+    theme_classic() +
+    khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
+    facet_wrap(~sitename)
+    # khroma::scale_fill_davos(trans = "log", reverse = TRUE)
+}
+
+
+scatter_s1 <- plot_gpp_predVsObs(df_predict_s1)
+
+scatter_s31 <- plot_gpp_predVsObs(df_predict_s31)
+scatter_s32 <- plot_gpp_predVsObs(df_predict_s32)
+scatter_s33 <- plot_gpp_predVsObs(df_predict_s33)
+scatter_s34 <- plot_gpp_predVsObs(df_predict_s34)
+scatter_s35 <- plot_gpp_predVsObs(df_predict_s35)
+scatter_s36 <- plot_gpp_predVsObs(df_predict_s36)
+scatter_s37 <- plot_gpp_predVsObs(df_predict_s37)
+scatter_s38 <- plot_gpp_predVsObs(df_predict_s38)
+scatter_s39 <- plot_gpp_predVsObs(df_predict_s39)
+scatter_s40 <- plot_gpp_predVsObs(df_predict_s40)
+scatter_s41 <- plot_gpp_predVsObs(df_predict_s41)
+scatter_s42 <- plot_gpp_predVsObs(df_predict_s42)
+
+# cowplot::plot_grid(scatter_s31, scatter_s32)
+scatter_all <- cowplot::plot_grid(
+  scatter_s31,
+  scatter_s32,
+  scatter_s33,
+  scatter_s34,
+  scatter_s35,
+  scatter_s36,
+  scatter_s37,
+  scatter_s38,
+  scatter_s39,
+  scatter_s40,
+  scatter_s41,
+  scatter_s42)
+
+ggsave_and_return(scatter_all, "fig_B2_pred-vs-obs_allsingle.png", width = 7.2, height = 7.2)
+ggsave_and_return(scatter_s1, "fig_B2_pred-vs-obs_s1.png", width = 7.2, height = 7.2)
+

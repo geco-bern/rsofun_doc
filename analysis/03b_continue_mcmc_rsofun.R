@@ -7,8 +7,9 @@
 # 2. number of iterations to add
 
 # Example:
-# Rscript -e 'renv::run("R/dev/03b_continue_mcmc_rsofun.R", project = "../rsofun_doc", args = c("out_calib__scen4_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds", "10000"))'
-# Rscript -e 'renv::run("R/dev/03b_continue_mcmc_rsofun.R", project = "../rsofun_doc", args = c("out_calib__scen14_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds", "10000"))'
+# Rscript -e 'renv::run("analysis/03b_continue_mcmc_rsofun.R", project = "../rsofun_doc", args = c("out_calib__scen4_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds", "10000"))'
+# Rscript -e 'renv::run("analysis/03b_continue_mcmc_rsofun.R", project = "../rsofun_doc", args = c("out_calib__scen14_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds", "10000"))'
+# Rscript -e 'renv::run("analysis/03b_continue_mcmc_rsofun.R", project = "../rsofun_doc", args = c("out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds", "15000"))'
 
 # # When using this script directly from RStudio, not from the shell, specify
 # args <- c("out_calib__scen14_DEzs-10000-0iter_8x3chains_on_CPU8x1.rds", "29")
