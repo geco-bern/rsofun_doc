@@ -69,7 +69,8 @@ setup_rsofun_calibration <- function(scenario = 3){
   )
 
   ## Define parameters to estimate and their priors
-  if (scenario %in% c(0,1,4, 11, 31,32,33,34,35,36,37,38,39,40,41,42)) { # the 30s and 40s are the multi-site gpp only
+  if (scenario %in% c(0,1,4, 11, 31,32,33,34,35,36,37,38,39,40,41,42,
+                                 51,52,53,54,55,56,57,58,59,60,61,62      )) {   # the 50s and 60s are the multi-site gpp only with a fixed beta0==0
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -84,6 +85,9 @@ setup_rsofun_calibration <- function(scenario = 3){
       err_bigD13C     = list(lower = 0.1, upper = 3, init = 0.8), # TODO: without err_bigD13C and err_vj this errors
       err_vj          = list(lower = 0.1, upper = 3, init = 0.8)  # TODO: without err_bigD13C and err_vj this errors
     )
+    if(scenario %in% c(51,52,53,54,55,56,57,58,59,60,61,62)){
+      par_to_estimate$soilm_betao = NULL
+    }
 
   } else if (scenario %in% c(2,3, 12,13,89,88,87,86, 14,15)) {
     par_to_estimate <- list(
@@ -250,21 +254,22 @@ setup_rsofun_calibration <- function(scenario = 3){
     )
 
     drivobs_test <- drivobs |> dplyr::slice(0) # No test dataset
-  } else if (scenario %in% c(31,32,33,34,35,36,37,38,39,40,41,42)) { # the 30s and 40s are the multi-site gpp only)){ # the 30s and 40s are the multi-site gpp only
+  } else if (scenario %in% c(31,32,33,34,35,36,37,38,39,40,41,42,
+                             51,52,53,54,55,56,57,58,59,60,61,62 )) { # the 30s and 40s are the multi-site gpp only)){ # the 30s and 40s are the multi-site gpp only, the 130s and 140s are preparation for site-specific whc/soilm_theatstar
     drivobs <- drivobs_train_bigD13C_vj_gpp |>
       filter(sitename == case_when(
-        scenario %in% c(31,131) ~ "BE-Vie",
-        scenario %in% c(32,132) ~ "CH-Dav",
-        scenario %in% c(33,133) ~ "CZ-BK1",
-        scenario %in% c(34,134) ~ "DK-Sor",
-        scenario %in% c(35,135) ~ "FI-Hyy",
-        scenario %in% c(36,136) ~ "GF-Guy",
-        scenario %in% c(37,137) ~ "IT-Lav",
-        scenario %in% c(38,138) ~ "US-Ha1",
-        scenario %in% c(39,139) ~ "US-MMS",
-        scenario %in% c(40,140) ~ "US-PFa",
-        scenario %in% c(41,141) ~ "US-Var",
-        scenario %in% c(42,142) ~ "US-Wkg",
+        scenario %in% c(31,131,51) ~ "BE-Vie",
+        scenario %in% c(32,132,52) ~ "CH-Dav",
+        scenario %in% c(33,133,53) ~ "CZ-BK1",
+        scenario %in% c(34,134,54) ~ "DK-Sor",
+        scenario %in% c(35,135,55) ~ "FI-Hyy",
+        scenario %in% c(36,136,56) ~ "GF-Guy",
+        scenario %in% c(37,137,57) ~ "IT-Lav",
+        scenario %in% c(38,138,58) ~ "US-Ha1",
+        scenario %in% c(39,139,59) ~ "US-MMS",
+        scenario %in% c(40,140,60) ~ "US-PFa",
+        scenario %in% c(41,141,61) ~ "US-Var",
+        scenario %in% c(42,142,62) ~ "US-Wkg",
         TRUE~"donotuseany"
       ))
     if (nrow(drivobs) == 0){stop(sprintf("Unsupported scenario %d", scenario))}
