@@ -6,54 +6,49 @@ library(tidyr)
 library(BayesianTools)
 library(ggplot2)
 library(patchwork)
+library(cowplot)
 
 source(here::here("R/calibration_helpers.R"))
+source(here::here("R/prediction_helpers.R"))
+source(here::here("R/run_prediction_rsofun.R"))
+
+source(here::here("R/figure_helpers.R"))
 source(here::here("analysis/00_define_scenarios.R"))
 
-ggsave_and_return <- function(plot, fname, width=7.2, height=3.6, units = "in", scale = 1.6){
-  ggsave(
-    here::here(file.path("fig/",fname)),
-    plot = plot,
-    width = width,
-    height = height,
-    units = units,
-    scale = scale)
-  return(plot)
-}
 
+out_calib_s0 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s1 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s2 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds")
+out_calib_s3 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s4 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen4_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds")
+out_calib_s14<- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds")
+out_calib_s15<- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen15_DEzs-15000-0iter_8x3chains_on_CPU8x1_continued.rds")
 
+out_calib_s31 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen31_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s32 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen32_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
+out_calib_s33 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen33_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s34 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen34_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s35 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen35_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s36 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen36_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s37 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen37_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s38 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen38_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s39 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen39_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s40 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen40_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
+out_calib_s41 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen41_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s42 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen42_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
 
-out_calib_s0 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s1 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s14<- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds")
-out_calib_s15<- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen15_DEzs-15000-0iter_8x3chains_on_CPU8x1_continued.rds")
-
-
-out_calib_s31 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen31_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s32 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen32_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
-out_calib_s33 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen33_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s34 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen34_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s35 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen35_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s36 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen36_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s37 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen37_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s38 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen38_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s39 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen39_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s40 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen40_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
-out_calib_s41 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen41_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s42 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen42_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds")
-
-# out_calib_s51 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen51")
-# out_calib_s52 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen52")
-out_calib_s53 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen53_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
-out_calib_s54 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen54_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
-# out_calib_s55 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen55")
-out_calib_s56 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen56_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
-# out_calib_s57 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen57")
-out_calib_s58 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen58_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
-# out_calib_s59 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen59")
-out_calib_s60 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen60_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
-# out_calib_s61 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen61")
-# out_calib_s62 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen62")
+# out_calib_s51 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen51")
+# out_calib_s52 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen52")
+out_calib_s53 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen53_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+out_calib_s54 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen54_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s55 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen55")
+out_calib_s56 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen56_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s57 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen57")
+out_calib_s58 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen58_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s59 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen59")
+out_calib_s60 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen60_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds")
+# out_calib_s61 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen61")
+# out_calib_s62 <- readr::read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen62")
 #
 burnin_to_skip = 8000
 burnin_to_skip_50s = 2500

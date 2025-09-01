@@ -57,7 +57,7 @@ stopifnot(args[["target_dataset"]] %in% c("test","train","both"))
 stopifnot(args[["nsimulations"]] > 0)
 
 rds_input_path <- file.path(
-  "/data_2/scratch/fbernhard/rsofun_doc_outputs/data", args[["mcmc"]])
+  "/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations", args[["mcmc"]])
 
 stopifnot(file.exists(rds_input_path))
 

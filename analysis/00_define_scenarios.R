@@ -120,7 +120,7 @@ setup_rsofun_calibration <- function(scenario = 3){
     if (scenario %in% c(14)) { # use priors from posterior of scenario 1 for kphio, kphio_par_a, kphio_par_b, soilm_thetastar, soilm_betao
 
       # read in posteriors from scenario 1 as prior for 14
-      calib_scen1 <- readr::read_rds(here::here("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds"))
+      calib_scen1 <- readr::read_rds(here::here("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds"))
 
       # fit a normal    distribution to: kphio, kphio_par_a, kphio_par_b, soilm_thetastar
       # fit a lognormal distribution to: soilm_betao
