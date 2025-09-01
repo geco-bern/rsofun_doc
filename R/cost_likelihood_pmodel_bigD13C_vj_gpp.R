@@ -326,7 +326,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
   df_mod_obs <- bind_rows(
     df_mod_obs_daily |> unnest(modobs) |>
       # make this work gracefully in case nrow=0
-      ensure_cols_defined(tibble(gpp_mod = numeric(), gpp = numeric(), date = Date())) |>
+      ensure_cols_defined(tibble(gpp_mod = numeric(), gpp = numeric(), date = lubridate::Date())) |>
       rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
       mutate(target  = "gpp",#curr_target,
              err_par = params_modl_and_err[["err_gpp"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>

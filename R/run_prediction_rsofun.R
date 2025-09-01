@@ -57,6 +57,7 @@ run_prediction_rsofun <- function(
   } else if (prediction == "test"){
     curr_driver <- select(res$drivobs_test, sitename, run_model, params_siml, site_info, forcing)
     curr_obs    <- select(res$drivobs_test, sitename, run_model, targets, data)
+    stopifnot(nrow(curr_obs)>0)
   }
 
   # Generate paths for output files

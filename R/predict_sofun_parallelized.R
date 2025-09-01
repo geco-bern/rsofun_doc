@@ -81,10 +81,10 @@ predict_sofun_parallelized <- function(
 
   }
 
-  # Save results
-  if (!is.null(outpath)) {
-    write_rds(df_model_predictions, outpath, compress = "xz")
-  }
+  # # Save results
+  # if (!is.null(outpath)) {
+  #   write_rds(df_model_predictions, outpath, compress = "xz")
+  # }
 
   return(df_model_predictions)
 }

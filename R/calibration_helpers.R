@@ -181,6 +181,48 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
   return(gg)
 }
 
+plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip){
+  require(BayesianTools)
+  require(dplyr)
+  require(tidyr)
+  require(ggplot2)
+
+  # Get matrices of prior and posterior samples
+  if ("prior" %in% names(named_list_scen)){
+    priorMat <-  getSetup(named_list_scen[["prior"]])$prior$sampler(10000) # nPriorDraws = 10000
+    colnames(priorMat) <- named_list_scen[["prior"]][[1]]$setup$names
+  }
+  posteriorMat_list <- lapply(
+    named_list_scen[names(named_list_scen) != "prior"],
+    function(x){ # prior is in here
+      getSample(x, parametersOnly = TRUE, start = burnin_to_skip)
+  })
+
+  # Create data frame for plotting
+  df_plot_scenarios <- dplyr::bind_rows(lapply(posteriorMat_list, tidyr::as_tibble), .id = "distrib")
+  df_plot_prior     <- as_tibble(priorMat) |> mutate(distrib = "prior")
+  df_plot           <- bind_rows(df_plot_prior, df_plot_scenarios) |>
+    pivot_longer(-c(distrib), names_to = "variable") |>
+    mutate(distrib  = forcats::fct_inorder(distrib),  # order by appearance
+           variable = forcats::fct_inorder(variable)) # order by appearance
+
+  # Plot with facet wrap
+  gg <- ggplot(df_plot, aes(x = value, color = distrib)) +
+    theme_classic() +
+    # variant 1: density:
+    # geom_density()
+    # # variant 2: scaled density:
+    geom_density(aes(y = after_stat(scaled))) + theme(axis.ticks.y = element_blank(),
+                                                      axis.text.y = element_blank(),
+                                                      axis.title.y = element_blank()) +
+    # layout:
+    facet_wrap( ~ variable , nrow = 2, scales = "free") +
+    theme(legend.position = "bottom") +
+    labs(x="Parameter value")
+
+  return(gg)
+}
+
 plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FALSE, end = NULL){
   curr_iter <- x[[1]]$settings$iterations
   if(dont_thin || curr_iter < 10000){

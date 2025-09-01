@@ -55,6 +55,9 @@ burnin_to_skip_50s = 2500
 
 (plot_mcmc_trace(out_calib_s0$mod,  nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s0$fpath)  + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s0.png")
 (plot_mcmc_trace(out_calib_s1$mod,  nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s1$fpath)  + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s1.png")
+(plot_mcmc_trace(out_calib_s2$mod,  nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s2$fpath)  + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s2.png")
+(plot_mcmc_trace(out_calib_s3$mod,  nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s3$fpath)  + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s3.png")
+(plot_mcmc_trace(out_calib_s4$mod,  nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s4$fpath)  + geom_vline(xintercept = burnin_to_skip, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s4.png")
 (plot_mcmc_trace(out_calib_s14$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s14$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s14.png")
 (plot_mcmc_trace(out_calib_s15$mod, nr_internal_chains = 3, burnin_to_skip = 0) + ggtitle(out_calib_s15$fpath) + geom_vline(xintercept = burnin_to_skip_50s, color="red", linetype="dashed")) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s15.png")
 
@@ -88,6 +91,13 @@ burnin_to_skip_50s = 2500
 
 pl_post_s0  <- (plot_prior_posterior_density(out_calib_s0$mod,burnin_to_skip  = burnin_to_skip) + ggtitle("Scenario 0") + ggtitle(out_calib_s0$fpath))  |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s0.png")
 pl_post_s1  <- (plot_prior_posterior_density(out_calib_s1$mod,burnin_to_skip  = burnin_to_skip) + ggtitle("Scenario 1") + ggtitle(out_calib_s1$fpath))  |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s1.png")
+pl_post_s2  <- (plot_prior_posterior_density(out_calib_s2$mod,burnin_to_skip  = burnin_to_skip) + ggtitle("Scenario 2") + ggtitle(out_calib_s2$fpath))  |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s2.png")
+pl_post_s3  <- (plot_prior_posterior_density(out_calib_s3$mod,burnin_to_skip  = burnin_to_skip) + ggtitle("Scenario 3") + ggtitle(out_calib_s3$fpath))  |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s3.png")
+pl_post_s4  <- (plot_prior_posterior_density(out_calib_s4$mod,burnin_to_skip  = burnin_to_skip) + ggtitle("Scenario 4") + ggtitle(out_calib_s4$fpath))  |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s4.png")
+
+pl_post_s14 <- (plot_prior_posterior_density(out_calib_s14$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 14")+ ggtitle(out_calib_s14$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s14.png")
+pl_post_s15 <- (plot_prior_posterior_density(out_calib_s15$mod,burnin_to_skip = 4000) + ggtitle("Scenario 15")+ ggtitle(out_calib_s15$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s15.png")
+
 pl_post_s31 <- (plot_prior_posterior_density(out_calib_s31$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 31")+ ggtitle(out_calib_s31$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s31.png")
 pl_post_s32 <- (plot_prior_posterior_density(out_calib_s32$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 32")+ ggtitle(out_calib_s32$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s32.png")
 pl_post_s33 <- (plot_prior_posterior_density(out_calib_s33$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 33")+ ggtitle(out_calib_s33$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s33.png")
@@ -138,6 +148,12 @@ scenarios_to_compare <- list(#"BE-Vie (s51)" = out_calib_s51$mod,
 #   named_list_scen =  c(list("prior" = out_calib_s31$mod), scenarios_to_compare),
 #   burnin_to_skip = burnin_to_skip)
 # ggsave_and_return(pl_post_comparison, "fig_A_MCMCconvergence_posterior_all.png")
+
+ggsave_and_return(pl_post_comparison, "fig_A_MCMCconvergence_posterior_all_1_2_3_14.png")
+
+scatter_predObs_s14 <- plot_all_predVsObs(df_predict_s14) |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s14.png", width = 7.2, height = 4.2)
+
+
 
 pl_post_comparison2 <- plot_prior_posterior_density_compare(
   named_list_scen =  c(list("prior" = out_calib_s53$mod), scenarios_to_compare),
@@ -206,78 +222,111 @@ if (TRUE){ # This is quite a slow plot:
 
 
 # sample posteriors and run model for each sample parameter set
-source(here::here("R/run_prediction_rsofun.R"))
-t0 <- Sys.time()
-# df_predict_s1  <- readRDS("df_predict_s1.RDS")
-df_predict_s31 <- run_prediction_rsofun(out_calib_s31, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s31,"df_predict_s31.RDS") # 500 samples on 12 cores: 5 minutes
-df_predict_s32 <- run_prediction_rsofun(out_calib_s32, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s32,"df_predict_s32.RDS") # 500 samples on 12 cores: 5 minutes
-df_predict_s33 <- run_prediction_rsofun(out_calib_s33, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s33,"df_predict_s33.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s34 <- run_prediction_rsofun(out_calib_s34, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s34,"df_predict_s34.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s35 <- run_prediction_rsofun(out_calib_s35, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s35,"df_predict_s35.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s36 <- run_prediction_rsofun(out_calib_s36, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s36,"df_predict_s36.RDS") # 500 samples on 12 cores: X minutes
-# df_predict_s37 <- run_prediction_rsofun(out_calib_s37, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s37,"df_predict_s37.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s38 <- run_prediction_rsofun(out_calib_s38, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s38,"df_predict_s38.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s39 <- run_prediction_rsofun(out_calib_s39, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s39,"df_predict_s39.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s40 <- run_prediction_rsofun(out_calib_s40, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s40,"df_predict_s40.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s41 <- run_prediction_rsofun(out_calib_s41, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s41,"df_predict_s41.RDS") # 500 samples on 12 cores: X minutes
-df_predict_s42 <- run_prediction_rsofun(out_calib_s42, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s42,"df_predict_s42.RDS") # 500 samples on 12 cores: X minutes
-t1 <- Sys.time()
-print(t1-t0)
+# renv::run("analysis/04_make-test-train_predictions.R", project = "../rsofun_doc", args = c("out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds", "train", "8000", "200", "8"))
+# renv::run("analysis/04_make-test-train_predictions.R", project = "../rsofun_doc", args = c("out_calib__scen15_DEzs-15000-0iter_8x3chains_on_CPU8x1_continued.rds", "train", "4000", "200", "8"))
+
+
+# t0 <- Sys.time()
+# # df_predict_s1  <- readRDS("df_predict_s1.RDS")
+# df_predict_s31 <- run_prediction_rsofun(out_calib_s31, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s31,"df_predict_s31.RDS") # 500 samples on 12 cores: 5 minutes
+# df_predict_s32 <- run_prediction_rsofun(out_calib_s32, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s32,"df_predict_s32.RDS") # 500 samples on 12 cores: 5 minutes
+# df_predict_s33 <- run_prediction_rsofun(out_calib_s33, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s33,"df_predict_s33.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s34 <- run_prediction_rsofun(out_calib_s34, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s34,"df_predict_s34.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s35 <- run_prediction_rsofun(out_calib_s35, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s35,"df_predict_s35.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s36 <- run_prediction_rsofun(out_calib_s36, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s36,"df_predict_s36.RDS") # 500 samples on 12 cores: X minutes
+# # df_predict_s37 <- run_prediction_rsofun(out_calib_s37, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s37,"df_predict_s37.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s38 <- run_prediction_rsofun(out_calib_s38, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s38,"df_predict_s38.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s39 <- run_prediction_rsofun(out_calib_s39, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s39,"df_predict_s39.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s40 <- run_prediction_rsofun(out_calib_s40, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s40,"df_predict_s40.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s41 <- run_prediction_rsofun(out_calib_s41, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s41,"df_predict_s41.RDS") # 500 samples on 12 cores: X minutes
+# df_predict_s42 <- run_prediction_rsofun(out_calib_s42, "train", burnin_to_skip,n_samples = 200, n_cores = 1); readr::write_rds(df_predict_s42,"df_predict_s42.RDS") # 500 samples on 12 cores: X minutes
+# t1 <- Sys.time()
+# print(t1-t0)
 # NOTE: no error term has (yet) been added
 
+# df_predict_s1old  <- read_rds("/home/fabian/GitHub/geco-bern/rsofun_doc/df_predict_s1.RDS") # THIS GIVES BIASED RESULTS
+df_predict_s0  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+df_predict_s1  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+df_predict_s2  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds")
+df_predict_s3  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+df_predict_s14 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+
+df_predict_test_s1  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+df_predict_test_s2  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds")
+df_predict_test_s3  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+df_predict_test_s14 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+# df_predict_test_s16 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+# df_predict_test_s17 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+# df_predict_test_s18 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+
+# df_predict_s15 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_tra")
+# df_predict_s32 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen32_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+# df_predict_s56 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_4000burnin__out_calib__scen56_DEzs-15000-0iter_8x3chains_on_CPU8x1.rds.rds")
+
+scatter_predObs_s14 <- plot_all_predVsObs(df_predict_s14) |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s14.png", width = 7.2, height = 4.2)
+scatter_predObs_s3  <- plot_all_predVsObs(df_predict_s3)  |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s3.png",  width = 7.2, height = 4.2)
+scatter_predObs_s2  <- plot_all_predVsObs(df_predict_s2)  |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s2.png",  width = 7.2, height = 4.2)
+scatter_predObs_s1  <- plot_all_predVsObs(df_predict_s1)  |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s1.png",  width = 7.2, height = 4.2)
+scatter_predObs_s0  <- plot_all_predVsObs(df_predict_s0)  |> ggsave_and_return("fig_B2b_train_scatter__pred-vs-obs_s0.png",  width = 7.2, height = 4.2)
+
+scatter_predObs_test_s14 <- plot_all_predVsObs(df_predict_test_s14) |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s14.png", width = 7.2, height = 4.2)
+scatter_predObs_test_s3  <- plot_all_predVsObs(df_predict_test_s3)  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s3.png",  width = 7.2, height = 4.2)
+scatter_predObs_test_s2  <- plot_all_predVsObs(df_predict_test_s2)  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s2.png",  width = 7.2, height = 4.2)
+# scatter_predObs_test_s1  <- plot_all_predVsObs(df_predict_test_s1)  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s1.png",  width = 7.2, height = 4.2)
+
+scatter_predObs_test_s1  <- plot_all_predVsObs(df_predict_test_s1), rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s1.png",  width = 7.2, height = 4.2*1.3)
+scatter_predObs_test_s2  <- plot_all_predVsObs(df_predict_test_s2), rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s2.png",  width = 7.2, height = 4.2*1.3)
+scatter_predObs_test_s3  <- plot_all_predVsObs(df_predict_test_s3), rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s3.png",  width = 7.2, height = 4.2*1.3)
+scatter_predObs_test_s14 <- plot_all_predVsObs(df_predict_test_s14),rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s14.png", width = 7.2, height = 4.2*1.3)
+# scatter_predObs_test_s16 <- plot_all_predVsObs(df_predict_test_s16),rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s16.png", width = 7.2, height = 4.2*1.3)
+# scatter_predObs_test_s17 <- plot_all_predVsObs(df_predict_test_s17),rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s17.png", width = 7.2, height = 4.2*1.3)
+# scatter_predObs_test_s18 <- plot_all_predVsObs(df_predict_test_s18),rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s18.png", width = 7.2, height = 4.2*1.3)
 
 
-
-# Plot raw predictions
-## gpp:
-plot_gpp_predVsObs <- function(df_predict){
-  df_hexplot_gpp <- df_predict |> unnest(sim) |> filter(!is.na(obs)) |> filter(target == "gpp")
-
-  lims <- round(max(quantile(df_hexplot_gpp$mod_no_err, 0.9999), quantile(df_hexplot_gpp$obs, 0.9999)))
-  ggplot(df_hexplot_gpp, aes(x=mod_no_err, y=obs)) +
-    geom_hex(bins = 50, show.legend = FALSE) +
-    facet_wrap(~target) +
-    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
-    coord_fixed() +
-    xlim(0, lims) +
-    ylim(0, lims) +
-    theme_classic() +
-    khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
-    facet_wrap(~sitename)
-    # khroma::scale_fill_davos(trans = "log", reverse = TRUE)
-}
-
-
-scatter_s1 <- plot_gpp_predVsObs(df_predict_s1)
-
-scatter_s31 <- plot_gpp_predVsObs(df_predict_s31)
-scatter_s32 <- plot_gpp_predVsObs(df_predict_s32)
-scatter_s33 <- plot_gpp_predVsObs(df_predict_s33)
-scatter_s34 <- plot_gpp_predVsObs(df_predict_s34)
-scatter_s35 <- plot_gpp_predVsObs(df_predict_s35)
-scatter_s36 <- plot_gpp_predVsObs(df_predict_s36)
-scatter_s37 <- plot_gpp_predVsObs(df_predict_s37)
-scatter_s38 <- plot_gpp_predVsObs(df_predict_s38)
-scatter_s39 <- plot_gpp_predVsObs(df_predict_s39)
-scatter_s40 <- plot_gpp_predVsObs(df_predict_s40)
-scatter_s41 <- plot_gpp_predVsObs(df_predict_s41)
-scatter_s42 <- plot_gpp_predVsObs(df_predict_s42)
-
-# cowplot::plot_grid(scatter_s31, scatter_s32)
-scatter_all <- cowplot::plot_grid(
-  scatter_s31,
-  scatter_s32,
-  scatter_s33,
-  scatter_s34,
-  scatter_s35,
-  scatter_s36,
-  scatter_s37,
-  scatter_s38,
-  scatter_s39,
-  scatter_s40,
-  scatter_s41,
-  scatter_s42)
-
-ggsave_and_return(scatter_all, "fig_B2_pred-vs-obs_allsingle.png", width = 7.2, height = 7.2)
-ggsave_and_return(scatter_s1, "fig_B2_pred-vs-obs_s1.png", width = 7.2, height = 7.2)
+# scatter_s1  <- plot_predobs_gpp_scatter(df_predict_s1)
+# scatter_s14 <- plot_predobs_gpp_scatter(df_predict_s14)
+# scatter_s32 <- plot_predobs_gpp_scatter(df_predict_s32)
+# scatter_s56 <- plot_predobs_gpp_scatter(df_predict_s56)
+#
+#
+# ggsave_and_return(scatter_s1, "fig_B2_pred-vs-obs_s1.png", width = 7.2, height = 7.2)
+# ggsave_and_return(scatter_s14, "fig_B2_pred-vs-obs_s14.png", width = 7.2, height = 7.2)
+#
+# timeseries_s1  <- plot_predobs_gpp_timeseries(df_predict_s1)
+# ggsave_and_return(timeseries_s1,  "fig_B3_pred-vs-obs_s1.png",  width = 7.2, height = 7.2, units = "in", scale = 2.0)
+#
+# timeseries_s14 <- plot_predobs_gpp_timeseries(df_predict_s14)
+# ggsave_and_return(timeseries_s14, "fig_B3_pred-vs-obs_s14.png", width = 7.2, height = 7.2, units = "in", scale = 2.0)
+#
+#
+#
+# scatter_s31 <- plot_predobs_gpp_scatter(df_predict_s31)
+# scatter_s32 <- plot_predobs_gpp_scatter(df_predict_s32)
+# scatter_s33 <- plot_predobs_gpp_scatter(df_predict_s33)
+# scatter_s34 <- plot_predobs_gpp_scatter(df_predict_s34)
+# scatter_s35 <- plot_predobs_gpp_scatter(df_predict_s35)
+# scatter_s36 <- plot_predobs_gpp_scatter(df_predict_s36)
+# scatter_s37 <- plot_predobs_gpp_scatter(df_predict_s37)
+# scatter_s38 <- plot_predobs_gpp_scatter(df_predict_s38)
+# scatter_s39 <- plot_predobs_gpp_scatter(df_predict_s39)
+# scatter_s40 <- plot_predobs_gpp_scatter(df_predict_s40)
+# scatter_s41 <- plot_predobs_gpp_scatter(df_predict_s41)
+# scatter_s42 <- plot_predobs_gpp_scatter(df_predict_s42)
+#
+# # cowplot::plot_grid(scatter_s31, scatter_s32)
+# scatter_all <- cowplot::plot_grid(
+#   scatter_s31,
+#   scatter_s32,
+#   scatter_s33,
+#   scatter_s34,
+#   scatter_s35,
+#   scatter_s36,
+#   scatter_s37,
+#   scatter_s38,
+#   scatter_s39,
+#   scatter_s40,
+#   scatter_s41,
+#   scatter_s42)
+#
+# ggsave_and_return(scatter_all, "fig_B2_pred-vs-obs_allsingle.png", width = 7.2, height = 7.2)
 
