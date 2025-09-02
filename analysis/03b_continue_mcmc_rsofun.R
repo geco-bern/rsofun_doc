@@ -85,7 +85,7 @@ continue_mcmc_rsofun <- function(
 
   outpath = dirname(rds_input_path)
   fname <- sprintf("timings_scen%d_%s", curr_calibration_scenario, format(Sys.time(), "%Y-%m-%d_%Hh%Mm%Ss"))
-  logpath = file.path(outpath, "timings", paste0(fname,"_log.txt"))
+  logpath = file.path(outpath, "..", "timings", paste0(fname,"_log.txt"))
 
   ## Continue the MCMC sampler: ----
   require(BayesianTools)
@@ -175,7 +175,7 @@ continue_mcmc_rsofun <- function(
   timings_rerun$resultfile <- return_value$fpath
 
   # save timings into csv and rds files:
-  timings_to_rds_csv(timings_rerun, file.path(outpath, "timings", fname))
+  timings_to_rds_csv(timings_rerun, file.path(outpath, "..", "timings", fname))
 }
 
 # run the mcmc
