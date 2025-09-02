@@ -223,7 +223,7 @@ plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip
   return(gg)
 }
 
-plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FALSE, end = NULL){
+plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, burnin_to_skip_gelman = burnin_to_skip, dont_thin=FALSE, end = NULL){
   curr_iter <- x[[1]]$settings$iterations
   if(dont_thin || curr_iter < 10000){
     curr_thin <- 1
@@ -268,8 +268,10 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, dont_thin=FAL
             gelman_df$mpsrf,
             psrf_string)
   }
-  subtitle <- tryCatch(get_gelman_diag(x, burnin_to_skip + 1, end = end), error = function(e) {e}) # unsure why min burnin of 1 is needed
+  subtitle <- tryCatch(get_gelman_diag(x, burnin_to_skip_gelman + 1, end = end), error = function(e) {e}) # unsure why min burnin of 1 is needed
   pl <- pl + ggtitle(NULL, subtitle = subtitle)
+
+  pl <- pl + geom_vline(xintercept = burnin_to_skip_gelman, color="red", linetype="dashed")
 
   return(pl)
 }

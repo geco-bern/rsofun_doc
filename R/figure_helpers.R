@@ -1,3 +1,5 @@
+# install.packages('scico')
+
 ggsave_and_return <- function(plot, fname, width=7.2, height=3.6, units = "in", scale = 1.6){
   ggsave(
     here::here(file.path("fig/",fname)),
@@ -8,3 +10,4 @@ ggsave_and_return <- function(plot, fname, width=7.2, height=3.6, units = "in", 
     scale = scale)
   return(plot)
 }
+

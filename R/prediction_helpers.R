@@ -57,7 +57,7 @@ plot_predobs_gpp_scatter <- function(df_predict){
       facet_wrap(~sitename)
     # khroma::scale_fill_davos(trans = "log", reverse = TRUE)
   } else {
-    gg <- ggplot(tibble(target = target_selection, mod_no_err=NA,obs=NA), aes(x=mod_no_err,y=obs)) +
+    gg <- ggplot(tibble(sitename = NA_character_, mod_no_err=NA,obs=NA), aes(x=mod_no_err,y=obs)) +
       facet_wrap(~sitename)
   }
 }
@@ -77,7 +77,10 @@ plot_predobs_vj_D13C_scatter <- function(df_predict, target_selection = c("bigD1
     khroma::scale_fill_batlowW(trans = "log", reverse = TRUE)
 
   if (length(target_selection) == 1){
-    gg <- gg + facet_wrap(~target, ncol=1) + coord_fixed()
+    lims_max <- max(quantile(df_hexplot$mod_no_err, 0.9999), quantile(df_hexplot$obs, 0.9999))
+    lims_min <- min(quantile(df_hexplot$mod_no_err, 0.0001), quantile(df_hexplot$obs, 0.0001))
+    gg <- gg + facet_wrap(~target, ncol=1) +
+      coord_fixed() + xlim(lims_min, lims_max) + ylim(lims_min, lims_max)
   } else {
     gg <- gg + facet_wrap(~target, scales = "free", ncol=1)
   }
@@ -85,32 +88,37 @@ plot_predobs_vj_D13C_scatter <- function(df_predict, target_selection = c("bigD1
 
 plot_all_predVsObs <- function(df_predict, rel_widths = c(5,2)){
   scatter_plot_gpp     <- plot_predobs_gpp_scatter(df_predict)
-  # scatter_plot_D13C_vj <- plot_predobs_vj_D13C_scatter(df_predict)
   scatter_plot_D13C    <- plot_predobs_vj_D13C_scatter(df_predict, target_selection = "bigD13C")
   scatter_plot_vj      <- plot_predobs_vj_D13C_scatter(df_predict, target_selection = "vj")
 
   # arrange layouts:
   # testcode with dummy plots:
-  # plot_left  <- ggplot(tibble(facet=rep(1:12,10)) |> mutate(x= runif(n()), y=runif(n())), aes(x=x,y=y)) + geom_point() + coord_fixed() + facet_wrap(~facet) + theme_classic()
+  # scatter_plot_gpp  <- ggplot(tibble(facet=rep(1:12,10)) |> mutate(x= runif(n()), y=runif(n())), aes(x=x,y=y)) + geom_point() + coord_fixed() + facet_wrap(~facet) + theme_classic()
   # plot_right <- ggplot(tibble(facet=rep(c("vj","bigD13C"),10)) |> mutate(x= runif(n(),10,12), y=runif(n(),25,30)), aes(x=x,y=y)) + geom_point() + facet_wrap(~facet, scales = "free", ncol=1) + theme_classic()
   # ggsave_and_return(cowplot::plot_grid(plot_left + facet_wrap(~facet, labeller = as_labeller(~paste0(.x, ", GPP (gCm-2s-1)"))),
   #                                      plot_right + facet_wrap(~facet, scales = "free", ncol=1, labeller = as_labeller(c("vj"="Vcmax/Jmax (-)","bigD13C" = "Δ13C (permil)"))) + labs(y=NULL),
   #                                      ncol = 2, rel_widths = c(5,2)),
   #                   "fig_B6_pred-vs-obs_s14.png", width = 7.2, height = 4.2)
   # scatter_plot_gpp     <- scatter_plot_gpp     + facet_wrap(~sitename,                        labeller = as_labeller(~paste0(.x, ", GPP (gCm-2s-1)")))
+  # scatter_plot_D13C_vj <- plot_predobs_vj_D13C_scatter(df_predict)
   # scatter_plot_D13C_vj <- scatter_plot_D13C_vj + facet_wrap(~target, scales = "free", ncol=1, labeller = as_labeller(c("vj"="Vcmax/Jmax (-)","bigD13C" = "Δ13C (permil)"))) + labs(y=NULL)
   # cowplot::plot_grid(scatter_plot_gpp, scatter_plot_D13C_vj, ncol = 2, rel_widths = rel_widths)
 
-  scatter_plot_gpp  <- scatter_plot_gpp  + facet_wrap(~sitename,       labeller = as_labeller(~paste0(.x, ", GPP")))  + labs(x="Predicted (with param. unc.) (gCm-2s-1)",y="Observed (gCm-2s-1)")
-  scatter_plot_D13C <- scatter_plot_D13C + facet_wrap(~target, ncol=1, labeller = as_labeller(c("bigD13C" = "Δ13C"))) + labs(x="Predicted (with param. unc.) (permil)", y="Observed (permil)")
-  scatter_plot_vj   <- scatter_plot_vj   + facet_wrap(~target, ncol=1, labeller = as_labeller(c("vj"="Vcmax/Jmax")))  + labs(x="Predicted (with param. unc.) (-)",      y="Observed (-)")
+  scatter_plot_gpp  <- scatter_plot_gpp  + labs(x=expression(paste("Predicted (with param. unc.) (g C m"^-2, "s"^-1, ")")),
+                                                y=expression(paste("Observed (g C m"^-2, "s"^-1, ")"))) +
+    theme(strip.background = element_blank())# facet_wrap(~sitename,       labeller = as_labeller(~paste0(.x, ", GPP")))  +
+  scatter_plot_D13C <- scatter_plot_D13C + labs(x="Predicted (with param. unc.) (permil)",  y="Observed (permil)") +
+    facet_wrap(~target, ncol=1, labeller = as_labeller(c("bigD13C" = "Δ13C"))) + theme(strip.background = element_blank(), strip.text = element_text(colour = NA))
+  scatter_plot_vj   <- scatter_plot_vj   + labs(x="Predicted (with param. unc.) (-)",       y="Observed (-)")      +
+    facet_wrap(~target, ncol=1, labeller = as_labeller(c("vj"="Vcmax/Jmax")))  + theme(strip.background = element_blank(), strip.text = element_text(colour = NA))
 
   tg_list <- cowplot::align_plots(scatter_plot_D13C, scatter_plot_vj)
-  browser()
   cowplot::plot_grid(
     scatter_plot_gpp,
-    cowplot::plot_grid(plotlist = tg_list, ncol=1, labels = c("(b) Δ13C:","(c) Vcmax/Jmax"), hjust = 0),
+    cowplot::plot_grid(plotlist = tg_list, ncol=1, labels = c("(b) Δ13C:","(c) Vcmax/Jmax:"), hjust = 0),
     ncol = 2, rel_widths = rel_widths, labels = c("(a) GPP:"), hjust = 0)
   # this layout with rel_widths c(5,2) should work for training plot (3x4)+(2x1) of size 7.2, 4.2, 300, 1.6
   # this layout with rel_widths c(5,2.3) should work for testing  plot (6x7)+(2x1) of size 7.2, 4.2*1.3, 300, 1.6
 }
+
+
