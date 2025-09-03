@@ -89,7 +89,7 @@ setup_rsofun_calibration <- function(scenario = 3){
       par_to_estimate$soilm_betao = NULL
     }
 
-  } else if (scenario %in% c(2,3, 12,13,89,88,87,86, 14,15)) {
+  } else if (scenario %in% c(2,3, 12,13,89,88,87,86, 14,15, 16,17,18)) {
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -238,7 +238,21 @@ setup_rsofun_calibration <- function(scenario = 3){
 
     drivobs      <- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
-
+  } else if (scenario %in% c(16,17,18)) { # only traits data, either both, or vj only, or bigD13C only
+    drivobs <- drivobs_train_bigD13C_vj_gpp |>
+      unnest_wider(targets) |>
+      filter(case_when(scenario==16 ~ vj | bigD13C,
+                       scenario==17 ~ vj,
+                       scenario==18 ~ bigD13C,
+                       TRUE ~ TRUE)) |>
+      nest(targets = c(vj, bigD13C, gpp))
+    drivobs_test <- drivobs_test_bigD13C_vj_gpp |>
+      unnest_wider(targets) |>
+      filter(case_when(scenario==16 ~ vj | bigD13C,
+                       scenario==17 ~ vj,
+                       scenario==18 ~ bigD13C,
+                       TRUE ~ TRUE)) |>
+      nest(targets = c(vj, bigD13C, gpp))
   } else if (scenario %in% c(0)) {  # only GPP data from FR-Pue
 
     drivobs <- tibble( # load it based on FR-Pue data:
