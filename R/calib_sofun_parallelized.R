@@ -161,7 +161,7 @@ calib_sofun_parallelized <- function(
     return_value$name <- suffix
 
     ## Store results to file: ----
-    return_value$fpath <- file.path(outpath, paste0("out_calib_", suffix, ".rds"))
+    return_value$fpath <- file.path(outpath, "calibrations", paste0("out_calib_", suffix, ".rds"))
     write_rds(return_value, file = return_value$fpath, compress = "xz")
 
 
