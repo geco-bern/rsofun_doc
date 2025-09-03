@@ -48,29 +48,41 @@ createMixedPrior <- function(prior_definitions, best = NULL){
   stopifnot(length(prior_definitions) == # check that all prior types are uniquely identified
               sum(list_unif==TRUE) + sum(list_norm==TRUE) + sum(list_lnorm==TRUE) + sum(list_beta==TRUE))
 
-  # prepare definition of sampler and density of prior
-  prior_args <- lapply(prior_definitions, \(def){
-    if(is_uniform_prior(def)){       return(list(rfct=runif, dfct=dunif, args=list(min    =def$lower,   max   =def$upper)))} #def$init is unused
-    else if(is_normal_prior(def)){   return(list(rfct=rnorm, dfct=dnorm, args=list(mean   =def$mean,    sd    =def$sd)))}
-    else if(is_lognormal_prior(def)){return(list(rfct=rlnorm,dfct=dlnorm,args=list(meanlog=def$meanlog, sdlog =def$sdlog)))}
-    else if(is_beta_prior(def)){     return(list(rfct=rbeta, dfct=dbeta, args=list(shape1 =def$shape1,  shape2=def$shape2)))}
-    else {stop("Unknown prior distribution,")}
-  })
+  if (all(unlist(list_unif))) {  # all uniformly distributed: recover previous behavior
+    pars  <- as.data.frame(do.call("rbind", prior_definitions))
+    out   <- BayesianTools::createUniformPrior(
+      lower = unlist(pars$lower),
+      upper = unlist(pars$upper),
+      best  = unlist(pars$init)
+    )
+  } else { # mixed distributions in prior
 
-  # define and create prior
-  density <- function(par) {
-    stopifnot(length(prior_args) == length(par))
-    sum(unlist(
-      # dunif(par[1], min=prior_definitions[[1]]$lower, max=prior_definitions[[1]]$upper, log=T),
-      # dunif(par[2], min=prior_definitions[[2]]$lower, max=prior_definitions[[2]]$upper, log=T)
-      lapply(seq_along(prior_args), \(i){ do.call(prior_args[[i]]$dfct, c(log=TRUE, x=par[i], prior_args[[i]]$args)) })
-    ))}
-  sampler <- function(n=1) {do.call(cbind,
-                                    # runif(1, prior_definitions[[1]]$lower, prior_definitions[[1]]$upper),
-                                    # runif(1, prior_definitions[[2]]$lower, prior_definitions[[2]]$upper)
-                                    lapply(prior_args, \(def){ do.call(def$rfct, c(n = n, def$args)) })
-  )}
-  out <- createPrior(density = density, sampler = sampler, best = best)
+    # prepare definition of sampler and density of prior
+    prior_args <- lapply(prior_definitions, \(def){
+      if(is_uniform_prior(def)){       return(list(rfct=runif, dfct=dunif, args=list(min    =def$lower,   max   =def$upper)))} #def$init is unused
+      else if(is_normal_prior(def)){   return(list(rfct=rnorm, dfct=dnorm, args=list(mean   =def$mean,    sd    =def$sd)))}
+      else if(is_lognormal_prior(def)){return(list(rfct=rlnorm,dfct=dlnorm,args=list(meanlog=def$meanlog, sdlog =def$sdlog)))}
+      else if(is_beta_prior(def)){     return(list(rfct=rbeta, dfct=dbeta, args=list(shape1 =def$shape1,  shape2=def$shape2)))}
+      else {stop("Unknown prior distribution,")}
+    })
+
+    # define and create prior
+    density <- function(par) {
+      stopifnot(length(prior_args) == length(par))
+      sum(unlist(
+        # dunif(par[1], min=prior_definitions[[1]]$lower, max=prior_definitions[[1]]$upper, log=T),
+        # dunif(par[2], min=prior_definitions[[2]]$lower, max=prior_definitions[[2]]$upper, log=T)
+        lapply(seq_along(prior_args), \(i){ do.call(prior_args[[i]]$dfct, c(log=TRUE, x=par[i], prior_args[[i]]$args)) })
+      ))}
+    sampler <- function(n=1) {do.call(cbind,
+                                      # runif(1, prior_definitions[[1]]$lower, prior_definitions[[1]]$upper),
+                                      # runif(1, prior_definitions[[2]]$lower, prior_definitions[[2]]$upper)
+                                      lapply(prior_args, \(def){ do.call(def$rfct, c(n = n, def$args)) })
+    )}
+    out <- createPrior(density = density, sampler = sampler, best = best)
+  }
+
+  return(out)
 }
 # TODO: we could now also overload BayesianTools:::print.prior
 #       e.g. something using: bind_rows(lapply(settings$par, as_tibble), .id = "parnames")
