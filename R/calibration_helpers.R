@@ -181,45 +181,60 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
   return(gg)
 }
 
-plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip){
+plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip, ridges = FALSE){
   require(BayesianTools)
   require(dplyr)
   require(tidyr)
   require(ggplot2)
 
   # Get matrices of prior and posterior samples
-  if ("prior" %in% names(named_list_scen)){
-    priorMat <-  getSetup(named_list_scen[["prior"]])$prior$sampler(10000) # nPriorDraws = 10000
-    colnames(priorMat) <- named_list_scen[["prior"]][[1]]$setup$names
-  }
+  priorMat_list <- lapply(
+    named_list_scen[grepl("[Pp]rior", names(named_list_scen))],
+    function(x){
+      priorMat <- getSetup(x)$prior$sampler(10000) # nPriorDraws = 10000
+      colnames(priorMat) <- x[[1]]$setup$names
+      return(as_tibble(priorMat))
+    }
+  )
   posteriorMat_list <- lapply(
-    named_list_scen[names(named_list_scen) != "prior"],
-    function(x){ # prior is in here
-      getSample(x, parametersOnly = TRUE, start = burnin_to_skip)
+    named_list_scen[!grepl("[Pp]rior", names(named_list_scen))],
+    function(x){
+      as_tibble(getSample(x, parametersOnly = TRUE, start = burnin_to_skip))
   })
 
   # Create data frame for plotting
-  df_plot_scenarios <- dplyr::bind_rows(lapply(posteriorMat_list, tidyr::as_tibble), .id = "distrib")
-  df_plot_prior     <- as_tibble(priorMat) |> mutate(distrib = "prior")
-  df_plot           <- bind_rows(df_plot_prior, df_plot_scenarios) |>
+  df_plot <- bind_rows(dplyr::bind_rows(priorMat_list,     .id = "distrib"),
+                       dplyr::bind_rows(posteriorMat_list, .id = "distrib")) |>
     pivot_longer(-c(distrib), names_to = "variable") |>
     mutate(distrib  = forcats::fct_inorder(distrib),  # order by appearance
            variable = forcats::fct_inorder(variable)) # order by appearance
 
   # Plot with facet wrap
-  gg <- ggplot(df_plot, aes(x = value, color = distrib)) +
-    theme_classic() +
-    # variant 1: density:
-    # geom_density()
-    # # variant 2: scaled density:
-    geom_density(aes(y = after_stat(scaled))) + theme(axis.ticks.y = element_blank(),
-                                                      axis.text.y = element_blank(),
-                                                      axis.title.y = element_blank()) +
-    # layout:
-    facet_wrap( ~ variable , nrow = 2, scales = "free") +
-    theme(legend.position = "bottom") +
-    labs(x="Parameter value")
-
+  if(ridges == FALSE){
+    gg <- ggplot(df_plot, aes(x = value, color = distrib)) +
+      theme_classic() +
+      # variant 1: density:
+      # geom_density()
+      # # variant 2: scaled density:
+      geom_density(aes(y = after_stat(scaled))) + theme(axis.ticks.y = element_blank(),
+                                                        axis.text.y = element_blank(),
+                                                        axis.title.y = element_blank()) +
+      # layout:
+      facet_wrap( ~ variable , nrow = 2, scales = "free") +
+      theme(legend.position = "bottom") +
+      labs(x="Parameter value")
+  } else {
+    df_plot2 <- df_plot |>
+      mutate(Scenario = as.factor(as.integer(gsub("Prior ", "", distrib)))) |>
+      mutate(Distribution = ifelse(grepl("Prior ", distrib), "Prior", "Posterior"))
+    gg <- ggplot(df_plot2, aes(x=value, y=Scenario, fill = Distribution)) +
+      theme_classic() +
+      geom_density_ridges() +
+      # layout:
+      facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
+      theme(legend.position = "bottom") + labs(x=NULL) +
+      scale_fill_manual(NULL, values = c("#29a274ff", t_col("#777055ff"))) # GECO colors
+  }
   return(gg)
 }
 

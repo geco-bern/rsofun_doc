@@ -170,6 +170,15 @@ scenarios_to_compare2 <- list("BE-Vie (s51)" = out_calib_s51$mod,
                              "US-Var (s61)" = out_calib_s61$mod,
                              "US-Wkg (s62)" = out_calib_s62$mod)
 
+scenarios_to_compare3 <- list("Prior 1" = out_calib_s1$mod,
+                              "Prior 2" = out_calib_s2$mod,
+                              "Prior 3" = out_calib_s3$mod,
+                              "Prior 4" = out_calib_s14$mod,
+                              "1" = out_calib_s1$mod,
+                              "2" = out_calib_s2$mod,
+                              "3" = out_calib_s3$mod,
+                              "4" = out_calib_s14$mod)
+
 # pl_post_comparison <- plot_prior_posterior_density_compare(
 #   named_list_scen =  c(list("prior" = out_calib_s31$mod), scenarios_to_compare),
 #   burnin_to_skip = burnin_to_skip)
@@ -187,6 +196,17 @@ pl_post_comparison2 <- plot_prior_posterior_density_compare(
 ggsave_and_return(pl_post_comparison2, "fig_A_MCMCconvergence_posterior_all2.png")
 
 
+pl_post_comparison3 <- plot_prior_posterior_density_compare(
+  named_list_scen =  scenarios_to_compare3,
+  burnin_to_skip  = burnin_to_skip,
+  ridges = TRUE)
+# cols <- c(rep("grey",4), scico::scico_palette_data("batlow",categorical = TRUE)[1:4])
+# # scales::show_col(cols)
+# names(cols) <- names(scenarios_to_compare3)
+# pl_post_comparison3 <- pl_post_comparison3 + scale_color_manual(NULL, values = cols)
+# pl_post_comparison3 <- pl_post_comparison3 + aes(fill = distrib) + scale_color_manual(NULL, values = cols, aesthetics = c("colour","fill"))
+ggsave_and_return(pl_post_comparison3, "fig_A_MCMCconvergence_posterior_s1_2_3_14.png",
+                  width = 7.2, height = 3.6)
 
 # Analyze estimated (MAP) of soilm_betastar vs whc:
 res1 <- setup_rsofun_calibration(scenario = 1)
