@@ -43,7 +43,7 @@ source(here::here("analysis/00_define_scenarios.R"))
 if (FALSE){
   ## s0 ----
   tryCatch({
-    df_predict_s0  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_s0  <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_s0  <- plot_all_predVsObs(df_predict_s0)  |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s0.png",  width = 7.2, height = 4.2);
     rm(scatter_predObs_s0, df_predict_s0); gc()
     # timeseries_s0  <- plot_predobs_gpp_timeseries(df_predict_s0)
@@ -54,7 +54,7 @@ if (FALSE){
 
   ## s1 ----
   tryCatch({
-    df_predict_s1  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_s1  <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_s1  <- plot_all_predVsObs(df_predict_s1)  |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s1.png",  width = 7.2, height = 4.2);
     rm(scatter_predObs_s1, df_predict_s1); gc()
     # timeseries_s1  <- plot_predobs_gpp_timeseries(df_predict_s1)
@@ -65,7 +65,7 @@ if (FALSE){
 
   ## s2 ----
   tryCatch({
-    df_predict_s2  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds")
+    df_predict_s2  <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds"))
     scatter_predObs_s2  <- plot_all_predVsObs(df_predict_s2)  |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s2.png",  width = 7.2, height = 4.2);
     rm(scatter_predObs_s2, df_predict_s2); gc()
     # timeseries_s2  <- plot_predobs_gpp_timeseries(df_predict_s2)
@@ -76,7 +76,7 @@ if (FALSE){
 
   ## s3 ----
   tryCatch({
-    df_predict_s3  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_s3  <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_s3  <- plot_all_predVsObs(df_predict_s3)  |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s3.png",  width = 7.2, height = 4.2);
     rm(scatter_predObs_s3, df_predict_s3); gc()
     # timeseries_s3  <- plot_predobs_gpp_timeseries(df_predict_s3)
@@ -87,7 +87,7 @@ if (FALSE){
 
   ## 14 ----
   tryCatch({
-    df_predict_s14 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+    df_predict_s14 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds"))
     scatter_predObs_s14 <- plot_all_predVsObs(df_predict_s14) |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s14.png", width = 7.2, height = 4.2);
     rm(df_predict_s14, scatter_predObs_s14); gc()
     # timeseries_s14  <- plot_predobs_gpp_timeseries(df_predict_s14)
@@ -98,7 +98,7 @@ if (FALSE){
 
   ## 16 ----
   tryCatch({
-    df_predict_s16 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen16_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_s16 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen16_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_s16 <- plot_all_predVsObs(df_predict_s16) |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s16.png", width = 7.2, height = 4.2);
     rm(df_predict_s16, scatter_predObs_s16); gc()
     # timeseries_s16  <- plot_predobs_gpp_timeseries(df_predict_s16)
@@ -109,7 +109,7 @@ if (FALSE){
 
   ## 17 ----
   tryCatch({
-    df_predict_s17 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen17_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_s17 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen17_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_s17 <- plot_all_predVsObs(df_predict_s17) |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s17.png", width = 7.2, height = 4.2);
     rm(df_predict_s17, scatter_predObs_s17); gc()
     # timeseries_s17  <- plot_predobs_gpp_timeseries(df_predict_s17)
@@ -120,7 +120,7 @@ if (FALSE){
 
   ## 18 ----
   tryCatch({
-    df_predict_s18 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen18_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_s18 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen18_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_s18 <- plot_all_predVsObs(df_predict_s18) |> ggsave_and_return("fig_B2b_train_scatter_pred-vs-obs_s18.png", width = 7.2, height = 4.2);
     rm(df_predict_s18, scatter_predObs_s18); gc()
     # timeseries_s18  <- plot_predobs_gpp_timeseries(df_predict_s18)
@@ -132,7 +132,7 @@ if (FALSE){
 
   ## s1 ----
   tryCatch({
-    df_predict_test_s1  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_test_s1  <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_test_s1  <- plot_all_predVsObs(df_predict_test_s1, rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s1.png",  width = 7.2, height = 4.2*1.3);
     rm(scatter_predObs_test_s1, df_predict_test_s1); gc()
     # timeseries_test_s1  <- plot_predobs_gpp_timeseries(df_predict_test_s1)
@@ -143,7 +143,7 @@ if (FALSE){
 
   ## s2 ----
   tryCatch({
-    df_predict_test_s2  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds")
+    df_predict_test_s2  <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds"))
     scatter_predObs_test_s2  <- plot_all_predVsObs(df_predict_test_s2, rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s2.png",  width = 7.2, height = 4.2*1.3);
     rm(scatter_predObs_test_s2, df_predict_test_s2); gc()
     # timeseries_test_s2  <- plot_predobs_gpp_timeseries(df_predict_test_s2)
@@ -154,7 +154,7 @@ if (FALSE){
 
   ## s3 ----
   tryCatch({
-    df_predict_test_s3  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_test_s3  <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_test_s3  <- plot_all_predVsObs(df_predict_test_s3, rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s3.png",  width = 7.2, height = 4.2*1.3);
     rm(scatter_predObs_test_s3, df_predict_test_s3); gc()
     # timeseries_test_s3  <- plot_predobs_gpp_timeseries(df_predict_test_s3)
@@ -165,7 +165,7 @@ if (FALSE){
 
   ## 14 ----
   tryCatch({
-    df_predict_test_s14 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+    df_predict_test_s14 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds"))
     scatter_predObs_test_s14 <- plot_all_predVsObs(df_predict_test_s14,rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s14.png", width = 7.2, height = 4.2*1.3);
     rm(df_predict_test_s14, scatter_predObs_test_s14); gc()
     # timeseries_test_s14  <- plot_predobs_gpp_timeseries(df_predict_test_s14)
@@ -176,7 +176,7 @@ if (FALSE){
 
   ## 16 ----
   tryCatch({
-    df_predict_test_s16 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen16_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_test_s16 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen16_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_test_s16 <- plot_all_predVsObs(df_predict_test_s16,rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s16.png", width = 7.2, height = 4.2*1.3);
     rm(df_predict_test_s16, scatter_predObs_test_s16); gc()
     # timeseries_test_s16  <- plot_predobs_gpp_timeseries(df_predict_test_s16)
@@ -187,7 +187,7 @@ if (FALSE){
 
   ## 17 ----
   tryCatch({
-    df_predict_test_s17 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen17_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_test_s17 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen17_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_test_s17 <- plot_all_predVsObs(df_predict_test_s17,rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s17.png", width = 7.2, height = 4.2*1.3);
     rm(df_predict_test_s17, scatter_predObs_test_s17); gc()
     # timeseries_test_s17  <- plot_predobs_gpp_timeseries(df_predict_test_s17)
@@ -198,7 +198,7 @@ if (FALSE){
 
   ## 18 ----
   tryCatch({
-    df_predict_test_s18 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen18_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds")
+    df_predict_test_s18 <- read_rds(file.path(rsofun_doc_output_path,"data/predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen18_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds.rds"))
     scatter_predObs_test_s18 <- plot_all_predVsObs(df_predict_test_s18,rel_widths = c(5,2.3))  |> ggsave_and_return("fig_B2a_test_scatter_pred-vs-obs_s18.png", width = 7.2, height = 4.2*1.3);
     rm(df_predict_test_s18, scatter_predObs_test_s18); gc()
     # timeseries_test_s18  <- plot_predobs_gpp_timeseries(df_predict_test_s18)
@@ -218,17 +218,17 @@ if (TRUE){
   ## Figure B: error distribution density plot ----
   ## for each scenario x target x test+train
   ### s1: ----
-  df_predict_s1       <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
-  df_predict_test_s1  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+  df_predict_s1       <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
+  df_predict_test_s1  <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
   ### s2: ----
-  df_predict_s2       <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds")
-  df_predict_test_s2  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds")
+  df_predict_s2       <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds"))
+  df_predict_test_s2  <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen2_DEzs-100000-0iter_10x3chains_on_CPU10x1.rds.rds"))
   ### s3: ----
-  df_predict_s3       <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
-  df_predict_test_s3  <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds")
+  df_predict_s3       <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
+  df_predict_test_s3  <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen3_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds.rds"))
   ### s4: ----
-  df_predict_s14      <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_train_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
-  df_predict_test_s14 <- read_rds("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds")
+  df_predict_s14      <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_train_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds"))
+  df_predict_test_s14 <- read_rds(file.path(rsofun_doc_output_path,"predictions_from_WS02/out_predict_N200_test_8000burnin__out_calib__scen14_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds.rds"))
 
   ### combine: ----
   dat_to_plot <- bind_rows(

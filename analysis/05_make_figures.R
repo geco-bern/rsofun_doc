@@ -21,7 +21,7 @@ source(here::here("analysis/00_define_scenarios.R"))
 
 # timings <- readr::read_rds(here::here("timings_FB_2025-08-20_21h25.rds"))
 # timing_files <- list.files(here::here("data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)
-timing_files1 <- list.files(file.path("/data_2/scratch/fbernhard/rsofun_doc_outputs/data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)
+timing_files1 <- list.files(file.path(rsofun_doc_output_path, "data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)
 timings1 <- lapply(timing_files1, readr::read_rds) |> bind_rows()
 
 timing_files2 <- list.files(file.path("/home/fabian/GitHub/geco-bern/rsofun_doc/data","timings"), pattern = "timings_scen.*_2025-08-.*.rds", full.names = T)

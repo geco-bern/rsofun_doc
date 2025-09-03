@@ -56,8 +56,7 @@ print(sprintf(
 stopifnot(args[["target_dataset"]] %in% c("test","train","both"))
 stopifnot(args[["nsimulations"]] > 0)
 
-rds_input_path <- file.path(
-  "/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations", args[["mcmc"]])
+rds_input_path <- file.path(rsofun_doc_output_path, "data", "calibrations", args[["mcmc"]])
 
 stopifnot(file.exists(rds_input_path))
 
@@ -81,10 +80,7 @@ outfile <- sprintf(
   args[["burnin"]],
   args[["mcmc"]])
 
-outpath <- file.path(
-  "/data_2/scratch/fbernhard/rsofun_doc_outputs/data/",
-  "predictions",
-  outfile)
+outpath <- file.path(rsofun_doc_output_path, "predictions", outfile)
 
 readr::write_rds(df_predict, outpath, compress = "gz")
 

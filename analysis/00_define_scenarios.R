@@ -1,4 +1,17 @@
-setup_rsofun_calibration <- function(scenario = 3){
+# Script to be sourced: defines where to store outputs and what details of the calibration scenarios
+
+rsofun_doc_output_path <- if (grepl("node", Sys.info()["nodename"])) {
+  # on UBELIX (think about rsyncing this to a permanent storage)
+  "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/"
+} else if (Sys.info()["nodename"] == "dash") {
+  # on WS-02
+  "/data_2/scratch/fbernhard/rsofun_doc_outputs"
+} else {
+  stop("Please specify where to store output as 'rsofun_doc_output_path'.")
+}
+
+
+setup_rsofun_calibration <- function(){
   # FROM THE REVISION PLAN:
   # Setup 1: global, reduced parameter set (as in initial manuscript version), only GPP as target
   # Setup 2: global, full parameter set, only GPP as target
@@ -120,7 +133,7 @@ setup_rsofun_calibration <- function(scenario = 3){
     if (scenario %in% c(14)) { # use priors from posterior of scenario 1 for kphio, kphio_par_a, kphio_par_b, soilm_thetastar, soilm_betao
 
       # read in posteriors from scenario 1 as prior for 14
-      calib_scen1 <- readr::read_rds(here::here("/data_2/scratch/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds"))
+      calib_scen1 <- readr::read_rds(file.path(rsofun_doc_output_path, "/data/calibrations/out_calib__scen1_DEzs-100000-0iter_8x3chains_on_CPU8x1.rds"))
 
       # fit a normal    distribution to: kphio, kphio_par_a, kphio_par_b, soilm_thetastar
       # fit a lognormal distribution to: soilm_betao

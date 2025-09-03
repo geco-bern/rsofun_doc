@@ -62,7 +62,7 @@ fname <- sprintf("timings_scen%s_%s",
                  paste0(args, collapse="-"),
                  format(Sys.time(), "%Y-%m-%d_%Hh%Mm%Ss"))
 # outpath <- here::here("data")
-outpath <- file.path("/data_2/scratch/fbernhard/rsofun_doc_outputs","data")
+outpath <- file.path(rsofun_doc_output_path,"data")
 dir.create(dirname(outpath), showWarnings = FALSE, recursive = TRUE)
 
 timings_to_rds_csv <- function(timings, filename = here::here("data","timings","timings_FB")){
