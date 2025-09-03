@@ -35,6 +35,8 @@
 is_uniform_prior   <- function(el){identical(sort(names(el)), c("init", "lower", "upper"))}
 is_normal_prior    <- function(el){identical(sort(names(el)), c("mean", "sd"))}
 is_lognormal_prior <- function(el){identical(sort(names(el)), c("meanlog","sdlog"))}
+is_truncnormal_prior    <- function(el){identical(sort(names(el)), c("lower", "mean", "sd", "upper"))}
+is_trunclognormal_prior <- function(el){identical(sort(names(el)), c("endpoint","meanlog","sdlog"))}
 is_beta_prior      <- function(el){identical(sort(names(el)), c("shape1","shape2"))}
 
 createMixedPrior <- function(prior_definitions, best = NULL){
@@ -43,10 +45,17 @@ createMixedPrior <- function(prior_definitions, best = NULL){
   list_unif  <- lapply(prior_definitions, is_uniform_prior)
   list_norm  <- lapply(prior_definitions, is_normal_prior)
   list_lnorm <- lapply(prior_definitions, is_lognormal_prior)
+  list_tnorm <- lapply(prior_definitions, is_truncnormal_prior)
+  list_tlnorm<- lapply(prior_definitions, is_trunclognormal_prior)
   list_beta  <- lapply(prior_definitions, is_beta_prior)
 
   stopifnot(length(prior_definitions) == # check that all prior types are uniquely identified
-              sum(list_unif==TRUE) + sum(list_norm==TRUE) + sum(list_lnorm==TRUE) + sum(list_beta==TRUE))
+              sum(list_unif==TRUE) +
+              sum(list_norm==TRUE) +
+              sum(list_lnorm==TRUE) +
+              sum(list_tnorm==TRUE) +
+              sum(list_tlnorm==TRUE) +
+              sum(list_beta==TRUE))
 
   if (all(unlist(list_unif))) {  # all uniformly distributed: recover previous behavior
     pars  <- as.data.frame(do.call("rbind", prior_definitions))
@@ -59,10 +68,12 @@ createMixedPrior <- function(prior_definitions, best = NULL){
 
     # prepare definition of sampler and density of prior
     prior_args <- lapply(prior_definitions, \(def){
-      if(is_uniform_prior(def)){       return(list(rfct=runif, dfct=dunif, args=list(min    =def$lower,   max   =def$upper)))} #def$init is unused
-      else if(is_normal_prior(def)){   return(list(rfct=rnorm, dfct=dnorm, args=list(mean   =def$mean,    sd    =def$sd)))}
-      else if(is_lognormal_prior(def)){return(list(rfct=rlnorm,dfct=dlnorm,args=list(meanlog=def$meanlog, sdlog =def$sdlog)))}
-      else if(is_beta_prior(def)){     return(list(rfct=rbeta, dfct=dbeta, args=list(shape1 =def$shape1,  shape2=def$shape2)))}
+      if(is_uniform_prior(def)){            return(list(rfct=runif,         dfct=dunif,          args=list(min    =def$lower,   max   =def$upper)))} #def$init is unused
+      else if(is_normal_prior(def)){        return(list(rfct=rnorm,         dfct=dnorm,          args=list(mean   =def$mean,    sd    =def$sd)))}
+      else if(is_lognormal_prior(def)){     return(list(rfct=rlnorm,        dfct=dlnorm,         args=list(meanlog=def$meanlog, sdlog =def$sdlog)))}
+      else if(is_truncnormal_prior(def)){   return(list(rfct=msm::rtnorm,   dfct=msm::dtnorm,    args=list(mean   =def$mean,    sd    =def$sd,    lower    =def$lower, upper =def$upper)))}
+      else if(is_trunclognormal_prior(def)){return(list(rfct=ReIns::rtlnorm, dfct=ReIns::dtlnorm,args=list(meanlog=def$meanlog, sdlog =def$sdlog, endpoint =def$endpoint)))}
+      else if(is_beta_prior(def)){          return(list(rfct=rbeta,         dfct=dbeta,          args=list(shape1 =def$shape1,  shape2=def$shape2)))}
       else {stop("Unknown prior distribution,")}
     })
 

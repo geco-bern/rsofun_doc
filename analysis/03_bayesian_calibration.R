@@ -22,6 +22,10 @@
 # args <- c("18", "0", "12", "2")
 # args <- c("17", "0", "12", "2")
 # args <- c("16", "0", "12", "2")
+# args <- c("70", "0", "12", "1")
+# args <- c("71", "0", "12", "1")
+# args <- c("72", "0", "12", "1")
+# args <- c("74", "0", "12", "1")
 
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)
@@ -66,6 +70,8 @@ outpath <- file.path(rsofun_doc_output_path,"data")
 dir.create(dirname(outpath), showWarnings = FALSE, recursive = TRUE)
 
 timings_to_rds_csv <- function(timings, filename = here::here("data","timings","timings_FB")){
+  if (!dir.exists(dirname(filename))) {dir.create(dirname(filename), recursive = T)}
+
   # to *.rds
   timings |> readr::write_rds(paste0(filename,".rds"))
 
