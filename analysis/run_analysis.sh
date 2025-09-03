@@ -2,7 +2,7 @@
 #SBATCH --job-name="scen75_calib_1x8"
 #SBATCH --time=48:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
-#SBATCH --ntasks=1               # nr of tasks (processes), used for MPI jobs that may run distributed on multiple compute nodes
+#SBATCH --array=70-74            # specifies the slurm array job with the number of tasks
 #SBATCH --cpus-per-task=12       # nr of threads, used for shared memory jobs that run locally on a single compute node (default: 1)
 #SBATCH --mail-user=your.email@unibe.ch
 #SBATCH --mail-type=none                     # when do you want to get notified: none, all, begin, end, fail, requeue, array_tasks
@@ -19,6 +19,7 @@ export SLURM_EXPORT_ENV=ALL  # source: https://hpc-unibe-ch.github.io/slurm/subm
 echo "Started on: $(date --rfc-3339=seconds)"
 echo "Hostname: $(hostname)"
 echo "Working directory: $PWD"   # Is most likely the HOME directory. Allows to check in the log.
+
 module load GEOS/3.12.2-GCC-13.3.0
 module load PROJ/9.4.1-GCCcore-13.3.0
 module load GDAL/3.10.0-foss-2024a
@@ -30,6 +31,7 @@ module load libxml2/2.12.7-GCCcore-13.3.0
 module load R/4.4.2-gfbf-2024a
 
 ## Run a small test R script using parallel workers
-Rscript analysis/03_bayesian_calibration.R 75 0 25000 8 # these are run one after the other
+# Rscript analysis/03_bayesian_calibration.R 75 0 25000 8
+Rscript analysis/03_bayesian_calibration.R $SLURM_ARRAY_TASK_ID 0 5000 8
 
 echo "Finished on: $(date --rfc-3339=seconds)"
