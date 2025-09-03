@@ -279,7 +279,7 @@ setup_rsofun_calibration <- function(scenario){
                        scenario %in% c(18,78) ~ bigD13C,
                        TRUE ~ TRUE)) |>
       nest(targets = c(vj, bigD13C, gpp))
-  } else if (scenario %in% c(0)) {  # only GPP data from FR-Pue
+  } else if (scenario %in% c(0, 70)) {  # only GPP data from FR-Pue
 
     drivobs <- tibble( # load it based on FR-Pue data:
       sitename    = rsofun::p_model_drivers$sitename,

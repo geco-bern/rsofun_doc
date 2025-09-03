@@ -107,7 +107,7 @@ continue_mcmc_rsofun <- function(
 
     indep_chains <- foreach(
       i = 1:n_parallel_independent,
-      .packages=c('BayesianTools','rsofun','dplyr','tidyr'),
+      .packages=c('BayesianTools','rsofun','dplyr','tidyr','ReIns'),
       #.export = c('get_mod_obs_pmodel_bigD13C_vj_gpp'),
       .verbose = TRUE
     ) %dopar% {
