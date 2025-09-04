@@ -44,3 +44,4 @@ data-previous*/
 timings*
 data/*.rds
 data/predictions/*.rds
+slurm-logs/*
