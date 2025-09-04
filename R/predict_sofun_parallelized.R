@@ -39,7 +39,7 @@ predict_sofun_parallelized <- function(
     df_pred_vs_obs <- df_pred_vs_obs |>
       # clarify name of model output (containing not yet any error model term)
       rename(mod_no_err = mod) |>
-      relocate(c(mod_no_err, err_par), .after = last_col())
+      relocate(c(mod_no_err, err_par_sd), .after = last_col())
 
     return(df_pred_vs_obs)
   }

@@ -4,13 +4,13 @@ plot_predobs_gpp_timeseries <- function(df_predict, N_sample_error = 5){
   df_tsplot_gpp <- df_predict |> unnest(sim) |> filter(target == "gpp")
 
   df_tsplot_gpp_obs <- df_tsplot_gpp |> select(sitename, target, obs_metadata, obs) |> distinct() |> unnest(obs_metadata)
-  df_tsplot_gpp_mod <- df_tsplot_gpp |> select(mcmc_id, sitename, obs_metadata, mod_no_err, err_par) |> unnest(obs_metadata)
+  df_tsplot_gpp_mod <- df_tsplot_gpp |> select(mcmc_id, sitename, obs_metadata, mod_no_err, err_par_sd) |> unnest(obs_metadata)
 
   # add observational error:
   N_samples <- tibble(sample_id = 1:N_sample_error)
   df_tsplot_gpp_mod_sampled <- df_tsplot_gpp_mod |>
     dplyr::cross_join(N_samples) |>
-    mutate(mod_with_err = mod_no_err + rnorm(n(), sd = err_par))
+    mutate(mod_with_err = mod_no_err + rnorm(n(), sd = err_par_sd))
 
   df_tsplot_gpp_mod_stat <- df_tsplot_gpp_mod_sampled |> group_by(sitename, date) |>
     summarise(mod_no_err_med = median(mod_no_err),

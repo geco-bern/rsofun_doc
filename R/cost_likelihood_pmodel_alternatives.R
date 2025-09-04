@@ -132,8 +132,8 @@ cost_likelihood_pmodel_bigD13C_vj_gpp_v2 <- function(
       # ensure_cols_defined(tibble(gpp_mod = numeric(), gpp = numeric())) |>
       rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
       mutate(#target  = "gpp",#curr_target,
-        err_par = par[["err_gpp"]]), #|> #par[[paste0("err_,"curr_target]]) |>
-    # select(sitename, run_model, target, mod, obs, err_par),
+        err_par_sd = par[["err_gpp"]]), #|> #par[[paste0("err_,"curr_target]]) |>
+    # select(sitename, run_model, target, mod, obs, err_par_sd),
 
     df_mod_obs_onestep |> # unnest(modobs) |>
       # make this work gracefully in case nrow=0
@@ -143,8 +143,8 @@ cost_likelihood_pmodel_bigD13C_vj_gpp_v2 <- function(
       # ensure_cols_defined(tibble(bigD13C_obs_permil = numeric())) |>
       rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
       mutate(#target  = "bigD13C",#curr_target,
-        err_par = par[["err_bigD13C"]]), #|> #par[[paste0("err_,"curr_target]]) |>
-    # select(sitename, run_model, target, mod, obs, err_par),
+        err_par_sd = par[["err_bigD13C"]]), #|> #par[[paste0("err_,"curr_target]]) |>
+    # select(sitename, run_model, target, mod, obs, err_par_sd),
 
     df_mod_obs_onestep |> # unnest(modobs) |>
       # make this work gracefully in case nrow=0
@@ -154,24 +154,24 @@ cost_likelihood_pmodel_bigD13C_vj_gpp_v2 <- function(
       # ensure_cols_defined(tibble(vj_obs__ = numeric())) |>
       rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
       mutate(#target  = "vj",#curr_target,
-        err_par = par[["err_vj"]]), #|> #par[[paste0("err_,"curr_target]]) |>
-    # select(sitename, run_model, target, mod, obs, err_par)
+        err_par_sd = par[["err_vj"]]), #|> #par[[paste0("err_,"curr_target]]) |>
+    # select(sitename, run_model, target, mod, obs, err_par_sd)
   )
   stopifnot(all(targets %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
 
   # D) Compute likelihood ----
-  ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par must be positive
-  # ll_lognormal <- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = mod,             sdlog = sd, log = TRUE)} # TODO: err_par must be positive
+  ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par_sd must be positive
+  # ll_lognormal <- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = mod,             sdlog = sd, log = TRUE)} # TODO: err_par_sd must be positive
   # ll_lognormal2<- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = log(mod) + sd^2, sdlog = sd, log = TRUE)}
   # ll_proportional<-function(obs,mod,sd){stats::dnorm(x=obs, mean = mod,                sd = abs(mod)*sd, log = TRUE)} # proportional: https://docs.pumas.ai/stable/model_components/error_models/
   # ll_userdefined <- function(obs,mod,err_par1, err_par2, err_par3){}
 
   # compute ll
-  df_ll <- df_mod_obs |> # group_by(target, err_par) |>
+  df_ll <- df_mod_obs |> # group_by(target, err_par_sd) |>
     # compute loglikelihoods
     # rowwise() |> # not needed and slowing things down
-    mutate(ll = ll_normal(obs,mod,err_par)) #|>
-  # select(sitename, run_model, target, mod, obs, err_par, ll)
+    mutate(ll = ll_normal(obs,mod,err_par_sd)) #|>
+  # select(sitename, run_model, target, mod, obs, err_par_sd, ll)
 
   ll <- sum(df_ll$ll)
 
@@ -244,21 +244,21 @@ cost_likelihood_pmodel_bigD13C_vj_gpp_v3 <- function(
   #   df_mod_obs <- bind_rows(
   #     df_mod_obs_daily |>
   #       rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
-  #       mutate(err_par = par[["err_gpp"]]),
+  #       mutate(err_par_sd = par[["err_gpp"]]),
   #     df_mod_obs_onestep |>
   #       unnest(bigD13C) |>
   #       rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
-  #       mutate(err_par = par[["err_bigD13C"]]), #|> #par[[paste0("err_,"curr_target]]) |>
+  #       mutate(err_par_sd = par[["err_bigD13C"]]), #|> #par[[paste0("err_,"curr_target]]) |>
   #     df_mod_obs_onestep |>
   #       unnest(vj) |>
   #       rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
   #       mutate(#target  = "vj",#curr_target,
-  #         err_par = par[["err_vj"]]), #|> #par[[paste0("err_,"curr_target]]) |>
-  #     # select(sitename, run_model, target, mod, obs, err_par)
+  #         err_par_sd = par[["err_vj"]]), #|> #par[[paste0("err_,"curr_target]]) |>
+  #     # select(sitename, run_model, target, mod, obs, err_par_sd)
   #   )
   #
   #   # D) Compute log-likelihood ----
-  #   ll <- sum(stats::dnorm( x=df_mod_obs$obs, mean = df_mod_obs$mod, sd = df_mod_obs$err_par, log = TRUE))
+  #   ll <- sum(stats::dnorm( x=df_mod_obs$obs, mean = df_mod_obs$mod, sd = df_mod_obs$err_par_sd, log = TRUE))
   #   browser()
   #   # trap boundary conditions
   #   if(is.nan(ll) | is.na(ll) | ll == 0){ll <- -Inf}
