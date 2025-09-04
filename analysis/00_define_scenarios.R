@@ -105,7 +105,7 @@ setup_rsofun_calibration <- function(scenario){
     }
 
   } else if (scenario %in% c(72,73,74,75,76,77,78,                       # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
-                             2,3, 12,13,89,88,87,86, 14,15, 16,17,18)) {
+                             2,3, 12,13, 14,15, 16,17,18)) {
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -125,19 +125,6 @@ setup_rsofun_calibration <- function(scenario){
     if (scenario %in% c(72,73,74,75,76,77,78)){ # use fixed rd_to_vcmax and use prior for tau_acclim
       par_to_estimate$rd_to_vcmax = NULL
       par_to_estimate$tau_acclim  = list(mean = 14, sd = 8, lower = 0, upper = 60) # truncated normal
-    }
-
-    if (scenario %in% c(89,88,87,86)) {
-      par_to_estimate$err_gpp$lower     = 0.1
-      par_to_estimate$err_bigD13C$lower = 0.1
-      par_to_estimate$err_vj$lower      = 0.1
-
-      # test adding only single parameter to estimation compared to scenario 4:
-      # i.e. out of beta_unitcostratio, rd_to_vcmax, tau_acclim, kc_jmax only add one at a time:
-      if (scenario==89){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio',              'tau_acclim','kc_jmax'))]}
-      if (scenario==88){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax',             'kc_jmax'))]}
-      if (scenario==87){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c('beta_unitcostratio','rd_to_vcmax','tau_acclim'          ))]}
-      if (scenario==86){par_to_estimate <- par_to_estimate[setdiff(names(par_to_estimate),c(                     'rd_to_vcmax','tau_acclim','kc_jmax'))]}
     }
 
     if (scenario %in% c(74,
@@ -263,7 +250,7 @@ setup_rsofun_calibration <- function(scenario){
       nest(targets = c(vj, bigD13C, gpp))
 
   } else if (scenario %in% c(73,74,75, # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
-                             3,4,89,88,87,86,13,14,15)) { # GPP and traits data
+                             3,4,13,14,15)) { # GPP and traits data
 
     drivobs      <- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp

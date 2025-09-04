@@ -88,10 +88,6 @@ timings_to_rds_csv <- function(timings, filename = here::here("data","timings","
 # run MCMC
 timings <- tibble(); timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 
-## Scenario 3:
-## Scenario 2:
-## Scenario 1:
-## Scenario 0: ( is only FR-Pue like in initial submission)
 timings <- run_mcmc_rsofun(
   # calibration scenario:
   curr_calibration_scenario    = args["scenario"],
