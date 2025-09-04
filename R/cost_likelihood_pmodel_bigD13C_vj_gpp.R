@@ -95,22 +95,24 @@ cost_likelihood_pmodel_bigD13C_vj_gpp <- function(
   df_mod_obs <- get_mod_obs(drivers, obs, params_modl_and_err, parallel, ncores)
 
   # D) Compute likelihood ----
-  ll_normal    <- function(obs,mod,sd){stats::dnorm( x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par_sd must be positive
-  ll_lognormal <- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = mod,             sdlog = sd, log = TRUE)} # TODO: err_par_sd must be positive
-  ll_lognormal2<- function(obs,mod,sd){stats::dlnorm(x=obs, meanlog = log(mod) + sd^2, sdlog = sd, log = TRUE)}
-  ll_proportional<-function(obs,mod,sd){stats::dnorm(x=obs, mean = mod,                sd = abs(mod)*sd, log = TRUE)} # proportional: https://docs.pumas.ai/stable/model_components/error_models/
-  # ll_userdefined <- function(obs,mod,err_par1, err_par2, err_par3){}
+  ll_normal            <- function(obs,mod,sd){stats::dnorm(      x=obs, mean = mod,                sd    = sd, log = TRUE)} # TODO: err_par_sd must be positive
+  ll_normalAdditiveBias<- function(obs,mod,sd,bias){stats::dnorm( x=obs, mean = mod-bias,           sd    = sd, log = TRUE)} # TODO: err_par_sd must be positive, err_par_bias: if it is positive: the model has a positive bias
+  ll_lognormal         <- function(obs,mod,sd){stats::dlnorm(     x=obs, meanlog = mod,             sdlog = sd, log = TRUE)} # TODO: err_par_sd must be positive
+  ll_lognormal2        <- function(obs,mod,sd){stats::dlnorm(     x=obs, meanlog = log(mod) + sd^2, sdlog = sd, log = TRUE)}
+  ll_proportional      <- function(obs,mod,sd){stats::dnorm(      x=obs, mean = mod,                sd = abs(mod)*sd, log = TRUE)} # proportional: https://docs.pumas.ai/stable/model_components/error_models/
+  # ll_userdefined     <- function(obs,mod,err_par1, err_par2, err_par3){}
 
   # compute ll
-  df_ll <- df_mod_obs |> group_by(target, err_par_sd) |>
+  df_ll <- df_mod_obs |> group_by(target, err_par_sd, err_par_bias) |>
     # compute loglikelihoods
-    # rowwise() |> # not needed and slowing things down
-    mutate(ll = case_when(
-      target == "gpp"     ~ ll_normal(obs,mod,err_par_sd),
-      target == "bigD13C" ~ ll_normal(obs,mod,err_par_sd),
-      target == "vj"      ~ ll_normal(obs,mod,err_par_sd)
-    )) |>
-    select(sitename, run_model, target, mod, obs, err_par_sd, ll)
+    # # rowwise() |> # not needed and slowing things down
+    # mutate(ll = case_when(
+    #   target == "gpp"     ~ ll_normal(            obs,mod,err_par_sd),
+    #   target == "bigD13C" ~ ll_normalAdditiveBias(obs,mod,err_par_sd),
+    #   target == "vj"      ~ ll_normalAdditiveBias(obs,mod,err_par_sd)
+    # )) |>
+    mutate(ll = ll_normalAdditiveBias(obs,mod,err_par_sd,err_par_bias)) |>
+    select(sitename, run_model, target, mod, obs, err_par_sd, err_par_bias, ll)
 
   ll <- sum(df_ll$ll)
 
@@ -316,6 +318,7 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
 
   # combine into single data.frame
   targets <- grep("^err_", names(params_modl_and_err), value = TRUE)
+  targets_biases <- grep("^errbias", names(params_modl_and_err), value = TRUE)
 
   # for (curr_target in targets){
   #   print(curr_target)
@@ -326,10 +329,11 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       # make this work gracefully in case nrow=0
       ensure_cols_defined(tibble(gpp_mod = numeric(), gpp = numeric(), date = lubridate::Date())) |>
       rename(all_of(c(mod = "gpp_mod", obs = "gpp"))) |>
-      mutate(target  = "gpp",#curr_target,
-             err_par_sd = params_modl_and_err[["err_gpp"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
+      mutate(target  = "gpp",                                  #curr_target,
+             err_par_sd   = params_modl_and_err[["err_gpp"]],  #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
+             err_par_bias = 0) |>
       nest(obs_metadata = c(date)) |>
-      select(sitename, run_model, target, obs_metadata, mod, obs, err_par_sd),
+      select(sitename, run_model, target, obs_metadata, mod, obs, err_par_sd, err_par_bias),
 
     df_mod_obs_onestep |>
       unnest(modobs) |>
@@ -340,10 +344,11 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       ensure_cols_defined(tibble(bigD13C_obs_permil = numeric(),
                                  species = character(), year = integer())) |>
       rename(all_of(c(mod = "bigD13C_mod_permil", obs = "bigD13C_obs_permil"))) |>
-      mutate(target  = "bigD13C",#curr_target,
-             err_par_sd = params_modl_and_err[["err_bigD13C"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
+      mutate(target  = "bigD13C",                                         #curr_target,
+             err_par_sd   = params_modl_and_err[["err_bigD13C"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
+             err_par_bias = params_modl_and_err[["errbias_bigD13C"]]) |>
       nest(obs_metadata = c(species, year)) |> # , Nobs, Nyears, Ndates
-      select(sitename, run_model, target, obs_metadata, mod, obs, err_par_sd),
+      select(sitename, run_model, target, obs_metadata, mod, obs, err_par_sd, err_par_bias),
 
     df_mod_obs_onestep |>
       unnest(modobs) |>
@@ -354,13 +359,15 @@ get_mod_obs_pmodel_bigD13C_vj_gpp <- function(
       ensure_cols_defined(tibble(vj_obs__ = numeric(),
                                  genus = character(), species = character(), year = integer())) |>
       rename(all_of(c(mod = "vj_mod__", obs = "vj_obs__"))) |>
-      mutate(target  = "vj",#curr_target,
-             err_par_sd = params_modl_and_err[["err_vj"]]) |> #params_modl_and_err[[paste0("err_,"curr_target]]) |>
+      mutate(target  = "vj",                                         #curr_target,
+             err_par_sd   = params_modl_and_err[["err_vj"]],         #params_modl_and_err[[paste0("err_,"curr_target]]) |> # TODO: work here on  not hardcoding this...
+             err_par_bias = params_modl_and_err[["errbias_vj"]]) |>
       nest(obs_metadata = c(genus, species, year)) |> # , Nobs, Nyears, Ndates
-      select(sitename, run_model, target, obs_metadata, mod, obs, err_par_sd)
+      select(sitename, run_model, target, obs_metadata, mod, obs, err_par_sd, err_par_bias)
   )
-  stopifnot(all(targets %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
-  # browser()
+  stopifnot(all(targets        %in% c("err_gpp", "err_bigD13C", "err_vj"))) # above hardcoded snippet is wrong if this is not the case
+  stopifnot(all(targets_biases %in% c("errbias_bigD13C", "errbias_vj")))    # above hardcoded snippet is wrong if this is not the case
+
   # df_mod_obs_onestep |> unnest_wider(targets, names_sep = "_") |> filter(targets_vj & targets_bigD13C)
   # df_mod_obs_onestep |> unnest_wider(targets, names_sep = "_") |> filter(targets_vj & targets_bigD13C) |>
   #   unnest(modobs) |>
