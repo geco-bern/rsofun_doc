@@ -56,10 +56,20 @@ print(sprintf(
 stopifnot(args[["target_dataset"]] %in% c("test","train","both"))
 stopifnot(args[["nsimulations"]] > 0)
 
+source(here::here("analysis/00_define_scenarios.R")) # to define 'rsofun_doc_output_path'
 rds_input_path <- file.path(rsofun_doc_output_path, "data", "calibrations", args[["mcmc"]])
 
 stopifnot(file.exists(rds_input_path))
 
+outfile <- sprintf(
+  "out_predict_N%d_%s_%dburnin__%s.rds",
+  args[["nsimulations"]],
+  args[["target_dataset"]],
+  args[["burnin"]],
+  args[["mcmc"]])
+
+outpath <- file.path(rsofun_doc_output_path, "predictions", outfile)
+if (!dir.exists(dirname(outpath))) {dir.create(dirname(outpath),  recursive=TRUE)}
 
 # sample posteriors and run model for each sample parameter set
 library(multidplyr)
@@ -72,15 +82,6 @@ df_predict <- run_prediction_rsofun(
   burnin_to_skip = args[["burnin"]],
   n_samples      = args[["nsimulations"]],
   n_cores        = args[["ncores"]])
-
-outfile <- sprintf(
-  "out_predict_N%d_%s_%dburnin__%s.rds",
-  args[["nsimulations"]],
-  args[["target_dataset"]],
-  args[["burnin"]],
-  args[["mcmc"]])
-
-outpath <- file.path(rsofun_doc_output_path, "predictions", outfile)
 
 readr::write_rds(df_predict, outpath, compress = "gz")
 
