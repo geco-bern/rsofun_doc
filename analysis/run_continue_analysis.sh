@@ -7,8 +7,7 @@
 #SBATCH --mail-user=your.email@unibe.ch
 #SBATCH --mail-type=none                     # when do you want to get notified: none, all, begin, end, fail, requeue, array_tasks
 #SBATCH --chdir=GitHub/geco-bern/rsofun_doc  # define here the working directory which contains your R-script, and where the output will be written to.
-#SBATCH --output=slurm-logs/slurm-%x.%j.txt
-#SBATCH --error=slurm-logs/slurm-%x.%j_err.txt
+#SBATCH --output=slurm-logs/slurm-%x.%j.txt  ###S-B-A-T-C-H --error=slurm-logs/slurm-%x.%j_err.txt
 
 # run this as: xx24axxx@submit04:~$ sbatch GitHub/geco-bern/rsofun_doc/analysis/run_analysis.sh
 # check with:  squeue --partition="icpu-stocker" --states="all" -o "%.23i %.9P %.8j %.8u %.8T %.11M %.11l %.6D %.3C %.11m %8z %20R %.19V %16p %o"
@@ -31,8 +30,8 @@ module load libxml2/2.12.7-GCCcore-13.3.0
 module load R/4.4.2-gfbf-2024a
 
 ## Continue the Bayesian calibration (MCMC sampling)
-PREV_NRUNS=40000 # which previous sampling to continue
-NEW_NRUNS=10000  # how many samples to add
+PREV_NRUNS=50000 # which previous sampling to continue
+NEW_NRUNS=20000  # how many samples to add
 # Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1.rds" "${NEW_NRUNS}"
 Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
 

@@ -2,13 +2,12 @@
 #SBATCH --job-name="calib_scenTASKID"
 #SBATCH --time=169:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
-#SBATCH --array=71-71            # specifies the slurm array job with the number of tasks
+#SBATCH --array=90-98            # specifies the slurm array job with the number of tasks
 #SBATCH --cpus-per-task=9        # nr of threads, used for shared memory jobs that run locally on a single compute node (default: 1)
 #SBATCH --mail-user=your.email@unibe.ch
 #SBATCH --mail-type=none                     # when do you want to get notified: none, all, begin, end, fail, requeue, array_tasks
 #SBATCH --chdir=GitHub/geco-bern/rsofun_doc  # define here the working directory which contains your R-script, and where the output will be written to.
-#SBATCH --output=slurm-logs/slurm-%x.%j.txt
-#SBATCH --error=slurm-logs/slurm-%x.%j_err.txt
+#SBATCH --output=slurm-logs/slurm-%x.%j.txt  ###S-B-A-T-C-H --error=slurm-logs/slurm-%x.%j_err.txt
 
 # run this as: xx24axxx@submit04:~$ sbatch GitHub/geco-bern/rsofun_doc/analysis/run_analysis.sh
 # check with:  squeue --partition="icpu-stocker" --states="all" -o "%.23i %.9P %.8j %.8u %.8T %.11M %.11l %.6D %.3C %.11m %8z %20R %.19V %16p %o"
@@ -32,6 +31,6 @@ module load R/4.4.2-gfbf-2024a
 
 ## Run the Bayesian calibration (MCMC sampling)
 # Rscript analysis/03_bayesian_calibration.R 75 0 25000 8
-Rscript analysis/03_bayesian_calibration.R $SLURM_ARRAY_TASK_ID 0 100000 8
+Rscript analysis/03_bayesian_calibration.R $SLURM_ARRAY_TASK_ID 0 15000 8
 
 echo "Finished on: $(date --rfc-3339=seconds)"
