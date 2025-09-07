@@ -30,6 +30,8 @@
 # args <- c("out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds", "train", "8000", "200", "8")
 # args <- c("out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds", "test", "8000", "200", "8")
 # args <- c("out_calib__scen0_DEzs-25000-0iter_8x3chains_on_CPU8x1.rds",            "test", "8000", "200", "8")
+# args <- c("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen74_DEzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds",            "test", "8000", "200", "8")
+# args <- c("out_calib__scen74_DEzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds", "test", "8000", "200", "8")
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)
 stopifnot(length(args) == 5)
@@ -68,7 +70,7 @@ outfile <- sprintf(
   args[["burnin"]],
   args[["mcmc"]])
 
-outpath <- file.path(rsofun_doc_output_path, "predictions", outfile)
+outpath <- file.path(rsofun_doc_output_path, "data", "predictions", outfile)
 if (!dir.exists(dirname(outpath))) {dir.create(dirname(outpath),  recursive=TRUE)}
 
 # sample posteriors and run model for each sample parameter set
@@ -83,6 +85,15 @@ df_predict <- run_prediction_rsofun(
   n_samples      = args[["nsimulations"]],
   n_cores        = args[["ncores"]])
 
-readr::write_rds(df_predict, outpath, compress = "gz")
+# readr::write_rds(df_predict, outpath, compress = "gz")
+readr::write_rds(df_predict, outpath, compress = "none")
 
 
+outpathMAP <- paste0(gsub("out_predict_N[0-9]*_", "out_predict_MAP_", outpath), "_MAP.rds")
+df_predict_MAP <- run_prediction_rsofun(
+  mcmc_posterior = out_calib,
+  prediction     = args[["target_dataset"]],
+  burnin_to_skip = args[["burnin"]],
+  n_samples      = 1, # n_samples == 1, requests MAP
+  n_cores        = args[["ncores"]])
+readr::write_rds(df_predict_MAP, outpathMAP, compress = "none")

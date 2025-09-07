@@ -5,7 +5,7 @@ run_prediction_rsofun <- function(
     mcmc_posterior,
     prediction = c("both","test","train"),
     burnin_to_skip = 0,
-    n_samples = 100,
+    n_samples = 100,      # if n_samples == 1, use MAP
     n_cores = NULL){
 
   if (length(prediction) == 1 && (prediction %in% c("both","test","train"))){
@@ -33,15 +33,25 @@ run_prediction_rsofun <- function(
 
   # Sample parameters from MCMC posterior
   # Evaluation of the uncertainty coming from the model parameters' uncertainty
-  samples_par <- getSample(
-    mcmc_posterior$mod,
-    thin = 1,
-    start = burnin_to_skip, numSamples = n_samples
-  ) |>
-    as.data.frame() |>
-    # Add sample IDs
-    dplyr::mutate(mcmc_id = 1:n()) |>
-    tidyr::nest(.by = mcmc_id, .key = "pars")
+  if (n_samples > 1){
+    samples_par <- getSample(
+        mcmc_posterior$mod,
+        thin = 1,
+        start = burnin_to_skip, numSamples = n_samples
+      ) |>
+        as.data.frame() |>
+        # Add sample IDs
+        dplyr::mutate(mcmc_id = 1:n()) |>
+        tidyr::nest(.by = mcmc_id, .key = "pars")
+  } else {
+    # mcmc_posterior$par # these are already precomputed...
+    # but more robust to recompute:
+    samples_par <- BayesianTools::MAP(mcmc_posterior$mod)$parametersMAP |>
+      as.list() |> as_tibble() |>
+      # Add sample IDs
+      dplyr::mutate(mcmc_id = 0) |> # mcmc_id == 0 means MAP
+      tidyr::nest(.by = mcmc_id, .key = "pars")
+  }
 
   # Setup prediction
   predict_sofun_settings <- list(n_cores=n_cores)
@@ -60,32 +70,13 @@ run_prediction_rsofun <- function(
     stopifnot(nrow(curr_obs)>0)
   }
 
-  # Generate paths for output files
-  outpath <- file.path(
-    dirname(mcmc_posterior$fpath),
-    "predictions",
-    paste0("out_predict_",prediction,"_", gsub("out_calib_","",basename(mcmc_posterior$fpath)))
-  )
-  logpath <- ifelse(
-    is.null(n_cores),
-    NULL,
-    file.path(dirname(outpath), paste0("log__",basename(outpath)))
-  )
-
-  # Create output directories if they don't exist
-  dir.create(dirname(outpath), showWarnings = FALSE, recursive = TRUE)
-  if (!dir.exists(dirname(outpath))) dir.create(dirname(outpath), recursive = TRUE)
-  if (!dir.exists(dirname(logpath))) dir.create(dirname(logpath), recursive = TRUE)
-
   # Run prediction
   df_pred_vs_obs <- predict_sofun_parallelized(
     drivers     = curr_driver,
     obs         = curr_obs,
     settings    = predict_sofun_settings,
     par         = samples_par,
-    par_fixed   = res$par_fixed,
-    outpath     = outpath,
-    logpath     = logpath
+    par_fixed   = res$par_fixed
   )
 
   return(df_pred_vs_obs)

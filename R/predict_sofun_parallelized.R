@@ -5,9 +5,7 @@ predict_sofun_parallelized <- function(
     obs,
     settings,
     par_fixed,
-    par_df = NULL,
-    outpath = NULL,
-    logpath = NULL) {
+    par_df = NULL) {
 
   # Set number of cores if not specified
   if (is.null(settings$n_cores)) {
