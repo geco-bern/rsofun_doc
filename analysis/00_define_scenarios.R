@@ -100,6 +100,10 @@ setup_rsofun_calibration <- function(scenario){
       errbias_bigD13C = list(lower =  -2, upper = 2, init = 0.0), # TODO: without bias_bigD13C and bias_vj this errors
       errbias_vj      = list(lower =  -2, upper = 2, init = 0.0)  # TODO: without err_bigD13C and err_vj this errors
     )
+    if (scenario %in% c(90, 91)){
+      par_to_estimate$errbias_bigD13C = list(lower =   -8, upper = 8, init = 0.0)
+      par_to_estimate$errbias_vj      = list(lower =   -1, upper = 1, init = 0.0)
+    }
     if(scenario %in% c(51,52,53,54,55,56,57,58,59,60,61,62)){
       par_to_estimate$soilm_betao = NULL
     }
