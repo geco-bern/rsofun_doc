@@ -174,14 +174,16 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
     facet_wrap( ~ variable , nrow = 2, scales = "free") +
     theme(
       legend.position = "bottom",
-      axis.title.x = element_text("")
+      axis.title.x = element_text(""),
+      axis.ticks.y = element_blank(),
+      axis.text.y = element_blank(),
     ) +
     scale_fill_manual(NULL, values = c("#29a274ff", t_col("#777055ff"))) # GECO colors
 
   return(gg)
 }
 
-plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip, ridges = FALSE){
+plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip, ridges = FALSE, add_MAP = FALSE){
   require(BayesianTools)
   require(dplyr)
   require(tidyr)
@@ -189,7 +191,7 @@ plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip
 
   # Get matrices of prior and posterior samples
   priorMat_list <- lapply(
-    named_list_scen[grepl("[Pp]rior", names(named_list_scen))],
+    named_list_scen[grepl("[Pp]rior", names(named_list_scen))] |> rev(), # rev is for to have later scenarios with more parameters determine order
     function(x){
       priorMat <- getSetup(x)$prior$sampler(10000) # nPriorDraws = 10000
       colnames(priorMat) <- x[[1]]$setup$names
@@ -197,21 +199,29 @@ plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip
     }
   )
   posteriorMat_list <- lapply(
-    named_list_scen[!grepl("[Pp]rior", names(named_list_scen))],
+    named_list_scen[!grepl("[Pp]rior", names(named_list_scen))] |> rev(), # rev is for to have later scenarios with more parameters determine order
     function(x){
       as_tibble(getSample(x, parametersOnly = TRUE, start = burnin_to_skip))
   })
+  MAP_list <- lapply(
+    named_list_scen[!grepl("[Pp]rior", names(named_list_scen))] |> rev(), # rev is for to have later scenarios with more parameters determine order
+    function(x){as_tibble(as.list(BayesianTools::MAP(x)$parametersMAP))}
+  )
+
+
 
   # Create data frame for plotting
   df_plot <- bind_rows(dplyr::bind_rows(priorMat_list,     .id = "distrib"),
-                       dplyr::bind_rows(posteriorMat_list, .id = "distrib")) |>
+                       dplyr::bind_rows(posteriorMat_list, .id = "distrib"),
+                       dplyr::bind_rows(MAP_list, .id = "distrib") |> mutate(distrib = paste0("MAP ", distrib))) |>
     pivot_longer(-c(distrib), names_to = "variable") |>
     mutate(distrib  = forcats::fct_inorder(distrib),  # order by appearance
            variable = forcats::fct_inorder(variable)) # order by appearance
 
   # Plot with facet wrap
   if(ridges == FALSE){
-    gg <- ggplot(df_plot, aes(x = value, color = distrib)) +
+    gg <- ggplot(filter(df_plot, !grepl("MAP ", distrib)),
+                 aes(x = value, color = distrib)) +
       theme_classic() +
       # variant 1: density:
       # geom_density()
@@ -225,15 +235,24 @@ plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip
       labs(x="Parameter value")
   } else {
     df_plot2 <- df_plot |>
-      mutate(Scenario = as.factor(as.integer(gsub("Prior ", "", distrib)))) |>
-      mutate(Distribution = ifelse(grepl("Prior ", distrib), "Prior", "Posterior"))
-    gg <- ggplot(df_plot2, aes(x=value, y=Scenario, fill = Distribution)) +
+      mutate(Scenario = as.factor(as.integer(gsub("((Prior)|(MAP)) ", "", distrib)))) |>
+      mutate(Distribution = case_when(grepl("Prior ", distrib) ~ "Prior",
+                                      grepl("MAP ", distrib)   ~ "MAP",
+                                      TRUE                     ~ "Posterior"))
+    gg <- ggplot(df_plot2 |> filter(!grepl("MAP ", distrib)),
+                 aes(x=value, y=Scenario)) +
       theme_classic() +
-      geom_density_ridges() +
+      geom_density_ridges(aes(fill = Distribution)) +
+      {if (add_MAP) geom_segment(data = df_plot2 |> filter(grepl("MAP ", distrib)),
+                                 mapping = aes(yend = as.integer(Scenario) + 0.6,
+                                               color = Distribution),
+                                 key_glyph = "vline", linetype = "2121")} + # "dashed"
       # layout:
       facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
+      # scale_y_discrete(limits=rev) + # to have scenario 1 on top and 4 at bottom
       theme(legend.position = "bottom") + labs(x=NULL) +
-      scale_fill_manual(NULL, values = c("#29a274ff", t_col("#777055ff"))) # GECO colors
+      scale_fill_manual(NULL, values = c("Posterior"="#29a274ff", "Prior" = t_col("#777055ff"),  # GECO colors
+                                         "MAP" = "black"), aesthetics = c("fill","colour"))
   }
   return(gg)
 }
