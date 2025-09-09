@@ -71,6 +71,7 @@ if (!dir.exists(dirname(outpath))) {dir.create(dirname(outpath),  recursive=TRUE
 library(multidplyr)
 source(here::here("R/run_prediction_rsofun.R"))
 
+print("Posterior runs: Test")
 out_calib <- readr::read_rds(rds_input_path)
 df_predict_test <- run_prediction_rsofun(
   mcmc_posterior = out_calib,
@@ -80,6 +81,7 @@ df_predict_test <- run_prediction_rsofun(
   n_cores        = args[["ncores"]])
 readr::write_rds(df_predict_test, gsub("XXX","test",outpath), compress = "none")
 
+print("Posterior runs: Train")
 df_predict_train <- run_prediction_rsofun(
   mcmc_posterior = out_calib,
   prediction     = "train",
@@ -90,6 +92,7 @@ readr::write_rds(df_predict_train, gsub("XXX","train",outpath), compress = "none
 
 # get MAP and run model for MAP parameter set
 outpathMAP <- paste0(gsub("out_predict_N[0-9]*_", "out_predict_MAP_", outpath), "_MAP.rds")
+print("MAP run: Test")
 df_predict_MAP_test <- run_prediction_rsofun(
   mcmc_posterior = out_calib,
   prediction     = "test",
@@ -98,6 +101,7 @@ df_predict_MAP_test <- run_prediction_rsofun(
   n_cores        = args[["ncores"]])
 readr::write_rds(df_predict_MAP_test, gsub("XXX","test",outpathMAP), compress = "none")
 
+print("MAP run: Train")
 df_predict_MAP_train <- run_prediction_rsofun(
   mcmc_posterior = out_calib,
   prediction     = "train",
@@ -109,6 +113,7 @@ readr::write_rds(df_predict_MAP_train, gsub("XXX","train",outpathMAP), compress 
 
 # apply bias-correction and simulate structural error
 if (TRUE){
+  print("Apply bias and sample error")
   # combine test and train predictions
   # apply bias-correction and simulate structural error
   library(dtplyr)
@@ -166,6 +171,7 @@ if (TRUE){
   #                  paste0(gsub("_XXX",paste0("parsxN",N_sample_error,"errors"), outpath),"_sampled_continuousWithObsNA.rds"),
   #                  compress = "none")
 
+  print("Save results")
   readr::write_rds(dat_to_plot_inclNAObs_sampled |> filter(dataset == "train"),
                    paste0(gsub("_XXX",paste0("parsxN",N_sample_error,"errors_train"), outpath),"_sampled_continuousWithObsNA.rds"),
                    compress = "none")
