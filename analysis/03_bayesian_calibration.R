@@ -25,7 +25,7 @@
 # args <- c("70", "0", "12", "1")
 # args <- c("71", "0", "12", "1")
 # args <- c("72", "0", "12", "1")
-# args <- c("74", "0", "12", "1")
+# args <- c("94", "0", "12", "1")
 
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)

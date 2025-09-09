@@ -41,16 +41,16 @@ run_prediction_rsofun <- function(
       ) |>
         as.data.frame() |>
         # Add sample IDs
-        dplyr::mutate(mcmc_id = 1:n()) |>
-        tidyr::nest(.by = mcmc_id, .key = "pars")
+        dplyr::mutate(posterior_sample_id = 1:n()) |>
+        tidyr::nest(.by = posterior_sample_id, .key = "pars")
   } else {
     # mcmc_posterior$par # these are already precomputed...
     # but more robust to recompute:
     samples_par <- BayesianTools::MAP(mcmc_posterior$mod)$parametersMAP |>
       as.list() |> as_tibble() |>
       # Add sample IDs
-      dplyr::mutate(mcmc_id = 0) |> # mcmc_id == 0 means MAP
-      tidyr::nest(.by = mcmc_id, .key = "pars")
+      dplyr::mutate(posterior_sample_id = 0L) |> # posterior_sample_id == 0 means MAP
+      tidyr::nest(.by = posterior_sample_id, .key = "pars")
   }
 
   # Setup prediction

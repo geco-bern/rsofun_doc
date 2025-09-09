@@ -23,9 +23,8 @@ source(here::here("analysis/00_define_scenarios.R"))
 
 
 # sample posteriors and run model for each sample parameter set
-# renv::run("analysis/04_make-test-train_predictions.R", project = "../rsofun_doc", args = c("out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds", "train", "8000", "200", "8"))
-# renv::run("analysis/04_make-test-train_predictions.R", project = "../rsofun_doc", args = c("out_calib__scen15_DEzs-15000-0iter_8x3chains_on_CPU8x1_continued.rds", "train", "4000", "200", "8"))
-
+# renv::run("analysis/04_make-test-train_predictions.R", project = "../rsofun_doc", args = c("out_calib__scen14_DEzs-35000-0iter_8x3chains_on_CPU8x1_continued.rds", "8000", "200", "8", "3"))
+# renv::run("analysis/04_make-test-train_predictions.R", project = "../rsofun_doc", args = c("out_calib__scen15_DEzs-15000-0iter_8x3chains_on_CPU8x1_continued.rds", "4000", "200", "8", "3"))
 
 # t0 <- Sys.time()
 # # df_predict_s1  <- readRDS("df_predict_s1.RDS")

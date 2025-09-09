@@ -2,7 +2,7 @@
 #SBATCH --job-name="predict_scenTASKID"
 #SBATCH --time=48:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
-#SBATCH --array=95-95            # specifies the slurm array job with the number of tasks
+#SBATCH --array=94-95            # specifies the slurm array job with the number of tasks
 #SBATCH --cpus-per-task=9        # nr of threads, used for shared memory jobs that run locally on a single compute node (default: 1)
 #SBATCH --mem-per-cpu=8G
 #SBATCH --mail-user=your.email@unibe.ch
@@ -31,9 +31,12 @@ module load libxml2/2.12.7-GCCcore-13.3.0
 module load R/4.4.2-gfbf-2024a
 
 ## Continue the Bayesian calibration (MCMC sampling)
-NRUNS=60000      # which MCMC sampling to use
+NRUNS=60000     # which MCMC sampling to use
 NPREDICTIONS=20 # how many samples of posterior to use for predictions
-# Rscript analysis/04_make-test-train_predictions.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "12000" "${NPREDICTIONS}" "8"
-Rscript analysis/04_make-test-train_predictions.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "12000" "${NPREDICTIONS}" "8"
+NERRORS=3      # how many samples of structural error
+
+# Rscript analysis/04_make-test-train_predictions.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${NRUNS}-0iter_8x3chains_on_CPU8x1.rds" "12000" "${NPREDICTIONS}" "8" "${NERRORS}"
+Rscript analysis/04_make-test-train_predictions.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "18000" "${NPREDICTIONS}" "8" "${NERRORS}"
+# TODO: setup for DREAMzs
 
 echo "Finished on: $(date --rfc-3339=seconds)"

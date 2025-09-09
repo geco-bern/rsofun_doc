@@ -366,8 +366,8 @@ if (FALSE){ # This is quite a slow plot:
               #   thin = 60
               #   ) |>
               #   as.data.frame() |>
-              #   dplyr::mutate(mcmc_id = 1:n()) |>
-              #   tidyr::nest(.by = mcmc_id, .key = "pars")
+              #   dplyr::mutate(posterior_sample_id = 1:n()) |>
+              #   tidyr::nest(.by = posterior_sample_id, .key = "pars")
               #
               # run_pmodel <- function(par){
               #   # Function that runs the P-model for a sample of parameters
@@ -407,7 +407,7 @@ if (FALSE){ # This is quite a slow plot:
               # pmodel_runs <- samples_par |>
               #   dplyr::mutate(sim = purrr::map(pars, ~run_pmodel(.x))) |>
               #   # format to obtain 90% credible intervals
-              #   dplyr::select(mcmc_id, sim) |>
+              #   dplyr::select(posterior_sample_id, sim) |>
               #   tidyr::unnest(sim) |>
               #   dplyr::group_by(date) |>
               #   # compute quantiles for each day
@@ -642,7 +642,7 @@ df_predict_s4
 
 # Plot raw predictions
 ## gpp:
-df_hexplot_gpp_s4 <- df_predict_s4 |> filter(mcmc_id %in% c(1,2,3)) |> unnest(sim) |> filter(!is.na(obs)) |> filter(target == "gpp") # This does really not work!
+df_hexplot_gpp_s4 <- df_predict_s4 |> filter(posterior_sample_id %in% c(1,2,3)) |> unnest(sim) |> filter(!is.na(obs)) |> filter(target == "gpp") # This does really not work!
 df_hexplot_gpp_s1 <- df_predict_s1 |> unnest(sim) |> filter(!is.na(obs)) |> filter(target == "gpp")
 df_hexplot_gpp_s0 <- df_predict_s0 |> unnest(sim) |> filter(!is.na(obs)) |> filter(target == "gpp")
 
@@ -679,7 +679,7 @@ ggplot(df_hexplot_others, aes(x=mod_no_err, y=obs)) +
                 browser()
                 # |>
                 #   # format to obtain 90% credible intervals
-                #   dplyr::select(mcmc_id, sim) |>
+                #   dplyr::select(posterior_sample_id, sim) |>
                 #   tidyr::unnest(sim) |>
                 #   dplyr::group_by(date) |>
                 #   # compute quantiles for each day

@@ -8,7 +8,7 @@ plot_predobs_gpp_timeseries <- function(df_predict, N_sample_error = 5, fpath){
   # df_tsplot_gpp <- df_tsplot_gpp |> group_by(sitename) |> slice(1:100) # for development
 
   df_tsplot_gpp_obs <- df_tsplot_gpp |> select(sitename, target, obs_metadata, obs) |> distinct() |> unnest(obs_metadata)
-  df_tsplot_gpp_mod <- df_tsplot_gpp |> select(mcmc_id, sitename, obs_metadata, mod_no_err, err_par_sd) |> unnest(obs_metadata)
+  df_tsplot_gpp_mod <- df_tsplot_gpp |> select(posterior_sample_id, sitename, obs_metadata, mod_no_err, err_par_sd) |> unnest(obs_metadata)
 
   # add observational error:
   # N_samples <- tibble(sample_id = 1:N_sample_error)
