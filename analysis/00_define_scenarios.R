@@ -225,6 +225,29 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$soilm_thetastar <- NULL
       par_to_estimate$soilm_betao <- NULL
     }
+  } else if (scenario %in% c(104,103)){
+    par_to_estimate <- list(
+      kphio              = list(mean    = 0.0479684950570567,   sd    = 9.75104729575593e-05),
+      kphio_par_a        = list(mean    = -0.00179211384220008, sd    = 2.98616456930556e-05),
+      kphio_par_b        = list(mean    = 18.4293950588911,     sd    = 0.102867468875224),
+      soilm_thetastar    = list(mean    = 27.0859346061886,     sd    = 0.762249191490997),
+      soilm_betao        = list(meanlog = -4.65845041863264,    sdlog = 1.31209247435319, endpoint = 1.0), # NOTE: use truncated lognormal!
+      beta_unitcostratio = list(mean = 146.0, sd = 50,  lower = 0.1, upper = 400), # truncated normal
+      tau_acclim         = list(mean = 14,    sd = 8,   lower = 0.1, upper = 60),  # truncated normal
+      kc_jmax            = list(mean = 0.41,  sd = 0.2, lower = 0.1, upper = 1.5), # truncated normal
+      err_gpp            = list(mean = 0.8, sd = 0.5, lower = 0.01, upper = 5), # truncated normal
+      err_bigD13C        = list(mean = 0.8, sd = 0.5, lower = 0.01, upper = 5), # truncated normal
+      err_vj             = list(mean = 0.8, sd = 0.5, lower = 0.01, upper = 5), # truncated normal
+      errbias_bigD13C    = list(mean = 0, sd = 5),
+      errbias_vj         = list(mean = 0, sd = 1)
+    )
+    if(scenario == 103){
+      par_to_estimate$kphio           = list(mean = 0.05,    sd = 0.05,  lower = 0.02, upper = 0.15)
+      par_to_estimate$kphio_par_a     = list(mean = -0.0025, sd = 0.001, lower = -0.004, upper = -0.001)
+      par_to_estimate$kphio_par_b     = list(mean = 20,      sd = 5,    lower = 10, upper = 30)
+      par_to_estimate$soilm_thetastar = list(mean = 40,      sd = 20,   lower = 1, upper = 250) # NOTE: scenario 0 was previously: 4.32375, 259.425, 432.375
+      par_to_estimate$soilm_betao     = list(meanlog = -2, sdlog = 1, endpoint = 1.0) # NOTE: use truncated lognormal!
+    }
   } else {
     stop(sprintf("Unsupported scenario: %d", scenario))
   }
@@ -264,7 +287,7 @@ setup_rsofun_calibration <- function(scenario){
       # filter(gpp) |> 
       # nest(targets = c(vj, bigD13C, gpp))
 
-  } else if (scenario %in% c(93,94,95, # the 90s (90,91,92,93,94,95,96,97,98) are reruns from 2025-09-06
+  } else if (scenario %in% c(103,104,93,94,95, # the 90s (90,91,92,93,94,95,96,97,98) are reruns from 2025-09-06
                              83,84,85, # the 80s (80,81,82,83,84,85,86,87,88) are reruns from 2025-09-05
                              73,74,75, # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
                              3,4,13,14,15)) { # GPP and traits data
