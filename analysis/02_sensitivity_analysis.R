@@ -7,12 +7,12 @@
 # 2. iterations of Morris sensitivity analysis
 
 # Example:
-# Rscript -e 'renv::run("analysis/92_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 10))'
-# Rscript -e 'renv::run("analysis/92_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 100))'
-# Rscript -e 'renv::run("analysis/92_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 210))'
-# Rscript -e 'renv::run("analysis/92_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 220))'
-# Rscript -e 'renv::run("analysis/92_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 500))'
-# Rscript -e 'renv::run("analysis/92_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 5000))'
+# Rscript -e 'renv::run("analysis/02_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 10))'
+# Rscript -e 'renv::run("analysis/02_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 160))'
+# Rscript -e 'renv::run("analysis/02_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 210))'
+# Rscript -e 'renv::run("analysis/02_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 220))'
+# Rscript -e 'renv::run("analysis/02_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 500))'
+# Rscript -e 'renv::run("analysis/02_sensitivity_analysis.R", project = "../rsofun_doc", args = c(90, 5000))'
 
 # # When using this script directly from RStudio, not from the shell, specify
 # args <- c("94", "1000")
@@ -55,47 +55,11 @@ library(BayesianTools)
 source(here::here("R/sensitivity_sofun_serialized.R"))
 source(here::here("R/run_sensitivity_rsofun.R"), echo = TRUE)
 
+outpath <- file.path(rsofun_doc_output_path,"data")
+
 # run sensitivitiy with requested arguments
 res <- run_sensitivity_rsofun(
   curr_calibration_scenario = args[["scenario"]],
-  iterations = args[["iterations"]]
+  iterations                = args[["iterations"]],
+  outpath                   = outpath
 )
-
-
-
-
-stop("Finished script")
-res <- run_sensitivity_rsofun(curr_calibration_scenario = 90, iterations = 150) # for development only
-res$morrisplot %+% filter(res$morrisplot$data, !grepl("^err_",parameter))
-
-        #
-        # morris_stats <- data.frame(
-        #   parameter = res$raw_in$names,
-        #   mu.star   = apply(abs(res$raw_out$ee), 2, mean, na.rm = T),
-        #   sigma     = apply(res$raw_out$ee,      2, sd,   na.rm = T)
-        #   ) |> arrange( mu.star )
-        #
-        # morris_stats |>
-        #   tidyr::pivot_longer( -parameter, names_to = "variable", values_to = "value") |>
-        #   ggplot(aes(
-        #     reorder(parameter, value),
-        #     value,
-        #     fill = variable),
-        #     color = NA) +
-        #   geom_bar(position = position_dodge(), stat = 'identity') +
-        #   # layout
-        #   coord_flip() +     # make horizontal
-        #   scale_fill_manual(
-        #     "",
-        #     labels = c('mu.star' = expression(mu * "*"),
-        #                'sigma' = expression(sigma)),
-        #     values = c('mu.star' = "#29a274ff",
-        #                'sigma' = "#777055ff")) +
-        #   theme_classic() +
-        #   theme(
-        #     axis.text = element_text(size = 6),
-        #     axis.title = element_blank(),
-        #     legend.position = "inside",
-        #     legend.position.inside = c(0.95, 0.05),
-        #     legend.justification = c(1.0, 0),
-        #   )

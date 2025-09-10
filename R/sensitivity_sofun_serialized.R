@@ -4,7 +4,7 @@ sensitivity_sofun_serialized <- function(
     obs,
     settings,
     suffix = "",        # for storing results (rds and plot)
-    outpath,            # for storing restults (rds only; plots are hardcoded to ./fig)
+    outpath             # for storing results (rds only; plots are hardcoded to './fig')
     # ...
 ){
   print(paste0(Sys.time(),": start sensitivity analyisis of ", suffix))

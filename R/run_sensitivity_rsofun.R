@@ -5,7 +5,8 @@ source(here::here("analysis/00_define_scenarios.R"))
 run_sensitivity_rsofun <- function(
     curr_calibration_scenario,
     # morris sensitivity setup
-    iterations = 3
+    iterations = 3,
+    outpath = outpath
   ){
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
@@ -52,8 +53,9 @@ run_sensitivity_rsofun <- function(
     drivers  = select(res$drivobs, sitename, run_model, params_siml, site_info, forcing),
     obs      = select(res$drivobs, sitename, run_model, targets, data),
     settings = sensitivity_sofun_settings,
-    suffix = suffix_str       # for storing results (rds and plot)
-  ) # this stores the whole out_morris in an rds object identified by "suffix_str" (into outpath UNUSED)
+    suffix   = suffix_str,       # for storing results
+    outpath  = outpath           # for storing results
+  ) # this stores the whole out_morris in an rds object identified by "suffix_str" (into outpath)
 
   return(out_morris)
 }
