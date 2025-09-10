@@ -13,7 +13,7 @@ run_mcmc_rsofun <- function(
     # parallelization:
     n_parallel_independent  = 3,      # number of cores for parallelization of independent chains     https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#running-several-mcmcs-in-parallel
     n_parallel_within_sampler = FALSE,# number of cores for parallelization of within-sampler chains  https://cran.r-project.org/web/packages/BayesianTools/vignettes/InterfacingAModel.html#within-sampler-parallelization as well as https://cran.r-project.org/web/packages/BayesianTools/vignettes/BayesianTools.html#reference-on-creating-likelihoods
-    outpath = here::here("data"), logpath = ""
+    outpath = here::here("data"), logpath = "", sampler = "DEzs"
 ){
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
@@ -35,7 +35,7 @@ run_mcmc_rsofun <- function(
     method = "BayesianTools",
     metric = cost_likelihood_pmodel_bigD13C_vj_gpp,
     control = list(
-      sampler = "DEzs",
+      sampler = sampler,
       settings = list(
         burnin     = burnin,                 # 10000,
         iterations = iterations,             # 50000,

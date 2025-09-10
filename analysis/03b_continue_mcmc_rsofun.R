@@ -13,6 +13,7 @@
 
 # # When using this script directly from RStudio, not from the shell, specify
 # args <- c("out_calib__scen14_DEzs-10000-0iter_8x3chains_on_CPU8x1.rds", "29")
+# args <- c("out_calib__scen94_DREAMzs-20000-0iter_8x3chains_on_CPU8x1.rds", "29")
 
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)
@@ -76,8 +77,8 @@ continue_mcmc_rsofun <- function(
   n_parallel_independent  <- as.integer(result[[1,"cores"]])
   n_parallel_within_sampler <- FALSE; stopifnot(as.integer(result[[1,"coresinner"]])==1)
 
-  stopifnot("DEzs" == out_calib_to_continue$mod[[1]]$settings$sampler)
-  stopifnot("DEzs" == result[[1,"sampler"]])
+  stopifnot(out_calib_to_continue$mod[[1]]$settings$sampler %in% c("DEzs","DREAMzs")) # TODO: setup for DREAMzs
+  stopifnot(result[[1,"sampler"]] %in% c("DEzs","DREAMzs"))                           # TODO: setup for DREAMzs
 
   # prepare new output:
   iterations_out <- iterations_prev + iterations_to_add
