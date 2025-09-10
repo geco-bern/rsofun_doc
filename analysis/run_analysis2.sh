@@ -29,35 +29,39 @@ module load GCC/13.3.0
 module load libxml2/2.12.7-GCCcore-13.3.0
 module load R/4.4.2-gfbf-2024a
 
+
+DREAMZS_OR_DEZS="DEzs"    # either DREAMzs or DEzs # needed for the inital run
+# DREAMZS_OR_DEZS="DREAMzs" # either DREAMzs or DEzs # needed for the inital run
+
 ## Run the Bayesian calibration (MCMC sampling)
 PREV_NRUNS=0
 NEW_NRUNS=20000  # how many samples to add
 echo "Starting Stage 1: starting with $NEW_RUNS"
-Rscript analysis/03_bayesian_calibration.R $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
+Rscript "analysis/03_bayesian_calibration_${DREAMZS_OR_DEZS}.R" $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
 echo "Stage 1 reached on on: $(date --rfc-3339=seconds)"
 
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
 NEW_NRUNS=20000       # how many samples to add
 echo "Starting Stage 2: adding $NEW_RUNS runs to $PREV_NRUNS"
-Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1.rds" "${NEW_NRUNS}"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1.rds" "${NEW_NRUNS}"
 echo "Stage 2 reached on on: $(date --rfc-3339=seconds)"
 
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
 NEW_NRUNS=20000  # how many samples to add
 echo "Starting Stage 3: adding $NEW_RUNS runs to $PREV_NRUNS"
-Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
 echo "Stage 3 reached on on: $(date --rfc-3339=seconds)"
 
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
 NEW_NRUNS=20000  # how many samples to add
 echo "Starting Stage 4: adding $NEW_RUNS runs to $PREV_NRUNS"
-Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
 echo "Stage 4 reached on on: $(date --rfc-3339=seconds)"
 
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
 NEW_NRUNS=20000  # how many samples to add
 echo "Starting Stage 5: adding $NEW_RUNS runs to $PREV_NRUNS"
-Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DEzs-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
 echo "Stage 5 reached on on: $(date --rfc-3339=seconds)"
 
 echo "Finished on: $(date --rfc-3339=seconds)"

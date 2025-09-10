@@ -30,7 +30,7 @@ module load libxml2/2.12.7-GCCcore-13.3.0
 module load R/4.4.2-gfbf-2024a
 
 ## Run the Bayesian calibration (MCMC sampling)
-# Rscript analysis/03_bayesian_calibration.R 75 0 25000 8
-Rscript analysis/03_bayesian_calibration.R $SLURM_ARRAY_TASK_ID 0 50000 8
+# Rscript analysis/03_bayesian_calibration_DEzs.R 75 0 25000 8
+Rscript analysis/03_bayesian_calibration_DEzs.R $SLURM_ARRAY_TASK_ID 0 50000 8
 
 echo "Finished on: $(date --rfc-3339=seconds)"
