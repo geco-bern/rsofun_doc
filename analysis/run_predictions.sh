@@ -2,7 +2,7 @@
 #SBATCH --job-name="predict_scenTASKID"
 #SBATCH --time=48:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
-#SBATCH --array=94-95            # specifies the slurm array job with the number of tasks
+#SBATCH --array=90,91,92,93,94,95 # specifies the slurm array job with the number of tasks
 #SBATCH --cpus-per-task=9        # nr of threads, used for shared memory jobs that run locally on a single compute node (default: 1)
 #SBATCH --mem-per-cpu=8G
 #SBATCH --mail-user=your.email@unibe.ch

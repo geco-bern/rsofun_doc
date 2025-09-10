@@ -1,87 +1,90 @@
 # Plot raw predictions
 ## gpp:
-plot_predobs_gpp_timeseries <- function(df_predict, N_sample_error = 5, fpath){
-  require(dtplyr)
-  require(data.table)
-  df_tsplot_gpp <- df_predict |>
-    unnest(sim) |> filter(target == "gpp") |> rename(any_of(c("err_par_sd" = "err_par")))
-  # df_tsplot_gpp <- df_tsplot_gpp |> group_by(sitename) |> slice(1:100) # for development
+#ts_to_plot <- df_B3_timeseries$gpp |> filter(Scenario == "1", dataset == "train"); fpath = here::here("fig","fig_BXY_predObs_gppTimeSeries_s1_train.png")
+plot_predobs_gpp_timeseries3 <- function(ts_to_plot, fpath){
 
-  df_tsplot_gpp_obs <- df_tsplot_gpp |> select(sitename, target, obs_metadata, obs) |> distinct() |> unnest(obs_metadata)
-  df_tsplot_gpp_mod <- df_tsplot_gpp |> select(posterior_sample_id, sitename, obs_metadata, mod_no_err, err_par_sd) |> unnest(obs_metadata)
+  # separate obs
+  df_tsplot_gpp_obs <- ts_to_plot |>
+    select(sitename, target, date, obs, Scenario, dataset) |>
+    distinct()
 
-  # add observational error:
-  # N_samples <- tibble(sample_id = 1:N_sample_error)
-  dt_tsplot_gpp_mod_sampled <- df_tsplot_gpp_mod |>
-    lazy_dt() |>   # use lazy data.table for speed
-    group_by(sitename, err_par_sd) |>
-    # following line is basically a cross_join:
-    mutate(Nrow=n()) |> slice(rep(1:.N, each = N_sample_error)) |> mutate(sample_id = rep(1:N_sample_error, times = unique(Nrow))) |> select(-Nrow) |>
-    # sample the error
-    mutate(err_sample   = rnorm(n(), sd = err_par_sd),
-           bias = 0,
-           mod_with_bias        = mod_no_err - bias,
-           mod_with_biasAnderr  = mod_no_err - bias + err_sample)
-
-  dt_tsplot_gpp_mod_stat <- dt_tsplot_gpp_mod_sampled |>
-    group_by(sitename, date) |>
+  # compute stats of sampled distributions before plotting them
+  tibble_to_plot <- ts_to_plot |>
+    filter(target == "gpp") |>
+    lazy_dt() |>
+    group_by(Scenario, dataset, parameters, sitename, target, date, model_output_type, y_facet) |>
     summarise(#mod_no_err_p50 = quantile(mod_no_err, 0.5),
-              mod_no_err_p50 = quantile(mod_with_bias, 0.5),
-              mod_no_err_p95 = quantile(mod_with_bias, 0.95),
-              mod_no_err_p05 = quantile(mod_with_bias, 0.05),
-              mod_with_err_p95  = quantile(mod_with_biasAnderr, 0.95),
-              mod_with_err_p05  = quantile(mod_with_biasAnderr, 0.05)
-    )
+      modelled_p50 = quantile(modelled, 0.5),
+      modelled_p95 = quantile(modelled, 0.95),
+      modelled_p05 = quantile(modelled, 0.05)
+    ) |>
+    as_tibble() |>
+    # and bind back obsevations
+    left_join(
+      df_tsplot_gpp_obs,
+      by = join_by(sitename, target, date, Scenario, dataset))
 
-  tibble_to_plot <- as_tibble(dt_tsplot_gpp_mod_stat)
-  tibble_to_plot <- left_join(tibble_to_plot, df_tsplot_gpp_obs, by = join_by(sitename, date))
-  # tibble_to_plot|>filter(is.na(mod_no_err_p50))
-  # tibble_to_plot|>filter(sitename == "GF-Guy") |> View()
-  gg <- ggplot(tibble_to_plot, aes(x=date, y=mod_no_err_p50)) +
+  n_sites <- tibble_to_plot$sitename |> unique() |> length()
+
+  pl_timeseries_gpp <- ggplot(
+    data = tibble_to_plot,
+    mapping = aes(x=date, y=modelled_p50)) +
     # Observations underneath (following Cameron 2022)
-    geom_point(aes(y=obs), color = "black", shape = 4, alpha= 0.5, size=0.5) +
+    geom_point(
+      data = function(df) df |> select(-parameters, -model_output_type, -y_facet, -starts_with("modelled")) |> distinct(),
+      # data = df_tsplot_gpp_obs, # variant 1, but does not allow %+%-replacement of underlying data
+      mapping = aes(y=obs), color = "black", shape = 4, alpha= 0.5, size=0.5) +
     # Structural uncertainty (including error model), a.k.a prediction band
-    geom_ribbon(alpha=0.5, aes(ymin = mod_with_err_p05, ymax = mod_with_err_p95, fill = "Structural uncertainty")) +
+    geom_ribbon(
+      alpha=0.5,
+      data = function(df) df |> filter(model_output_type == "with struct. uncert."),
+      mapping = aes(ymin = modelled_p05, ymax = modelled_p95, fill = "Post.+Error")) +
     # Parametric uncertainty (without error model, only parameter sampling), a.k.a confidence band
-    geom_ribbon(alpha=0.5, aes(ymin = mod_no_err_p05,   ymax = mod_no_err_p95,   fill = "Parameter uncertainty")) +
-    geom_line(aes(y = mod_no_err_p50, color = "Parameter uncertainty")) +
+    geom_ribbon(
+      alpha=0.5,
+      data = function(df) df |> filter(model_output_type == "rsofun"),
+      mapping = aes(ymin = modelled_p05, ymax = modelled_p95, fill = "Posterior")) +
+    geom_line(
+      data = function(df) df |> filter(model_output_type == "rsofun"),
+      mapping = aes(y = modelled_p50, color = "Posterior")) +
     # layout
     facet_wrap(~sitename, scales = "free_x") +
     theme_classic() + theme(legend.position = "bottom") +
     labs(
-      x = 'Date',
+      x = NULL, #'Date',
       y = expression(paste("GPP (g C m"^-2, "s"^-1, ")"))
     ) +
     scale_fill_manual(NULL,aesthetics = c("colour", "fill"),
-                      breaks = c("Structural uncertainty",
-                                 "Parameter uncertainty"),
-                      values = c("moccasin",  # colors from Cameron 2022
-                                 "#99333380") # colors from Cameron 2022
+                      breaks = c("Post.+Error",
+                                 "Posterior"),
+                      # values = c("moccasin",  # colors from Cameron 2022
+                      #            "#99333380") # colors from Cameron 2022
+                      values = c("Posterior"=t_col("#29a274ff"),
+                                 "Post.+Error" = t_col("#777055ff"))
                       # values = c(t_col("tomato", 50),
                       #            t_col("#1b9e77", 0))
-    )
+    ) +
+    scale_x_date(date_breaks = "12 months", date_labels = "%Y-%m")
 
   # save some variants of this plot:
-  ggsave(gsub("fig_BXX", "figB3a", fpath),
-         plot = gg + facet_wrap(~sitename, scales = "free_x", ncol = 2),
+  # TODO: make this conditional on n_sites
+  ggsave(gsub("fig_BXY", "fig_B3a", fpath),
+         plot = pl_timeseries_gpp + facet_wrap(~sitename, scales = "free_x", ncol = 2),
          width=7.2, height=7.2*1.5, units = "in", scale = 1)
-  ggsave(gsub("fig_BXX", "figB3b", fpath),
-         plot = gg %+% (gg$data |> group_by(sitename) |> slice(1:(4*365))) +
+  ggsave(gsub("fig_BXY", "fig_B3b", fpath),
+         plot = pl_timeseries_gpp %+% (pl_timeseries_gpp$data |> group_by(sitename) |> slice(1:(4*365))) +
            facet_wrap(~sitename, scales = "free_x", ncol = 2),
          width=7.2, height=7.2*1.5, units = "in", scale = 1)
-  ggsave(gsub("fig_BXX", "figB3c", fpath),
-         plot = gg %+% (gg$data |> filter(date >= ymd("2002-01-01"),
-                                                          date <= ymd("2005-12-31"))) +
+  ggsave(gsub("fig_BXY", "fig_B3c", fpath),
+         plot = pl_timeseries_gpp %+% (pl_timeseries_gpp$data |> filter(date >= lubridate::ymd("2002-01-01"),
+                                                                        date <= lubridate::ymd("2005-12-31"))) +
            facet_wrap(~sitename, scales = "free_x", ncol = 2),
          width=7.2, height=7.2*1.5, units = "in", scale = 1)
-  ggsave(gsub("fig_BXX", "figB3d", fpath),
-         plot = gg %+% (gg$data |> filter(date >= ymd("2012-01-01"),
-                                                          date <= ymd("2015-12-31"))) +
+  ggsave(gsub("fig_BXY", "fig_B3d", fpath),
+         plot = pl_timeseries_gpp %+% (pl_timeseries_gpp$data |> filter(date >= lubridate::ymd("2012-01-01"),
+                                                                        date <= lubridate::ymd("2015-12-31"))) +
            facet_wrap(~sitename, scales = "free_x", ncol = 2),
          width=7.2, height=7.2*1.5, units = "in", scale = 1)
-
-  # return full plot
-  return(gg)
 }
 
 plot_predobs_gpp_scatter <- function(df_predict){
