@@ -1,5 +1,6 @@
 source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
 
+# Runs the requested model predictions and returns results
 predict_sofun_parallelized <- function(
     drivers,
     obs,

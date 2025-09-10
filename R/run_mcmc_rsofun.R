@@ -27,8 +27,6 @@ run_mcmc_rsofun <- function(
   source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = FALSE)
   # loads:
   #   cost_likelihood_pmodel_bigD13C_vj_gpp
-  #   cost_likelihood_pmodel_bigD13C_vj_gpp_v2
-  #   cost_likelihood_pmodel_bigD13C_vj_gpp_v3
 
   # Setup MCMC
   calib_sofun_settings <- list(

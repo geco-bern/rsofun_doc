@@ -1,3 +1,4 @@
+# Runs the requested model calibration, stores to data-folder and returns results
 calib_sofun_parallelized <- function(
     drivers,
     obs,
