@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 
+# TO BE DELETED ONCE NO JOBS ARE RUNNING, since it is replaced by DEzs
+
 # Script running Bayesian calibration
 
 # script is called with three arguments for sampling:
@@ -12,7 +14,7 @@
 # and argument ncores in the script.
 
 # Example:
-# Rscript -e 'renv::run("analysis/03_bayesian_calibration.R", project = "../rsofun_doc", args = c(3,11,51))'
+# Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(3,11,51))'
 
 # # When using this script directly from RStudio, not from the shell, specify
 # args <- c("3", "11", "51", "3")

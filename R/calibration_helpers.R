@@ -92,17 +92,17 @@ plot_prior_density <- function(priors, parNames, n=1000){
 
   # Create data frame for plotting
   df_plot <- rbind(
-    # data.frame(posteriorMat, distrib = "posterior"),
-    data.frame(priorMat, distrib = "prior")
+    # data.frame(posteriorMat, par_estimation = "posterior"),
+    data.frame(priorMat, par_estimation = "prior")
   )
-  df_plot$distrib <- as.factor(df_plot$distrib)
+  df_plot$par_estimation <- as.factor(df_plot$par_estimation)
 
   # Plot with facet wrap
   df_plot |> tidyr::tibble() |>
-    tidyr::pivot_longer(-c(distrib), names_to = "variable") |>
+    tidyr::pivot_longer(-c(par_estimation), names_to = "variable") |>
     dplyr::mutate(variable = forcats::fct_inorder(variable)) |> # order by appearance
     ggplot(
-      aes(x = value, fill = distrib)
+      aes(x = value, fill = par_estimation)
     ) +
     geom_density() +
     theme_classic() +
@@ -119,10 +119,10 @@ plot_prior_density <- function(priors, parNames, n=1000){
 #
 #   # Create data frame for plotting
 #   df_plot <- rbind(
-#     # data.frame(posteriorMat, distrib = "posterior"),
-#     data.frame(priorMat, distrib = "prior")
+#     # data.frame(posteriorMat, par_estimation = "posterior"),
+#     data.frame(priorMat, par_estimation = "prior")
 #   )
-#   df_plot$distrib <- as.factor(df_plot$distrib)
+#   df_plot$par_estimation <- as.factor(df_plot$par_estimation)
 #
 #   library(GGally)
 #   library(ggplot2)
@@ -133,7 +133,7 @@ plot_prior_density <- function(priors, parNames, n=1000){
 #   }
 #
 #   # make scatter plot matrix only for prior
-#   dat_to_plot <- tidyr::tibble(df_plot) |> dplyr::filter(distrib == "prior") |> dplyr::select(-distrib)
+#   dat_to_plot <- tidyr::tibble(df_plot) |> dplyr::filter(par_estimation == "prior") |> dplyr::select(-par_estimation)
 #   p <- ggpairs(dat_to_plot,
 #                lower = list(continuous = my_hex_fn)) +
 #     theme_classic() #+
@@ -157,17 +157,17 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
 
   # Create data frame for plotting
   df_plot <- rbind(
-    data.frame(posteriorMat, distrib = "posterior"),
-    data.frame(priorMat, distrib = "prior")
+    data.frame(posteriorMat, par_estimation = "posterior"),
+    data.frame(priorMat, par_estimation = "prior")
   )
-  df_plot$distrib <- as.factor(df_plot$distrib)
+  df_plot$par_estimation <- as.factor(df_plot$par_estimation)
 
   # Plot with facet wrap
   gg <- df_plot |> tibble() |>
-    pivot_longer(-c(distrib), names_to = "variable") |>
+    pivot_longer(-c(par_estimation), names_to = "variable") |>
     mutate(variable = forcats::fct_inorder(variable)) |> # order by appearance
     ggplot(
-      aes(x = value, fill = distrib)
+      aes(x = value, fill = par_estimation)
     ) +
     geom_density() +
     theme_classic() +
@@ -183,7 +183,13 @@ plot_prior_posterior_density <- function(x, burnin_to_skip){
   return(gg)
 }
 
-plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip, ridges = FALSE, add_MAP = FALSE){
+plot_prior_posterior_density_compare <- function(
+    named_list_scen,
+    burnin_to_skip,
+    ridges = FALSE,
+    add_MAP = FALSE,
+    correct_scenarios = c("4"=94, "3"=93, "2"=92, "1" = 91, "0" = 90)  # this is for retrieval of correct scenario definition, despite renaming
+  ){
   require(BayesianTools)
   require(dplyr)
   require(tidyr)
@@ -207,21 +213,57 @@ plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip
     named_list_scen[!grepl("[Pp]rior", names(named_list_scen))] |> rev(), # rev is for to have later scenarios with more parameters determine order
     function(x){as_tibble(as.list(BayesianTools::MAP(x)$parametersMAP))}
   )
-
-
+  # add fixed parameter values
+  stopifnot(all(names(MAP_list) %in% names(correct_scenarios)))
+  fixed_list <- lapply(names(MAP_list), function(scenario_name){
+    curr_scen <- correct_scenarios[scenario_name] # this basically undoes manual renaming that was applied for plotting purposes
+    as_tibble(setup_rsofun_calibration(curr_scen)$par_fixed)
+  })
+  names(fixed_list) <- names(MAP_list) # ensure names are there
 
   # Create data frame for plotting
-  df_plot <- bind_rows(dplyr::bind_rows(priorMat_list,     .id = "distrib"),
-                       dplyr::bind_rows(posteriorMat_list, .id = "distrib"),
-                       dplyr::bind_rows(MAP_list, .id = "distrib") |> mutate(distrib = paste0("MAP ", distrib))) |>
-    pivot_longer(-c(distrib), names_to = "variable") |>
-    mutate(distrib  = forcats::fct_inorder(distrib),  # order by appearance
+  df_plot <- bind_rows(dplyr::bind_rows(priorMat_list,     .id = "par_estimation"),
+                       dplyr::bind_rows(posteriorMat_list, .id = "par_estimation"),
+                       dplyr::bind_rows(MAP_list,          .id = "par_estimation") |> mutate(par_estimation = paste0("MAP ", par_estimation)),
+                       dplyr::bind_rows(fixed_list,        .id = "par_estimation") |> mutate(par_estimation = paste0("Fixed ", par_estimation)) |>
+                         select(-any_of("rd_to_vcmax")) # HARDCODED do not plot rd_to_vcmax
+                       ) |>
+    pivot_longer(-c(par_estimation), names_to = "variable") |>
+    mutate(par_estimation  = forcats::fct_inorder(par_estimation),  # order by appearance
            variable = forcats::fct_inorder(variable)) # order by appearance
 
   # Plot with facet wrap
-  if(ridges == FALSE){
-    gg <- ggplot(filter(df_plot, !grepl("MAP ", distrib)),
-                 aes(x = value, color = distrib)) +
+  if(ridges == TRUE){
+    df_plot2 <- df_plot |>
+      mutate(Scenario = as.factor(as.integer(gsub("((Prior)|(MAP)|(Fixed)) ", "", par_estimation)))) |>
+      mutate(Distribution = case_when(#grepl("Prior ", par_estimation) ~ "Prior",
+                                      #grepl("MAP ",   par_estimation) ~ "MAP",
+                                      grepl("Fixed ", par_estimation) ~ "Fixed",
+                                      TRUE                            ~ "Posterior"))
+    gg <- ggplot(df_plot2, aes(x=value, y=Scenario)) +
+      theme_classic() +
+      geom_density_ridges(
+        data =  df_plot2 |> filter(!grepl("((MAP)|(Fixed)) ", par_estimation)),
+        mapping = aes(fill = Distribution)) +
+      {if (add_MAP) geom_segment(
+        data = df_plot2 |> filter(grepl("MAP ", par_estimation)) |> filter(!is.na(value)),
+        mapping = aes(yend = as.integer(Scenario) - 0.6, color = Distribution), # minus (-) because of scale reverse
+        key_glyph = "vline", linetype = "2121")} + # "dashed"
+      {if (add_MAP) geom_segment(
+        data = df_plot2 |> filter(grepl("Fixed ", par_estimation)) |> filter(!is.na(value)),
+        mapping = aes(yend = as.integer(Scenario) - 0.6, color = Distribution), # minus (-) because of scale reverse
+        key_glyph = "vline", linetype = "solid")} +
+      # layout:
+      scale_y_discrete(limits = rev) +
+      facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
+      # scale_y_discrete(limits=rev) + # to have scenario 1 on top and 4 at bottom
+      theme(legend.position = "bottom") + labs(x=NULL) +
+      scale_fill_manual(NULL, aesthetics = c("fill","colour"),
+                        values = c("Posterior"="#29a274ff", "Prior" = t_col("#777055ff"),  # GECO colors
+                                   "MAP"      = "black",    "Fixed" = "black"))
+  } else {
+    gg <- ggplot(filter(df_plot, !grepl("MAP ", par_estimation)),
+                 aes(x = value, color = par_estimation)) +
       theme_classic() +
       # variant 1: density:
       # geom_density()
@@ -233,26 +275,6 @@ plot_prior_posterior_density_compare <- function(named_list_scen, burnin_to_skip
       facet_wrap( ~ variable , nrow = 2, scales = "free") +
       theme(legend.position = "bottom") +
       labs(x="Parameter value")
-  } else {
-    df_plot2 <- df_plot |>
-      mutate(Scenario = as.factor(as.integer(gsub("((Prior)|(MAP)) ", "", distrib)))) |>
-      mutate(Distribution = case_when(grepl("Prior ", distrib) ~ "Prior",
-                                      grepl("MAP ", distrib)   ~ "MAP",
-                                      TRUE                     ~ "Posterior"))
-    gg <- ggplot(df_plot2 |> filter(!grepl("MAP ", distrib)),
-                 aes(x=value, y=Scenario)) +
-      theme_classic() +
-      geom_density_ridges(aes(fill = Distribution)) +
-      {if (add_MAP) geom_segment(data = df_plot2 |> filter(grepl("MAP ", distrib)),
-                                 mapping = aes(yend = as.integer(Scenario) + 0.6,
-                                               color = Distribution),
-                                 key_glyph = "vline", linetype = "2121")} + # "dashed"
-      # layout:
-      facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
-      # scale_y_discrete(limits=rev) + # to have scenario 1 on top and 4 at bottom
-      theme(legend.position = "bottom") + labs(x=NULL) +
-      scale_fill_manual(NULL, values = c("Posterior"="#29a274ff", "Prior" = t_col("#777055ff"),  # GECO colors
-                                         "MAP" = "black"), aesthetics = c("fill","colour"))
   }
   return(gg)
 }
@@ -273,7 +295,7 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, burnin_to_ski
     }) |>
     bind_rows(.id = "chain_id") |>
     pivot_longer(-c(iteration, chain_id), names_to = "variable") |>
-    # mark inner and outer chains (assumes DEzs):
+    # mark inner and outer chains (assumes DEzs): # TODO: setup for DREAMzs
     mutate(outerChain = as.factor(ceiling(as.numeric(chain_id)/3)),
            innerChain = (as.numeric(chain_id)+2)%%3 + 1,
            innerChain_str = letters[innerChain],

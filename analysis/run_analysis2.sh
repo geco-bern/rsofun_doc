@@ -1,15 +1,15 @@
 #! /usr/bin/bash -l
-#SBATCH --job-name="calib_scenTASKID"
+#SBATCH --job-name="cal_5x20k"
 #SBATCH --time=169:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
-#SBATCH --array=103-104            # specifies the slurm array job with the number of tasks
+#SBATCH --array=96-98            # specifies the slurm array job with the number of tasks
 #SBATCH --cpus-per-task=9        # nr of threads, used for shared memory jobs that run locally on a single compute node (default: 1)
 #SBATCH --mail-user=your.email@unibe.ch
 #SBATCH --mail-type=none                     # when do you want to get notified: none, all, begin, end, fail, requeue, array_tasks
 #SBATCH --chdir=GitHub/geco-bern/rsofun_doc  # define here the working directory which contains your R-script, and where the output will be written to.
 #SBATCH --output=slurm-logs/slurm-%x.%j.txt  ###S-B-A-T-C-H --error=slurm-logs/slurm-%x.%j_err.txt
 
-# run this as: xx24axxx@submit04:~$ sbatch GitHub/geco-bern/rsofun_doc/analysis/run_analysis.sh
+# run this as: xx24axxx@submit04:~$ sbatch GitHub/geco-bern/rsofun_doc/analysis/run_analysis2.sh
 # check with:  squeue --partition="icpu-stocker" --states="all" -o "%.23i %.9P %.8j %.8u %.8T %.11M %.11l %.6D %.3C %.11m %8z %20R %.19V %16p %o"
 
 export SBATCH_EXPORT=NONE    # source: https://hpc-unibe-ch.github.io/slurm/submission.html#exportnone
@@ -30,8 +30,8 @@ module load libxml2/2.12.7-GCCcore-13.3.0
 module load R/4.4.2-gfbf-2024a
 
 
-DREAMZS_OR_DEZS="DEzs"    # either DREAMzs or DEzs # needed for the inital run
-# DREAMZS_OR_DEZS="DREAMzs" # either DREAMzs or DEzs # needed for the inital run
+# DREAMZS_OR_DEZS="DEzs"    # either DREAMzs or DEzs # needed for the inital run
+DREAMZS_OR_DEZS="DREAMzs" # either DREAMzs or DEzs # needed for the inital run
 
 ## Run the Bayesian calibration (MCMC sampling)
 PREV_NRUNS=0

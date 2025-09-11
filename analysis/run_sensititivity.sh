@@ -1,8 +1,8 @@
 #! /usr/bin/bash -l
-#SBATCH --job-name="sens"
+#SBATCH --job-name="SA_200-500-1k"
 #SBATCH --time=169:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
-#SBATCH --array=90-93,96,97,98            # specifies the slurm array job with the number of tasks
+#SBATCH --array=90-93,96,97      # specifies the slurm array job with the number of tasks
 #SBATCH --cpus-per-task=9        # nr of threads, used for shared memory jobs that run locally on a single compute node (default: 1)
 #SBATCH --mail-user=your.email@unibe.ch
 #SBATCH --mail-type=none                     # when do you want to get notified: none, all, begin, end, fail, requeue, array_tasks
