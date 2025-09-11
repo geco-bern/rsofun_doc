@@ -5,16 +5,15 @@ sensitivity_sofun_serialized <- function(
     settings,
     suffix = "",        # for storing results (rds and plot)
     outpath             # for storing results (rds only; plots are hardcoded to './fig')
-    # ...
 ){
-  print(paste0(Sys.time(),": start sensitivity analyisis of ", suffix))
+  print(paste0(Sys.time(),": start sensitivity analysis of ", suffix))
   #--- Bayesiantools ----
 
   ## Preprocess: ----
-  # parse prior distributions of parameters
-  parnames <- names(settings$par)
-  source(here::here("R/createMixedPrior.R"))
-  priors  <- createMixedPrior(settings$par)
+  # parse parameters ranges to sample with senstivitiy analysis
+  parnames <- settings$par_ranges$parameter_name
+  binf_arg <- settings$par_ranges$lower
+  bsup_arg <- settings$par_ranges$upper
 
   # Your external data
   # drivers
@@ -40,54 +39,19 @@ sensitivity_sofun_serialized <- function(
   ## Run the sensitivity: ----
   start_time <- Sys.time()
 
-  # if (settings$control$n_parallel_independent > 1){ # parallel sensitivity analysis:
-  #   stop("Parallel sensitivity not implemented")
-  # } else { # sequential sensitivity analysis:
-
-  # setup the bayesian sampling
+  # setup the bayesian sampling as a way to define the likelihood as target function for sensitivity::morris()
   morrisSetup <- createBayesianSetup(
-    likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp),# , ...),
-    prior      = priors,
+    likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp),
+    prior      = NULL,
+    lower      = binf_arg,
+    upper      = bsup_arg,
     names      = parnames,
     parallel   = FALSE) # TODO...
-
-  # define lower and upper limit of parameters: 'binf_arg' and 'bsup_arg'
-  #    this behavior is defined by the value of `settings$control$par_ranges`
-  #    it can either be the string "prior" or then a data.frame with column names:
-  #    c("parameter_name", "lower", "upper") that contains the ranges to all parameters
-  stopifnot(
-    (is.character(settings$control$par_ranges) && settings$control$par_ranges == "prior") ||
-    (is.data.frame(settings$control$par_ranges) && all(names(settings$control$par_ranges) %in% c("parameter_name", "lower", "upper")))
-  )
-
-  if (is.character(settings$control$par_ranges) && settings$control$par_ranges == "prior"){
-    # get range from prior
-    binf_bsup <- getPriorMinMaxRanges(morrisSetup$prior, settings$par)
-    stopifnot(length(binf_bsup$inflim) == length(settings$par))
-    stopifnot(all(names(binf_bsup$inflim) == names(settings$par)))
-    binf_arg <- binf_bsup$inflim
-    bsup_arg <- binf_bsup$suplim
-
-  } else if (is.data.frame(settings$control$par_ranges) &&
-             all(names(settings$control$par_ranges) %in% c("parameter_name", "lower", "upper"))) {
-    # get range from specified data.frame (e.g. derived from posterior)
-    par_ranges <- settings$control$par_ranges
-    stopifnot(length(par_ranges$lower) == length(settings$par))
-    stopifnot(all(par_ranges$parameter_name == names(settings$par))) # this expects same ordering
-    binf_arg <- par_ranges$lower
-    bsup_arg <- par_ranges$upper
-
-  } else {
-
-    stop(
-      "Recieved unknown argument in 'settings$control$par_ranges'.",
-      "\n",
-      paste0(capture.output(print(settings$control$par_ranges)), collapse = "\n"))
-  }
+  # stop("Parallel sensitivity not implemented")
 
   # run morris sensitivity
-  # morrisSetup$posterior$density(binf_arg) # run this to test whether likelihood will work with a named vector of parameter values
-  # morrisSetup$posterior$density(bsup_arg) # run this to test whether likelihood will work with a named vector of parameter values
+  # morrisSetup$posterior$density(binf_arg) # run this to test whether likelihood works with a named vector of parameter values
+  # morrisSetup$posterior$density(bsup_arg) # run this to test whether likelihood works with a named vector of parameter values
   set.seed(432)
   morrisOut <- sensitivity::morris(
     model   = morrisSetup$posterior$density,
