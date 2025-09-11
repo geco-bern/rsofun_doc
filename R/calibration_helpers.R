@@ -188,7 +188,8 @@ plot_prior_posterior_density_compare <- function(
     burnin_to_skip,
     ridges = FALSE,
     add_MAP = FALSE,
-    correct_scenarios = c("4"=94, "3"=93, "2"=92, "1" = 91, "0" = 90)  # this is for retrieval of correct scenario definition, despite renaming
+    correct_scenarios = c("4"=94, "3"=93, "2"=92, "1" = 91, "0" = 90),  # this is for retrieval of correct scenario definition, despite renaming
+    param_order
   ){
   require(BayesianTools)
   require(dplyr)
@@ -229,17 +230,20 @@ plot_prior_posterior_density_compare <- function(
                          select(-any_of("rd_to_vcmax")) # HARDCODED do not plot rd_to_vcmax
                        ) |>
     pivot_longer(-c(par_estimation), names_to = "variable") |>
-    mutate(par_estimation  = forcats::fct_inorder(par_estimation),  # order by appearance
-           variable = forcats::fct_inorder(variable)) # order by appearance
+    mutate(variable = forcats::fct(variable, levels = param_order)) # order the facets
 
   # Plot with facet wrap
   if(ridges == TRUE){
     df_plot2 <- df_plot |>
-      mutate(Scenario = as.factor(as.integer(gsub("((Prior)|(MAP)|(Fixed)) ", "", par_estimation)))) |>
-      mutate(Distribution = case_when(#grepl("Prior ", par_estimation) ~ "Prior",
-                                      #grepl("MAP ",   par_estimation) ~ "MAP",
+      mutate(Scenario = as.integer(gsub("((Prior)|(MAP)|(Fixed)) ", "", par_estimation))) |>
+      mutate(Distribution = case_when(grepl("Prior ", par_estimation) ~ "Prior",
+                                      grepl("MAP ",   par_estimation) ~ "MAP",
                                       grepl("Fixed ", par_estimation) ~ "Fixed",
-                                      TRUE                            ~ "Posterior"))
+                                      TRUE                            ~ "Posterior")) |>
+      # ensure plotting order by defining Scenario as factor
+      arrange(desc(Scenario), Distribution) |>
+      mutate(Scenario = forcats::as_factor(as.character(Scenario)))
+
     gg <- ggplot(df_plot2, aes(x=value, y=Scenario)) +
       theme_classic() +
       geom_density_ridges(
@@ -247,17 +251,17 @@ plot_prior_posterior_density_compare <- function(
         mapping = aes(fill = Distribution)) +
       {if (add_MAP) geom_segment(
         data = df_plot2 |> filter(grepl("MAP ", par_estimation)) |> filter(!is.na(value)),
-        mapping = aes(yend = as.integer(Scenario) - 0.6, color = Distribution), # minus (-) because of scale reverse
+        mapping = aes(yend = as.integer(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
         key_glyph = "vline", linetype = "2121")} + # "dashed"
       {if (add_MAP) geom_segment(
         data = df_plot2 |> filter(grepl("Fixed ", par_estimation)) |> filter(!is.na(value)),
-        mapping = aes(yend = as.integer(Scenario) - 0.6, color = Distribution), # minus (-) because of scale reverse
+        mapping = aes(yend = as.integer(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
         key_glyph = "vline", linetype = "solid")} +
       # layout:
-      scale_y_discrete(limits = rev) +
       facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
       # scale_y_discrete(limits=rev) + # to have scenario 1 on top and 4 at bottom
       theme(legend.position = "bottom") + labs(x=NULL) +
+      theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
       scale_fill_manual(NULL, aesthetics = c("fill","colour"),
                         values = c("Posterior"="#29a274ff", "Prior" = t_col("#777055ff"),  # GECO colors
                                    "MAP"      = "black",    "Fixed" = "black"))
@@ -308,6 +312,7 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, burnin_to_ski
          aes(x=iteration, y=value, color = outerChain, linetype = innerChain_str)) + geom_line() +
     # geom_rug(sides = "r") +
     theme_classic() +
+    scale_x_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
     facet_wrap(~variable,  nrow = 2, scales = "free_y") +
     theme(
       legend.position = "bottom"

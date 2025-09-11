@@ -25,8 +25,8 @@ if (flag_plot_sampling_and_posteriors){
   out_calib_s90 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds"))
   out_calib_s91 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k
   out_calib_s92 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen92_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k
-  out_calib_s93 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen93_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 100k
-  out_calib_s94 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen94_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 100k
+  out_calib_s93 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen93_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s94 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen94_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
   out_calib_s95 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen95_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 100k
   out_calib_s96 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen96_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
   out_calib_s97 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen97_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
@@ -48,8 +48,8 @@ if (flag_plot_sampling_and_posteriors){
   (plot_mcmc_trace(out_calib_s90$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s90$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s90.png")
   (plot_mcmc_trace(out_calib_s91$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s91$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s91.png")
   (plot_mcmc_trace(out_calib_s92$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s92$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s92.png")
-  (plot_mcmc_trace(out_calib_s93$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)          + ggtitle(out_calib_s93$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s93.png")
-  (plot_mcmc_trace(out_calib_s94$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)          + ggtitle(out_calib_s94$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s94.png")
+  (plot_mcmc_trace(out_calib_s93$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000)          + ggtitle(out_calib_s93$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s93.png")
+  (plot_mcmc_trace(out_calib_s94$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000)          + ggtitle(out_calib_s94$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s94.png")
   (plot_mcmc_trace(out_calib_s95$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)          + ggtitle(out_calib_s95$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s95.png")
   (plot_mcmc_trace(out_calib_s96$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s96$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s96.png")
   (plot_mcmc_trace(out_calib_s97$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s97$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s97.png")
@@ -57,14 +57,13 @@ if (flag_plot_sampling_and_posteriors){
 
   (plot_mcmc_trace(out_calib_s94DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 12000)    + ggtitle(out_calib_s94DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s94DREAMZs.png")
 
-
   # Figure A: prior, posterior density plot ----
   ## for each scenario x params
   pl_post_s90 <- (plot_prior_posterior_density(out_calib_s90$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 90")+ ggtitle(out_calib_s90$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s90.png")
   pl_post_s91 <- (plot_prior_posterior_density(out_calib_s91$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 91")+ ggtitle(out_calib_s91$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s91.png")
   pl_post_s92 <- (plot_prior_posterior_density(out_calib_s92$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 92")+ ggtitle(out_calib_s92$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s92.png")
-  pl_post_s93 <- (plot_prior_posterior_density(out_calib_s93$mod,burnin_to_skip = 25000)          + ggtitle("Scenario 93")+ ggtitle(out_calib_s93$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s93.png")
-  pl_post_s94 <- (plot_prior_posterior_density(out_calib_s94$mod,burnin_to_skip = 25000)          + ggtitle("Scenario 94")+ ggtitle(out_calib_s94$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s94.png")
+  pl_post_s93 <- (plot_prior_posterior_density(out_calib_s93$mod,burnin_to_skip = 30000)          + ggtitle("Scenario 93")+ ggtitle(out_calib_s93$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s93.png")
+  pl_post_s94 <- (plot_prior_posterior_density(out_calib_s94$mod,burnin_to_skip = 30000)          + ggtitle("Scenario 94")+ ggtitle(out_calib_s94$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s94.png")
   pl_post_s95 <- (plot_prior_posterior_density(out_calib_s95$mod,burnin_to_skip = 25000)          + ggtitle("Scenario 95")+ ggtitle(out_calib_s95$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s95.png")
   pl_post_s96 <- (plot_prior_posterior_density(out_calib_s96$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 96")+ ggtitle(out_calib_s96$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s96.png")
   pl_post_s97 <- (plot_prior_posterior_density(out_calib_s97$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 97")+ ggtitle(out_calib_s97$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s97.png")
@@ -73,6 +72,7 @@ if (flag_plot_sampling_and_posteriors){
   pl_post_s94DR<-(plot_prior_posterior_density(out_calib_s94DREAMzs$mod, burnin_to_skip = 8000)   + ggtitle("Scenario 94")+ ggtitle(out_calib_s94DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s94DREAMZs.png")
 
   # compare them:
+  param_order <- out_calib_s94$mod[[1]]$setup$names
   library(ggridges)
   scenarios_to_compare3 <- list("Prior 1" = out_calib_s91$mod,
                                 "Prior 2" = out_calib_s92$mod,
@@ -86,7 +86,8 @@ if (flag_plot_sampling_and_posteriors){
     named_list_scen =  scenarios_to_compare3,
     burnin_to_skip  = burnin_to_skip,
     ridges = TRUE, add_MAP = TRUE,
-    correct_scenarios = c("4"=94, "3"=93, "2"=92, "1" = 91, "0" = 90)  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
+    correct_scenarios = c("4"=94, "3"=93, "2"=92, "1" = 91, "0" = 90),  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
+    param_order = param_order
   )
   pl_post_comparison3
   ggsave_and_return(pl_post_comparison3,
@@ -110,8 +111,10 @@ if (flag_plot_sampling_and_posteriors){
     named_list_scen =  scenarios_to_compare4,
     burnin_to_skip  = burnin_to_skip,
     ridges = TRUE, add_MAP = TRUE,
-    correct_scenarios = c("8"=98, "7"=97, "6"=96, "4"=94, "1" = 91, "0" = 90)  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
+    correct_scenarios = c("8"=98, "7"=97, "6"=96, "4"=94, "1" = 91, "0" = 90),  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
+    param_order = param_order
   )
+
   ggsave_and_return(pl_post_comparison4,
                     "fig_A_MCMCconvergence_posterior_s90_91_94_95_96_97.png",
                     width = 7.2, height = 3.6)
@@ -132,16 +135,16 @@ if (flag_plot_sampling_and_posteriors){
     # save_corr_plot(out_calib_s2, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s2.png"))
     # save_corr_plot(out_calib_s3, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s3.png"))
     # save_corr_plot(out_calib_s4, thin = 1, start = burnin_to_skip,filename = here::here("fig/fig_E2_MCMCconvergence_corr_s4.png"))
-    save_corr_plot(out_calib_s90, thin = 10,  start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s90.png"))
-    save_corr_plot(out_calib_s91, thin = 10, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s91.png"))
-    save_corr_plot(out_calib_s92, thin = 10, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s92.png"))
-    save_corr_plot(out_calib_s93, thin = 10, start = 25000,          filename = here::here("fig/fig_E2_MCMCconvergence_corr_s93.png"))
-    save_corr_plot(out_calib_s94, thin = 10, start = 25000,          filename = here::here("fig/fig_E2_MCMCconvergence_corr_s94.png"))
-    save_corr_plot(out_calib_s95, thin = 10, start = 25000,          filename = here::here("fig/fig_E2_MCMCconvergence_corr_s95.png"))
-    save_corr_plot(out_calib_s96, thin = 10, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s96.png"))
-    save_corr_plot(out_calib_s97, thin = 10, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s97.png"))
-    save_corr_plot(out_calib_s98, thin = 10, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s98.png"))
-    save_corr_plot(out_calib_s94DREAMzs,thin=10,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s94DREAMzs.png"))
+    save_corr_plot(out_calib_s90, thin = 5,  start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s90.png"))
+    save_corr_plot(out_calib_s91, thin = 5, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s91.png"))
+    save_corr_plot(out_calib_s92, thin = 5, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s92.png"))
+    save_corr_plot(out_calib_s93, thin = 5, start = 25000,          filename = here::here("fig/fig_E2_MCMCconvergence_corr_s93.png"))
+    save_corr_plot(out_calib_s94, thin = 5, start = 25000,          filename = here::here("fig/fig_E2_MCMCconvergence_corr_s94.png"))
+    save_corr_plot(out_calib_s95, thin = 5, start = 25000,          filename = here::here("fig/fig_E2_MCMCconvergence_corr_s95.png"))
+    save_corr_plot(out_calib_s96, thin = 5, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s96.png"))
+    save_corr_plot(out_calib_s97, thin = 5, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s97.png"))
+    save_corr_plot(out_calib_s98, thin = 5, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s98.png"))
+    save_corr_plot(out_calib_s94DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s94DREAMzs.png"))
 
   }
 
