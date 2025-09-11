@@ -128,7 +128,7 @@ if (FALSE) { # This made sense for scenarios that fitted a single site only
   dat_to_plot <- df_dis |> filter(param == "soilm_thetastar") |>
     pivot_wider(id_cols = c(sample_id, scenario), names_from = "param", values_from = "param_sample") |>
     mutate(sitename = substr(scenario,1,6)) |>
-    left_join(res1$drivobs |> select(sitename, site_info) |> unnest(site_info))
+    left_join(res1$drivobs_train |> select(sitename, site_info) |> unnest(site_info))
   pl_soilmthetastar_whc <- ggplot(dat_to_plot, aes(x=whc, y=soilm_thetastar, colour = scenario)) +
     geom_violin(scale = "width", width = 10) +
     geom_abline(slope = 0.2, linetype = "dashed")
@@ -137,7 +137,7 @@ if (FALSE) { # This made sense for scenarios that fitted a single site only
   dat_to_plot2 <- df_dis2 |> filter(param == "soilm_thetastar") |>
     pivot_wider(id_cols = c(sample_id, scenario), names_from = "param", values_from = "param_sample") |>
     mutate(sitename = substr(scenario,1,6)) |>
-    left_join(res1$drivobs |> select(sitename, site_info) |> unnest(site_info))
+    left_join(res1$drivobs_train |> select(sitename, site_info) |> unnest(site_info))
   pl_soilmthetastar_whc2 <- ggplot(dat_to_plot2, aes(x=whc, y=soilm_thetastar, colour = scenario)) +
     geom_violin(scale = "width", width = 10) +
     geom_abline(slope = 0.2, linetype = "dashed")

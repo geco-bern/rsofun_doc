@@ -57,13 +57,13 @@ run_prediction_rsofun <- function(
   predict_sofun_settings <- list(n_cores=n_cores)
 
   if (prediction == "both"){
-    curr_driver <- bind_rows(res$drivobs, res$drivobs_test) |>
+    curr_driver <- bind_rows(res$drivobs_train, res$drivobs_test) |>
       select(sitename, run_model, params_siml, site_info, forcing)
-    curr_obs    <- bind_rows(res$drivobs, res$drivobs_test) |>
+    curr_obs    <- bind_rows(res$drivobs_train, res$drivobs_test) |>
       select(sitename, run_model, targets, data)
   } else if (prediction == "train"){
-    curr_driver <- select(res$drivobs, sitename, run_model, params_siml, site_info, forcing)
-    curr_obs    <- select(res$drivobs, sitename, run_model, targets, data)
+    curr_driver <- select(res$drivobs_train, sitename, run_model, params_siml, site_info, forcing)
+    curr_obs    <- select(res$drivobs_train, sitename, run_model, targets, data)
   } else if (prediction == "test"){
     curr_driver <- select(res$drivobs_test, sitename, run_model, params_siml, site_info, forcing)
     curr_obs    <- select(res$drivobs_test, sitename, run_model, targets, data)

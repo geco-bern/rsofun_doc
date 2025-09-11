@@ -589,7 +589,7 @@ if (flag_plot_predictions){
   # NOTE that this spread we won't be able to model
   res_s3 <- setup_rsofun_calibration(scenario = 3)
   site_info <- bind_rows(
-    res_s3$drivobs |> mutate(set = "train"),
+    res_s3$drivobs_train |> mutate(set = "train"),
     res_s3$drivobs_test |> mutate(set = "test")
   ) |> unnest(site_info) |>
     unnest_wider(targets)
@@ -854,7 +854,7 @@ if (flag_plot_general){
   # Figure C: map of sites ----
   ## for each targets x test+train
   site_info <- bind_rows(
-    res_s3$drivobs |> mutate(set = "train"),
+    res_s3$drivobs_train |> mutate(set = "train"),
     res_s3$drivobs_test |> mutate(set = "test")
   ) |> unnest(site_info) |>
     unnest_wider(targets)

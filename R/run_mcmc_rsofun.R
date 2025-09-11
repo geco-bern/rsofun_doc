@@ -17,7 +17,7 @@ run_mcmc_rsofun <- function(
 ){
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
-  # res$drivobs
+  # res$drivobs_train
   # res$drivobs_test
   # res$par_fixed
   # res$par
@@ -25,10 +25,11 @@ run_mcmc_rsofun <- function(
   # Load loglikelihood
   source(here::here("R/calibration_helpers.R"), echo = FALSE)
   source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = FALSE)
-  # loads:
-  #   cost_likelihood_pmodel_bigD13C_vj_gpp
 
-  # Setup MCMC
+  # Setup MCMC                  # uses drivobs_train, not drivobs_test
+  driver_to_use_for_mcmc <- select(res$drivobs_train, sitename, run_model, params_siml, site_info, forcing)
+  obs_to_use_for_mcmc    <- select(res$drivobs_train, sitename, run_model, targets, data)
+
   calib_sofun_settings <- list(
     method = "BayesianTools",
     metric = cost_likelihood_pmodel_bigD13C_vj_gpp,
@@ -73,13 +74,13 @@ run_mcmc_rsofun <- function(
   )
 
   out_calib <- calib_sofun_parallelized(
-    drivers   = select(res$drivobs, sitename, run_model, params_siml, site_info, forcing),
-    obs       = select(res$drivobs, sitename, run_model, targets, data),
+    drivers   = driver_to_use_for_mcmc,
+    obs       = obs_to_use_for_mcmc,
     settings  = calib_sofun_settings,
     # other arguments for the cost function
     par_fixed = res$par_fixed,
     suffix    = suffix_str,
-    outpath = outpath, logpath = logpath
+    outpath   = outpath, logpath = logpath
   ) # this stores the whole out_calib in an rds object identified by "suffix_str" into outpath
 
   # append performance results to return object

@@ -291,13 +291,13 @@ setup_rsofun_calibration <- function(scenario){
 
   if (scenario %in% c(1,2,11,12, 71,72, 81,82, 91,92, 111,112)){ # only GPP data
 
-    drivobs <- drivobs_train_bigD13C_vj_gpp |>
+    drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
     drivobs_test <- drivobs_test_bigD13C_vj_gpp # |> ## for the test data set keep all
       # unnest_wider(targets) |>
-      # filter(gpp) |> 
+      # filter(gpp) |>
       # nest(targets = c(vj, bigD13C, gpp))
 
   } else if (scenario %in% c(113,114,115,      # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
@@ -306,14 +306,14 @@ setup_rsofun_calibration <- function(scenario){
                              73,74,75, # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
                              3,4,13,14,15)) { # GPP and traits data
 
-    drivobs      <- drivobs_train_bigD13C_vj_gpp
+    drivobs_train<- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
   } else if (scenario %in% c(116,117,118,      # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
                              96,97,98, # the 90s are reruns from 2025-09-06
                              86,87,88, # the 80s (80,81,82,83,84,85,86,87,88) are reruns from 2025-09-05
                              76,77,78, # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
                              16,17,18)) { # only traits data, either both, or vj only, or bigD13C only
-    drivobs <- drivobs_train_bigD13C_vj_gpp |>
+    drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
       filter(case_when(scenario %in% c(16,76,86,96,116) ~ vj | bigD13C,
                        scenario %in% c(17,77,87,97,117) ~ vj,
@@ -329,7 +329,7 @@ setup_rsofun_calibration <- function(scenario){
       # nest(targets = c(vj, bigD13C, gpp))
   } else if (scenario %in% c(0, 70, 80, 90, 110)) {  # only GPP data from FR-Pue
 
-    drivobs <- tibble( # load it based on FR-Pue data:
+    drivobs_train <- tibble( # load it based on FR-Pue data:
       sitename    = rsofun::p_model_drivers$sitename,
       run_model   = "daily",
       params_siml = rsofun::p_model_drivers$params_siml,
@@ -341,12 +341,12 @@ setup_rsofun_calibration <- function(scenario){
                            filter(!is.na(gpp)))
     )
 
-    # drivobs_test <- drivobs |> dplyr::slice(0) # No test dataset
+    # drivobs_test <- drivobs_train |> dplyr::slice(0) # No test dataset
     drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
 
   } else if (scenario %in% c(31,32,33,34,35,36,37,38,39,40,41,42,
                              51,52,53,54,55,56,57,58,59,60,61,62 )) { # the 30s and 40s are the multi-site gpp only)){ # the 30s and 40s are the multi-site gpp only, the 130s and 140s are preparation for site-specific whc/soilm_theatstar
-    drivobs <- drivobs_train_bigD13C_vj_gpp |>
+    drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
       filter(sitename == case_when(
         scenario %in% c(31,131,51) ~ "BE-Vie",
         scenario %in% c(32,132,52) ~ "CH-Dav",
@@ -362,9 +362,9 @@ setup_rsofun_calibration <- function(scenario){
         scenario %in% c(42,142,62) ~ "US-Wkg",
         TRUE~"donotuseany"
       ))
-    if (nrow(drivobs) == 0){stop(sprintf("Unsupported scenario %d", scenario))}
+    if (nrow(drivobs_train) == 0){stop(sprintf("Unsupported scenario %d", scenario))}
 
-    # drivobs_test <- drivobs |> dplyr::slice(0) # No test dataset
+    # drivobs_test <- drivobs_train |> dplyr::slice(0) # No test dataset
     drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
   } else {
     stop(sprintf("Unsupported scenario: %d", scenario))
@@ -372,7 +372,7 @@ setup_rsofun_calibration <- function(scenario){
 
   ## return ---
   return(list(
-    drivobs = drivobs,
+    drivobs_train = drivobs_train,
     drivobs_test = drivobs_test,
     par_fixed = par_to_fix,
     par = par_to_estimate
