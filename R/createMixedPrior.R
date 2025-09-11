@@ -83,7 +83,7 @@ createMixedPrior <- function(prior_definitions, best = NULL){
       sum(unlist(
         # dunif(par[1], min=prior_definitions[[1]]$lower, max=prior_definitions[[1]]$upper, log=T),
         # dunif(par[2], min=prior_definitions[[2]]$lower, max=prior_definitions[[2]]$upper, log=T)
-        lapply(seq_along(prior_args), \(i){ do.call(prior_args[[i]]$dfct, c(log=TRUE, x=par[i], prior_args[[i]]$args)) })
+        lapply(seq_along(prior_args), \(i){ do.call(prior_args[[i]]$dfct, c(log=TRUE, x=par[[i]], prior_args[[i]]$args)) }) # unname(par[i]) or par[[i]] needed due to error message: "Problem in the priorError in (function (x, min = 0, max = 1, log = FALSE) : unused argument (x.kphio = 0.0487171059425491)"
       ))}
     sampler <- function(n=1) {do.call(cbind,
                                       # runif(1, prior_definitions[[1]]$lower, prior_definitions[[1]]$upper),

@@ -26,27 +26,10 @@ sensitivity_sofun_serialized <- function(
 
   # make available get_mod_obs_pmodel_bigD13C_vj_gpp so we can export it to workers
   source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"))
-          # debug(cost_likelihood_pmodel_bigD13C_vj_gpp)
-          # settings <- list(
-          #   method = "BayesianTools",
-          #   metric = cost_likelihood_pmodel_bigD13C_vj_gpp,
-          #   control = list(
-          #     sampler = "DEzs",
-          #     settings = list(
-          #       burnin     = burnin,                 # 10000,
-          #       iterations = iterations,             # 50000,
-          #       nrChains   = NA,                     # number of independent chains
-          #       startValue = n_chains_within_sampler # number of internal chains to be sampled
-          #     ),
-          #     n_chains_independent      = 1,
-          #     n_parallel_independent    = 1,
-          #     n_parallel_within_sampler = 1
-          #   ),
-          #   par = res$par
-          # )
+
   ll_factory <- function(obs, drivers, parnames, get_mod_obs, ...){
     function(random_par){
-      eval(settings$metric)(par = as.list(setNames(random_par, parnames)), # TODO: for morris we need as.list()
+      eval(settings$metric)(par = as.list(setNames(random_par, parnames)), # NOTE: for morris we need as.list() to transform the vector to a named list
                             obs = obs,
                             drivers = drivers,
                             get_mod_obs = get_mod_obs,
@@ -62,37 +45,57 @@ sensitivity_sofun_serialized <- function(
   # } else { # sequential sensitivity analysis:
 
   # setup the bayesian sampling
-  # bayesianSetup
   morrisSetup <- createBayesianSetup(
     likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp),# , ...),
     prior      = priors,
     names      = parnames,
     parallel   = FALSE) # TODO...
 
+  # define lower and upper limit of parameters: 'binf_arg' and 'bsup_arg'
+  #    this behavior is defined by the value of `settings$control$par_ranges`
+  #    it can either be the string "prior" or then a data.frame with column names:
+  #    c("parameter_name", "lower", "upper") that contains the ranges to all parameters
+  stopifnot(
+    (is.character(settings$control$par_ranges) && settings$control$par_ranges == "prior") ||
+    (is.data.frame(settings$control$par_ranges) && all(names(settings$control$par_ranges) %in% c("parameter_name", "lower", "upper")))
+  )
+
+  if (is.character(settings$control$par_ranges) && settings$control$par_ranges == "prior"){
+    # get range from prior
+    binf_bsup <- getPriorMinMaxRanges(morrisSetup$prior, settings$par)
+    stopifnot(length(binf_bsup$inflim) == length(settings$par))
+    stopifnot(all(names(binf_bsup$inflim) == names(settings$par)))
+    binf_arg <- binf_bsup$inflim
+    bsup_arg <- binf_bsup$suplim
+
+  } else if (is.data.frame(settings$control$par_ranges) &&
+             all(names(settings$control$par_ranges) %in% c("parameter_name", "lower", "upper"))) {
+    # get range from specified data.frame (e.g. derived from posterior)
+    par_ranges <- settings$control$par_ranges
+    stopifnot(length(par_ranges$lower) == length(settings$par))
+    stopifnot(all(par_ranges$parameter_name == names(settings$par))) # this expects same ordering
+    binf_arg <- par_ranges$lower
+    bsup_arg <- par_ranges$upper
+
+  } else {
+
+    stop(
+      "Recieved unknown argument in 'settings$control$par_ranges'.",
+      "\n",
+      paste0(capture.output(print(settings$control$par_ranges)), collapse = "\n"))
+  }
+
+  # run morris sensitivity
+  # morrisSetup$posterior$density(binf_arg) # run this to test whether likelihood will work with a named vector of parameter values
+  # morrisSetup$posterior$density(bsup_arg) # run this to test whether likelihood will work with a named vector of parameter values
   set.seed(432)
-  # define lower and upper limit of parameters
-  binf_bsup <- getPriorMinMaxRanges(morrisSetup$prior, settings$par)
-  stopifnot(length(binf_bsup$inflim) == length(settings$par))
-  stopifnot(all(names(binf_bsup$inflim) == names(settings$par)))
-
-  # arguments to morris sensitivity analysis:
-  targetFunction <- morrisSetup$posterior$density
-  factors        <- morrisSetup$names
-  r              <- settings$control$settings$iterations
-  design         <- list(type = "oat", levels = 20, grid.jump = 3) # settings$control$settings$design # TODO
-  binf           <- binf_bsup$inflim
-  bsup           <- binf_bsup$suplim
-
-  # targetFunction(binf) # to test whether likelihood will work with a named vector
-  # targetFunction(bsup) # to test whether likelihood will work with a named vector
-
   morrisOut <- sensitivity::morris(
-    model   = targetFunction,
-    factors = factors,
-    r       = r,
-    design  = design,
-    binf    = binf,
-    bsup    = bsup,
+    model   = morrisSetup$posterior$density,
+    factors = morrisSetup$names,
+    r       = settings$control$settings$iterations,
+    design  = settings$control$settings$design,
+    binf    = binf_arg,
+    bsup    = bsup_arg,
     scale   = TRUE
   )
 

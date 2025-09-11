@@ -58,8 +58,74 @@ source(here::here("R/run_sensitivity_rsofun.R"), echo = TRUE)
 outpath <- file.path(rsofun_doc_output_path,"data")
 
 # run sensitivitiy with requested arguments
-res <- run_sensitivity_rsofun(
-  curr_calibration_scenario = args[["scenario"]],
-  iterations                = args[["iterations"]],
-  outpath                   = outpath
+
+
+# a) Sensitivity analysis can be run as screening of parameters prior to calibration ----
+#    with the aim to detect parameters that are not identifiable
+#    This allows to remove these parameters from the calibration.
+
+#    In this case the range the parameters are varied in the sensitivity analysis
+#    corresponds to the prior belief.
+
+# run sensitivity analysis
+# res <- run_sensitivity_rsofun(
+#   curr_calibration_scenario = args[["scenario"]],
+#   iterations                = args[["iterations"]],
+#   outpath                   = outpath,
+#   par_ranges_derived_from   = "prior"
+# )
+
+
+
+
+# b) Sensitivity analysis can also be run after calibration ----
+#    based on the posterior range, i.e. best guesses of parameter uncertainty
+#    with the aim to analyze the model output.
+#    This allows to order the parameters by importance with respect to a certain
+#    and identify benefits of better constraining which parameter.
+
+#    In this case the range the parameters are varied in the sensitivity analysis
+#    corresponds to the posterior after a calibration.
+
+# load the posterior
+library(tibble)
+library(tidyr)
+library(dplyr)
+out_calib_s94 <- readr::read_rds(
+  file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/",
+            "out_calib__scen94_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
 )
+out_calib_s93 <- readr::read_rds(
+  file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/",
+            "out_calib__scen94_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds")
+)
+
+# define ranges as quantiles of posterior
+# BayesianTools::getCredibleIntervals(out_calib_s94)
+# BayesianTools::getPredictiveIntervals(out_calib_s94)
+
+df_posterior <- BayesianTools::getSample(
+    out_calib_s94$mod,
+    parametersOnly = TRUE,
+    start = 25000) |>
+  as.data.frame()
+
+par_ranges <- lapply(df_posterior, \(vec) quantile(vec, c(0.05, 0.95))) |>
+  as.data.frame() |> as_tibble(rownames = "percentile") |>
+  pivot_longer(-percentile, names_to = "parameter_name") |>
+  mutate(percentile = if_else(percentile == "5%", "lower", "upper")) |>
+  pivot_wider(names_from = percentile)
+
+# run sensitivity analysis
+res <- run_sensitivity_rsofun(
+  curr_calibration_scenario = args[["scenario"]],   # TODO: comment in again
+  iterations                = args[["iterations"]], # TODO: comment in again
+  outpath                   = outpath,
+  par_ranges_derived_from   = par_ranges
+)
+
+# TODO: we could of course make three sensitivity analyses of the three target types: "gpp","bigD13C", and "vj"
+#       and equally with the test or train dataset.
+#       - we could simply use par_ranges from scenario 94 with the likelihood function of other scenarios (i.e. 92,96,97) and the current code would use the training data set
+#       - or we modify arguments to run_sensitivity_rsofun() to control in a more straightforward manner how we want it to be done.
+

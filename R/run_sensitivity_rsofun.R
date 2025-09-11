@@ -6,36 +6,27 @@ run_sensitivity_rsofun <- function(
     curr_calibration_scenario,
     # morris sensitivity setup
     iterations = 3,
-    outpath = outpath
+    outpath = outpath,
+    par_ranges_derived_from = "prior" # this could either be "prior" or a data.frame(parameter_name=..., lower=..., upper=...)
   ){
   # Setup simulation model
   res <- setup_rsofun_calibration(scenario = curr_calibration_scenario)
-  # res$drivobs
-  # res$drivobs_test
-  # res$par_fixed
-  # res$par
 
   # Load loglikelihood
   source(here::here("R/calibration_helpers.R"), echo = FALSE)
   source(here::here("R/cost_likelihood_pmodel_bigD13C_vj_gpp.R"), echo = FALSE)
-  # loads:
-  #   get_mod_obs_pmodel_bigD13C_vj_gpp
 
-  # Setup sensitivity analysis
+  # Setup Morris sensitivity analysis
+  design <- list(type = "oat", levels = 20, grid.jump = 3)
   sensitivity_sofun_settings <- list(
     # method = "BayesianTools",
     metric = cost_likelihood_pmodel_bigD13C_vj_gpp,
     control = list(
       settings = list(
-        iterations = iterations                # 50000,
-        # burnin     = burnin,                 # 10000,
-        # nrChains   = NA,                     # number of independent chains
-        # startValue = n_chains_within_sampler # number of internal chains to be sampled
-      )
-      # sampler = "DEzs",
-      # n_chains_independent      = n_chains_independent,
-      # n_parallel_independent    = n_parallel_independent,
-      # n_parallel_within_sampler = n_parallel_within_sampler
+        iterations = iterations,
+        design     = design
+      ),
+    par_ranges = par_ranges_derived_from
     ),
     par = res$par
   )
@@ -44,14 +35,16 @@ run_sensitivity_rsofun <- function(
   # # Run sensitivity in parallel # TODO:;;; define function below and then run here
   # # Run sensitivity
   suffix_str <- sprintf(
-    "_scen%d_%s-%diter", # %dx%dchains_on_CPU%dx%d
-    curr_calibration_scenario, "morris", iterations #n_chains, n_chains_inner, cores, cores_inner
+    "_scen%d_%s-%diter_par-range-%s", # %dx%dchains_on_CPU%dx%d
+    curr_calibration_scenario, "morris", iterations,
+    ifelse(is.character(par_ranges_derived_from), par_ranges_derived_from, "prespecified")
     # TODO: include further needed options from settings. (e.g. parse 'design')
+    #       #n_chains, n_chains_inner, cores, cores_inner
   )
 
   out_morris <- sensitivity_sofun_serialized(
-    drivers  = select(res$drivobs, sitename, run_model, params_siml, site_info, forcing),
-    obs      = select(res$drivobs, sitename, run_model, targets, data),
+    drivers  = select(res$drivobs_train, sitename, run_model, params_siml, site_info, forcing),
+    obs      = select(res$drivobs_train, sitename, run_model, targets, data),
     settings = sensitivity_sofun_settings,
     suffix   = suffix_str,       # for storing results
     outpath  = outpath           # for storing results
