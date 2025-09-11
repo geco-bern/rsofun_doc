@@ -31,11 +31,13 @@ out_calib_s90 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibra
 out_calib_s91 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen91_DEzs-50000-0iter_8x3chains_on_CPU8x1.rds"))
 out_calib_s92 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen92_DEzs-50000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 out_calib_s93 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen93_DEzs-55000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k/100k
-out_calib_s94 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k/100k
+out_calib_s94 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen94_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k/100k
 out_calib_s95 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen95_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k/100k
 out_calib_s96 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen96_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 out_calib_s97 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen97_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 out_calib_s98 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen98_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+
+out_calib_s94DREAMzs <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen94_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k/100k
 
 # out_calib_s104 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen104_DEzs-60-0iter_8x3chains_on_CPU8x1_continued.rds"))
 # (plot_prior_posterior_density(out_calib_s104$mod,burnin_to_skip = 1) + ggtitle("Scenario 104")+ ggtitle(out_calib_s104$fpath))
@@ -56,17 +58,6 @@ burnin_to_skip = 12000
 (plot_mcmc_trace(out_calib_s77$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s77$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s77.png")
 (plot_mcmc_trace(out_calib_s78$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s78$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s78.png")
 
-(plot_mcmc_trace(out_calib_s90$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s90$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s90.png")
-(plot_mcmc_trace(out_calib_s91$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s91$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s91.png")
-(plot_mcmc_trace(out_calib_s92$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s92$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s92.png")
-(plot_mcmc_trace(out_calib_s93$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s93$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s93.png")
-(plot_mcmc_trace(out_calib_s94$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 18000)          + ggtitle(out_calib_s94$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s94.png")
-(plot_mcmc_trace(out_calib_s95$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 18000)          + ggtitle(out_calib_s95$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s95.png")
-(plot_mcmc_trace(out_calib_s96$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s96$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s96.png")
-(plot_mcmc_trace(out_calib_s97$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s97$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s97.png")
-(plot_mcmc_trace(out_calib_s98$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s98$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s98.png")
-
-
 pl_post_s14 <- (plot_prior_posterior_density(out_calib_s14$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 14")+ ggtitle(out_calib_s14$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s14.png")
 pl_post_s70 <- (plot_prior_posterior_density(out_calib_s70$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 70")+ ggtitle(out_calib_s70$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s70.png")
 pl_post_s71 <- (plot_prior_posterior_density(out_calib_s71$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 71")+ ggtitle(out_calib_s71$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s71.png")
@@ -77,55 +68,6 @@ pl_post_s75 <- (plot_prior_posterior_density(out_calib_s75$mod,burnin_to_skip = 
 pl_post_s76 <- (plot_prior_posterior_density(out_calib_s76$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 76")+ ggtitle(out_calib_s76$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s76.png")
 pl_post_s77 <- (plot_prior_posterior_density(out_calib_s77$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 77")+ ggtitle(out_calib_s77$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s77.png")
 pl_post_s78 <- (plot_prior_posterior_density(out_calib_s78$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 78")+ ggtitle(out_calib_s78$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s78.png")
-
-pl_post_s90 <- (plot_prior_posterior_density(out_calib_s90$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 90")+ ggtitle(out_calib_s90$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s90.png")
-pl_post_s91 <- (plot_prior_posterior_density(out_calib_s91$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 91")+ ggtitle(out_calib_s91$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s91.png")
-pl_post_s92 <- (plot_prior_posterior_density(out_calib_s92$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 92")+ ggtitle(out_calib_s92$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s92.png")
-pl_post_s93 <- (plot_prior_posterior_density(out_calib_s93$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 93")+ ggtitle(out_calib_s93$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s93.png")
-pl_post_s94 <- (plot_prior_posterior_density(out_calib_s94$mod,burnin_to_skip = 18000)          + ggtitle("Scenario 94")+ ggtitle(out_calib_s94$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s94.png")
-pl_post_s95 <- (plot_prior_posterior_density(out_calib_s95$mod,burnin_to_skip = 18000)          + ggtitle("Scenario 95")+ ggtitle(out_calib_s95$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s95.png")
-pl_post_s96 <- (plot_prior_posterior_density(out_calib_s96$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 96")+ ggtitle(out_calib_s96$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s96.png")
-pl_post_s97 <- (plot_prior_posterior_density(out_calib_s97$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 97")+ ggtitle(out_calib_s97$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s97.png")
-pl_post_s98 <- (plot_prior_posterior_density(out_calib_s98$mod,burnin_to_skip = burnin_to_skip) + ggtitle("Scenario 98")+ ggtitle(out_calib_s98$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s98.png")
-
-# compare them:
-library(ggridges)
-scenarios_to_compare3 <- list("Prior 1" = out_calib_s91$mod,
-                              "Prior 2" = out_calib_s92$mod,
-                              "Prior 3" = out_calib_s93$mod,
-                              "Prior 4" = out_calib_s94$mod,
-                              "1" = out_calib_s91$mod,
-                              "2" = out_calib_s92$mod,
-                              "3" = out_calib_s93$mod,
-                              "4" = out_calib_s94$mod)
-pl_post_comparison3 <- plot_prior_posterior_density_compare(
-  named_list_scen =  scenarios_to_compare3,
-  burnin_to_skip  = burnin_to_skip,
-  ridges = TRUE, add_MAP = TRUE)
-ggsave_and_return(pl_post_comparison3,
-                  "fig_A_MCMCconvergence_posterior_s91_92_93_94.png",
-                  width = 7.2, height = 3.6)
-
-scenarios_to_compare4 <- list("Prior 0" = out_calib_s90$mod,
-                              "Prior 1" = out_calib_s91$mod,
-                              "Prior 4" = out_calib_s94$mod,
-                              "Prior 6" = out_calib_s96$mod,
-                              "Prior 7" = out_calib_s97$mod,
-                              "Prior 8" = out_calib_s98$mod,
-                              "0" = out_calib_s90$mod,
-                              "1" = out_calib_s91$mod,
-                              "4" = out_calib_s94$mod,
-                              "6" = out_calib_s96$mod,
-                              "7" = out_calib_s97$mod,
-                              "8" = out_calib_s98$mod
-                              )
-pl_post_comparison4 <- plot_prior_posterior_density_compare(
-  named_list_scen =  scenarios_to_compare4,
-  burnin_to_skip  = burnin_to_skip,
-  ridges = TRUE, add_MAP = TRUE)
-ggsave_and_return(pl_post_comparison4,
-                  "fig_A_MCMCconvergence_posterior_s90_91_94_95_96_97.png",
-                  width = 7.2, height = 3.6)
 
 scenarios_to_compare <- list("BE-Vie (s31)" = out_calib_s31$mod,
                              "CH-Dav (s32)" = out_calib_s32$mod,
