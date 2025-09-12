@@ -189,7 +189,8 @@ plot_prior_posterior_density_compare <- function(
     ridges = FALSE,
     add_MAP = FALSE,
     correct_scenarios = c("4"=94, "3"=93, "2"=92, "1" = 91, "0" = 90),  # this is for retrieval of correct scenario definition, despite renaming
-    param_order
+    param_order,
+    params_not_to_plot = c("rd_to_vcmax") # HARDCODED by default, do not plot rd_to_vcmax
   ){
   require(BayesianTools)
   require(dplyr)
@@ -227,11 +228,10 @@ plot_prior_posterior_density_compare <- function(
                        dplyr::bind_rows(posteriorMat_list, .id = "par_estimation"),
                        dplyr::bind_rows(MAP_list,          .id = "par_estimation") |> mutate(par_estimation = paste0("MAP ", par_estimation)),
                        dplyr::bind_rows(fixed_list,        .id = "par_estimation") |> mutate(par_estimation = paste0("Fixed ", par_estimation)) |>
-                         select(-any_of("rd_to_vcmax")) # HARDCODED do not plot rd_to_vcmax
+                         select(-any_of(params_not_to_plot))
                        ) |>
     pivot_longer(-c(par_estimation), names_to = "variable") |>
     mutate(variable = forcats::fct(variable, levels = param_order)) # order the facets
-
   # Plot with facet wrap
   if(ridges == TRUE){
     df_plot2 <- df_plot |>

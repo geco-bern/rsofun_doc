@@ -117,6 +117,7 @@ if (is.null(drivobs_to_use_for_sensitivity)) {stop(sprintf("Undefined target req
 
 # ii) define the range of the prior (use posterior of a calibration)
 posterior_path <- dplyr::case_when(
+  args[["scenario"]] == "113" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds",
   args[["scenario"]] == "94" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen94_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   args[["scenario"]] == "93" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen93_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   TRUE ~ ""

@@ -32,7 +32,21 @@ if (flag_plot_sampling_and_posteriors){
   out_calib_s97 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen97_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
   out_calib_s98 <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen98_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 
-  out_calib_s94DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen94_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO change to 80k/100k
+  out_calib_s90DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen90_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s91DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen91_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s92DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen92_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s93DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen93_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s94DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen94_DREAMzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))  # TODO change to 100k
+
+  out_calib_s110DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen110_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s111DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen111_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s112DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen112_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s113DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds"))  # TODO change to 100k
+  out_calib_s114DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen114_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds"))  # TODO change to 100k
+  out_calib_s115DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen115_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds"))  # TODO change to 100k
+  out_calib_s116DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen116_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s117DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen117_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s118DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen118_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 
   # out_calib_s104 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations/out_calib__scen104_DEzs-60-0iter_8x3chains_on_CPU8x1_continued.rds"))
   # (plot_prior_posterior_density(out_calib_s104$mod,burnin_to_skip = 1) + ggtitle("Scenario 104")+ ggtitle(out_calib_s104$fpath))
@@ -55,7 +69,21 @@ if (flag_plot_sampling_and_posteriors){
   (plot_mcmc_trace(out_calib_s97$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s97$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s97.png")
   (plot_mcmc_trace(out_calib_s98$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = burnin_to_skip) + ggtitle(out_calib_s98$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s98.png")
 
-  (plot_mcmc_trace(out_calib_s94DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 12000)    + ggtitle(out_calib_s94DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s94DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s90DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s90DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s90DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s91DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s91DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s91DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s92DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s92DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s92DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s93DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s93DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s93DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s94DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s94DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s94DREAMZs.png")
+
+  (plot_mcmc_trace(out_calib_s110DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s110DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s110DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s111DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s111DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s111DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s112DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s112DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s112DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s113DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 12000)    + ggtitle(out_calib_s113DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s113DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s114DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 12000)    + ggtitle(out_calib_s114DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s114DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s115DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 12000)    + ggtitle(out_calib_s115DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s115DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s116DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s116DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s116DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s117DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s117DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s117DREAMZs.png")
+  (plot_mcmc_trace(out_calib_s118DREAMzs$mod, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000)    + ggtitle(out_calib_s118DREAMzs$fpath)) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s118DREAMZs.png")
 
   # Figure A: prior, posterior density plot ----
   ## for each scenario x params
@@ -71,8 +99,20 @@ if (flag_plot_sampling_and_posteriors){
 
   pl_post_s94DR<-(plot_prior_posterior_density(out_calib_s94DREAMzs$mod, burnin_to_skip = 8000)   + ggtitle("Scenario 94")+ ggtitle(out_calib_s94DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s94DREAMZs.png")
 
+  pl_post_s110DR<-(plot_prior_posterior_density(out_calib_s110DREAMzs$mod, burnin_to_skip = 25000)   + ggtitle("Scenario 110")+ ggtitle(out_calib_s110DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s110DREAMZs.png")
+  pl_post_s111DR<-(plot_prior_posterior_density(out_calib_s111DREAMzs$mod, burnin_to_skip = 25000)   + ggtitle("Scenario 111")+ ggtitle(out_calib_s111DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s111DREAMZs.png")
+  pl_post_s112DR<-(plot_prior_posterior_density(out_calib_s112DREAMzs$mod, burnin_to_skip = 25000)   + ggtitle("Scenario 112")+ ggtitle(out_calib_s112DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s112DREAMZs.png")
+  pl_post_s113DR<-(plot_prior_posterior_density(out_calib_s113DREAMzs$mod, burnin_to_skip = 12000)   + ggtitle("Scenario 113")+ ggtitle(out_calib_s113DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s113DREAMZs.png")
+  pl_post_s114DR<-(plot_prior_posterior_density(out_calib_s114DREAMzs$mod, burnin_to_skip = 12000)   + ggtitle("Scenario 114")+ ggtitle(out_calib_s114DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s114DREAMZs.png")
+  pl_post_s115DR<-(plot_prior_posterior_density(out_calib_s115DREAMzs$mod, burnin_to_skip = 12000)   + ggtitle("Scenario 115")+ ggtitle(out_calib_s115DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s115DREAMZs.png")
+  pl_post_s116DR<-(plot_prior_posterior_density(out_calib_s116DREAMzs$mod, burnin_to_skip = 25000)   + ggtitle("Scenario 116")+ ggtitle(out_calib_s116DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s116DREAMZs.png")
+  pl_post_s117DR<-(plot_prior_posterior_density(out_calib_s117DREAMzs$mod, burnin_to_skip = 25000)   + ggtitle("Scenario 117")+ ggtitle(out_calib_s117DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s117DREAMZs.png")
+  pl_post_s118DR<-(plot_prior_posterior_density(out_calib_s118DREAMzs$mod, burnin_to_skip = 25000)   + ggtitle("Scenario 118")+ ggtitle(out_calib_s118DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s118DREAMZs.png")
+
   # compare them:
-  param_order <- out_calib_s94$mod[[1]]$setup$names
+  # param_order <- out_calib_s94$mod[[1]]$setup$names
+  param_order <- out_calib_s114DREAMzs$mod[[1]]$setup$names
+
   library(ggridges)
   scenarios_to_compare3 <- list("Prior 1" = out_calib_s91$mod,
                                 "Prior 2" = out_calib_s92$mod,
@@ -82,41 +122,68 @@ if (flag_plot_sampling_and_posteriors){
                                 "2" = out_calib_s92$mod,
                                 "3" = out_calib_s93$mod,
                                 "4" = out_calib_s94$mod)
-  pl_post_comparison3 <- plot_prior_posterior_density_compare(
-    named_list_scen =  scenarios_to_compare3,
-    burnin_to_skip  = burnin_to_skip,
+  scenarios_to_compare3b <- list("Prior 1" = out_calib_s91DREAMzs$mod,
+                                "Prior 2" = out_calib_s92DREAMzs$mod,
+                                "Prior 3" = out_calib_s93DREAMzs$mod,
+                                "Prior 4" = out_calib_s94DREAMzs$mod,
+                                "1" = out_calib_s91DREAMzs$mod,
+                                "2" = out_calib_s92DREAMzs$mod,
+                                "3" = out_calib_s93DREAMzs$mod,
+                                "4" = out_calib_s94DREAMzs$mod)
+  scenarios_to_compare3c <- list("Prior 1" = out_calib_s111DREAMzs$mod,
+                                "Prior 2" = out_calib_s112DREAMzs$mod,
+                                "Prior 3" = out_calib_s113DREAMzs$mod,
+                                "Prior 4" = out_calib_s114DREAMzs$mod,
+                                "Prior 5" = out_calib_s115DREAMzs$mod,
+                                "1" = out_calib_s111DREAMzs$mod,
+                                "2" = out_calib_s112DREAMzs$mod,
+                                "3" = out_calib_s113DREAMzs$mod,
+                                "4" = out_calib_s114DREAMzs$mod,
+                                "5" = out_calib_s115DREAMzs$mod)
+  # pl_post_comparison3 <- plot_prior_posterior_density_compare( named_list_scen =  scenarios_to_compare3, burnin_to_skip  = burnin_to_skip,
+  # pl_post_comparison3b <- plot_prior_posterior_density_compare( named_list_scen =  scenarios_to_compare3b, burnin_to_skip  = 25000,
+  # pl_post_comparison3c <- plot_prior_posterior_density_compare( named_list_scen =  scenarios_to_compare3c[c("Prior 1","Prior 2","Prior 3","Prior 4", "1","2","3","4")], burnin_to_skip  = 12000,
+  # pl_post_comparison3d <- plot_prior_posterior_density_compare( named_list_scen =  scenarios_to_compare3c, burnin_to_skip  = 12000,
+  pl_post_comparison3e <- plot_prior_posterior_density_compare( named_list_scen =  scenarios_to_compare3c[c("Prior 1","Prior 2","Prior 3", "1","2","3")], burnin_to_skip  = 12000,
     ridges = TRUE, add_MAP = TRUE,
-    correct_scenarios = c("4"=94, "3"=93, "2"=92, "1" = 91, "0" = 90),  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
-    param_order = param_order
+    correct_scenarios = c("5"=115, "4"=114, "3"=113, "2"=112, "1" = 111, "0" = 110),  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
+    param_order = param_order,
+    params_not_to_plot = c("rd_to_vcmax", "soilm_betao")
   )
-  pl_post_comparison3
-  ggsave_and_return(pl_post_comparison3,
-                    "fig_A_MCMCconvergence_posterior_s91_92_93_94.png",
-                    width = 7.2, height = 3.6)
+  # ggsave_and_return(pl_post_comparison3, "fig_A_MCMCconvergence_posterior_s91_92_93_94.png", width = 7.2, height = 3.6)
+  # ggsave_and_return(pl_post_comparison3b, "fig_A_MCMCconvergence_posterior_s91DR_92DR_93DR_94DR.png", width = 7.2, height = 3.6)
+  # ggsave_and_return(pl_post_comparison3c, "fig_A_MCMCconvergence_posterior_s111DR_112DR_113DR_114DR.png", width = 7.2, height = 3.6)
+  # ggsave_and_return(pl_post_comparison3d, "fig_A_MCMCconvergence_posterior_s111DR_112DR_113DR_114DR_115DR.png", width = 7.2, height = 3.6)
+  ggsave_and_return(pl_post_comparison3e, "fig_A_MCMCconvergence_posterior_s111DR_112DR_113DR.png", width = 7.2, height = 3.6)
 
-  scenarios_to_compare4 <- list("Prior 0" = out_calib_s90$mod,
-                                "Prior 1" = out_calib_s91$mod,
-                                "Prior 4" = out_calib_s94$mod,
-                                "Prior 6" = out_calib_s96$mod,
-                                "Prior 7" = out_calib_s97$mod,
-                                "Prior 8" = out_calib_s98$mod,
-                                "0" = out_calib_s90$mod,
-                                "1" = out_calib_s91$mod,
-                                "4" = out_calib_s94$mod,
-                                "6" = out_calib_s96$mod,
-                                "7" = out_calib_s97$mod,
-                                "8" = out_calib_s98$mod
+  scenarios_to_compare4 <- list("Prior 0" = out_calib_s110DREAMzs$mod,
+                                "Prior 1" = out_calib_s111DREAMzs$mod,
+                                "Prior 2" = out_calib_s112DREAMzs$mod,
+                                "Prior 3" = out_calib_s113DREAMzs$mod,
+                                "Prior 4" = out_calib_s114DREAMzs$mod,
+                                "Prior 6" = out_calib_s116DREAMzs$mod,
+                                "Prior 7" = out_calib_s117DREAMzs$mod,
+                                "Prior 8" = out_calib_s118DREAMzs$mod,
+                                "0" = out_calib_s110DREAMzs$mod,
+                                "1" = out_calib_s111DREAMzs$mod,
+                                "2" = out_calib_s112DREAMzs$mod,
+                                "3" = out_calib_s113DREAMzs$mod,
+                                "4" = out_calib_s114DREAMzs$mod,
+                                "6" = out_calib_s116DREAMzs$mod,
+                                "7" = out_calib_s117DREAMzs$mod,
+                                "8" = out_calib_s118DREAMzs$mod
                                 )
   pl_post_comparison4 <- plot_prior_posterior_density_compare(
     named_list_scen =  scenarios_to_compare4,
-    burnin_to_skip  = burnin_to_skip,
+    burnin_to_skip  = 12000,
     ridges = TRUE, add_MAP = TRUE,
-    correct_scenarios = c("8"=98, "7"=97, "6"=96, "4"=94, "1" = 91, "0" = 90),  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
-    param_order = param_order
+    correct_scenarios = c("8"=118, "7"=117, "6"=116, "4"=114, "3"=113, "2" = 111, "1" = 111, "0" = 110),  # this is for retrieval of correct scenario definition for fixed parameters, in spite of renaming
+    param_order = param_order,
+    params_not_to_plot = c("rd_to_vcmax", "soilm_betao")
   )
 
   ggsave_and_return(pl_post_comparison4,
-                    "fig_A_MCMCconvergence_posterior_s90_91_94_95_96_97.png",
+                    "fig_A_MCMCconvergence_posterior_s110DR_111DR_112DR_113DR_114DR_115DR_116DR_117DR.png",
                     width = 7.2, height = 3.6)
 
 
@@ -145,6 +212,14 @@ if (flag_plot_sampling_and_posteriors){
     save_corr_plot(out_calib_s97, thin = 5, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s97.png"))
     save_corr_plot(out_calib_s98, thin = 5, start = burnin_to_skip, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s98.png"))
     save_corr_plot(out_calib_s94DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s94DREAMzs.png"))
+
+    save_corr_plot(out_calib_s110DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s110DREAMzs_burnin12000.png"))
+    save_corr_plot(out_calib_s111DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s111DREAMzs_burnin12000.png"))
+    save_corr_plot(out_calib_s113DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s113DREAMzs_burnin12000.png"))
+    save_corr_plot(out_calib_s114DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s114DREAMzs_burnin12000.png"))
+    save_corr_plot(out_calib_s116DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s116DREAMzs_burnin12000.png"))
+    save_corr_plot(out_calib_s117DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s117DREAMzs_burnin12000.png"))
+    save_corr_plot(out_calib_s118DREAMzs,thin=5,start=12000,         filename = here::here("fig/fig_E2_MCMCconvergence_corr_s118DREAMzs_burnin12000.png"))
 
   }
 
@@ -267,62 +342,78 @@ if (flag_plot_sampling_and_posteriors){
 ## for each scenario x target x test
 
 flag_plot_predictions <- TRUE # possibility to switch this off
+# define what data to load (and use this as suffix for output)
+n_post <- "N20+MAP"
+n_err <- "_N3errors"
+# outfname_suffix <- paste0(n_post, n_err, "_s94-s91-s90")
+outfname_suffix <- paste0(n_post, n_err, "_s113-s111")
+
 if (flag_plot_predictions){
-  # define what data to load (and use this as suffix for output)
-  n_post <- "N20+MAP"
-  n_err <- "_N3errors"
-  outfname_suffix <- paste0(n_post, n_err, "_s94-s91-s90")
+  # # Load sampled posterior params used for predictions
+  # df_94_params  <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds")))
+  # df_91_params  <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds")))
+  # df_90_params  <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds")))
+  # # Load predictions for plotting
+  # df_94_vj      <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds")))
+  # df_91_vj      <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds")))
+  # df_90_vj      <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds")))
+  # df_94_bigD13C <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds")))
+  # df_91_bigD13C <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds")))
+  # df_90_bigD13C <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds")))
+  # df_94_gpp     <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds")))
+  # df_91_gpp     <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds")))
+  # df_90_gpp     <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds")))
 
   # Load sampled posterior params used for predictions
-  df_94_params  <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds")))
-  df_91_params  <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds")))
-  df_90_params  <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds")))
+  df_113_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_12000burnin__out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
+  df_111_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen111_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
+  df_110_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen110_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
   # Load predictions for plotting
-  df_94_vj      <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds")))
-  df_91_vj      <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds")))
-  df_90_vj      <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds")))
-  df_94_bigD13C <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds")))
-  df_91_bigD13C <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds")))
-  df_90_bigD13C <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds")))
-  df_94_gpp     <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen94_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds")))
-  df_91_gpp     <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen91_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds")))
-  df_90_gpp     <- readr::read_rds(file.path(rsofun_doc_output_path, "data", "predictions", paste0("out_predict_",n_post,"_18000burnin__out_calib__scen90_DEzs-60000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds")))
+  df_113_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_12000burnin__out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
+  df_113_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_12000burnin__out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
+  df_113_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_12000burnin__out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
+  df_111_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen111_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
+  df_111_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen111_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
+  df_111_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen111_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
+  df_110_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen110_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
+  df_110_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen110_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
+  df_110_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_",n_post,"_25000burnin__out_calib__scen110_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
 
   # prepare plotting
-  # # i) bind together, ii) mutate(Scenario = "0","1","4")    # for FigB: filter(!is.na(obs)) , for FigB3: filter(target == "gpp")
+  # # i) bind together, ii) mutate(Scenario = "0","1","3")    # for FigB: filter(!is.na(obs)) , for FigB3: filter(target == "gpp")
   dfwide_gpp_train <- bind_rows(
-    df_94_gpp |> filter(is_train0_test1 == 0) |> mutate(Scenario = "4"),
-    df_91_gpp |> filter(is_train0_test1 == 0) |> mutate(Scenario = "1"),
-    df_90_gpp |> filter(is_train0_test1 == 0) |> mutate(Scenario = "0")
+    df_113_gpp |> filter(is_train0_test1 == 0) |> mutate(Scenario = "3"),
+    df_111_gpp |> filter(is_train0_test1 == 0) |> mutate(Scenario = "1"),
+    df_110_gpp |> filter(is_train0_test1 == 0) |> mutate(Scenario = "0")
   )
   dfwide_gpp_test <- bind_rows(
-    df_94_gpp |> filter(is_train0_test1 == 1) |> mutate(Scenario = "4"),
-    df_91_gpp |> filter(is_train0_test1 == 1) |> mutate(Scenario = "1"),
-    df_90_gpp |> filter(is_train0_test1 == 1) |> mutate(Scenario = "0")
+    df_113_gpp |> filter(is_train0_test1 == 1) |> mutate(Scenario = "3"),
+    df_111_gpp |> filter(is_train0_test1 == 1) |> mutate(Scenario = "1"),
+    df_110_gpp |> filter(is_train0_test1 == 1) |> mutate(Scenario = "0")
   )
   dfwide_vj <- bind_rows(
-    df_94_vj |> mutate(Scenario = "4"),
-    df_91_vj |> mutate(Scenario = "1"),
-    df_90_vj |> mutate(Scenario = "0")
+    df_113_vj |> mutate(Scenario = "3"),
+    df_111_vj |> mutate(Scenario = "1"),
+    df_110_vj |> mutate(Scenario = "0")
   )
   dfwide_bigD13C <- bind_rows(
-    df_94_bigD13C |> mutate(Scenario = "4"),
-    df_91_bigD13C |> mutate(Scenario = "1"),
-    df_90_bigD13C |> mutate(Scenario = "0")
+    df_113_bigD13C |> mutate(Scenario = "3"),
+    df_111_bigD13C |> mutate(Scenario = "1"),
+    df_110_bigD13C |> mutate(Scenario = "0")
   )
   dfwide_gpp_train |> select(              date, sitename, target) |> distinct() # 90k observations
   dfwide_gpp_test  |> select(              date, sitename, target) |> distinct() # 127k observations
   dfwide_vj        |> select(genus,species,year, sitename, target) |> distinct() # 590 observations
   dfwide_bigD13C   |> select(      species,year, sitename, target) |> distinct() # 2347 observations
-  rm(df_94_vj)
-  rm(df_91_vj)
-  rm(df_90_vj)
-  rm(df_94_bigD13C)
-  rm(df_91_bigD13C)
-  rm(df_90_bigD13C)
-  rm(df_94_gpp)
-  rm(df_91_gpp)
-  rm(df_90_gpp)
+  rm(df_113_vj)
+  rm(df_111_vj)
+  rm(df_110_vj)
+  rm(df_113_bigD13C)
+  rm(df_111_bigD13C)
+  rm(df_110_bigD13C)
+  rm(df_113_gpp)
+  rm(df_111_gpp)
+  rm(df_110_gpp)
 
   # make data sets long for plotting
   make_long <- function(df){
@@ -361,7 +452,7 @@ if (flag_plot_predictions){
     make_long()
 
 
-  # define what to show as output depending on the scenario:
+  # manually define what to show as output depending on the scenario:
   df_B1and2and3 <- list(
     # for gpp:
     gpp = bind_rows(dflong_gpp_test, dflong_gpp_train) |>
@@ -372,6 +463,9 @@ if (flag_plot_predictions){
         Scenario == "4" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",
         Scenario == "4" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior",
         Scenario == "4" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
+        Scenario == "3" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",
+        Scenario == "3" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior",
+        Scenario == "3" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
         Scenario == "1" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",
         Scenario == "1" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior",
         Scenario == "1" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
@@ -385,6 +479,9 @@ if (flag_plot_predictions){
         Scenario == "4" & model_output_type == "bias-corrected" &       parameters == "MAP"       ~ "MAP",
         Scenario == "4" & model_output_type == "bias-corrected" &       parameters == "Posterior" ~ "Posterior",
         Scenario == "4" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
+        Scenario == "3" & model_output_type == "bias-corrected" &       parameters == "MAP"       ~ "MAP",
+        Scenario == "3" & model_output_type == "bias-corrected" &       parameters == "Posterior" ~ "Posterior",
+        Scenario == "3" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
         Scenario == "1" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",       # since we did not fit a bias, we don't have a bias correction
         Scenario == "1" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior", # since we did not fit a bias, we don't have a bias correction
         # Scenario == "1" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error", # since vj was not fitted we don't have an error model
@@ -398,6 +495,9 @@ if (flag_plot_predictions){
         Scenario == "4" & model_output_type == "bias-corrected" &       parameters == "MAP"       ~ "MAP",
         Scenario == "4" & model_output_type == "bias-corrected" &       parameters == "Posterior" ~ "Posterior",
         Scenario == "4" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
+        Scenario == "3" & model_output_type == "bias-corrected" &       parameters == "MAP"       ~ "MAP",
+        Scenario == "3" & model_output_type == "bias-corrected" &       parameters == "Posterior" ~ "Posterior",
+        Scenario == "3" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error",
         Scenario == "1" & model_output_type == "rsofun" &               parameters == "MAP"       ~ "MAP",       # since we did not fit a bias, we don't have a bias correction
         Scenario == "1" & model_output_type == "rsofun" &               parameters == "Posterior" ~ "Posterior", # since we did not fit a bias, we don't have a bias correction
         # Scenario == "1" & model_output_type == "with struct. uncert." & parameters == "Posterior" ~ "Post.+Error", # since bigD13C was not fitted we don't have an error model
@@ -406,10 +506,55 @@ if (flag_plot_predictions){
       filter(y_facet != "remove")
   )
 
-  df_B1_density    <- lapply(df_B1and2and3, \(df) df |> filter(!is.na(obs)))       # remove NA observations
-  df_B2_scatter    <- lapply(df_B1and2and3, \(df) df |> filter(!is.na(obs),
-                                                               dataset == "test")) # remove NA observations and test data set
-  df_B3_timeseries <- df_B1and2and3["gpp"] # keep NA observations and test data set, only use gpp
+  df_B1_density    <- lapply(df_B1and2and3, \(df) df |> filter(!is.na(obs)))                    # remove NA observations
+  df_B2_scatter    <- lapply(df_B1and2and3, \(df) df |> filter(!is.na(obs), dataset == "test")) # remove NA observations and test data set
+  df_B3_timeseries <- df_B1and2and3["gpp"]                                                      # keep NA observations and test data set, only use gpp
+
+
+  # derive alternative representation of observations as average observations (e.g. across species, samples, etc...)
+  df_B2_scatter_avgObs <- list(
+    gpp = df_B2_scatter$gpp |># no need to aggregate since each site and each day has only 1 gpp value
+      mutate(obs_avg = obs,
+             obs_sd  = NA,
+             obs_n   = 1),
+    vj  = df_B2_scatter$vj |>
+    group_by(y_facet, modelled, target, sitename, parameters, dataset, Scenario, posterior_sample_id) |>
+    summarise(obs_avg = mean(obs),
+              obs_sd  = mean(obs),
+              obs_n   = n()),
+    bigD13C = df_B2_scatter$bigD13C |>
+    group_by(y_facet, modelled, target, sitename, parameters, dataset, Scenario, posterior_sample_id) |>
+    summarise(obs_avg = mean(obs),
+              obs_sd  = mean(obs),
+              obs_n   = n())
+  )
+  df_B1_density_avgObs <- list(
+    gpp = df_B1_density$gpp |># no need to aggregate since each site and each day has only 1 gpp value
+      mutate(obs_avg = obs,
+             obs_sd  = NA,
+             obs_n   = 1),
+    vj  = df_B1_density$vj |>
+    group_by(y_facet, modelled, target, sitename, parameters, dataset, Scenario, posterior_sample_id) |>
+    summarise(obs_avg = mean(obs),
+              obs_sd  = mean(obs),
+              obs_n   = n()),
+    bigD13C = df_B1_density$bigD13C |>
+    group_by(y_facet, modelled, target, sitename, parameters, dataset, Scenario, posterior_sample_id) |>
+    summarise(obs_avg = mean(obs),
+              obs_sd  = mean(obs),
+              obs_n   = n())
+  )
+
+  # df_B1_density$bigD13C |> filter(sitename == "lon_-111.80_lat_+040.77") |> filter(posterior_sample_id==1, y_facet == "Posterior", Scenario ==4) |> View()
+
+  # df_B1and2and3_avgObs <- df_B1and2and3
+  # df_B1and2and3_avgObs$gpp
+  # df_B1and2and3_avgObs$vj |> filter()
+  # df_B1and2and3_avgObs$bigD13C
+  # df_B1_density_avgObs    <- lapply(df_B1and2and3_avgObs, \(df) df |> filter(!is.na(obs)))                    # remove NA observations
+  # df_B2_scatter_avgObs    <- lapply(df_B1and2and3_avgObs, \(df) df |> filter(!is.na(obs), dataset == "test")) # remove NA observations and test data set
+  # df_B3_timeseries_avgObs <- df_B1and2and3_avgObs["gpp"]                                                      # keep NA observations and test data set, only use gpp
+
 
   ## Figure B2: pred-vs-obs scatter plot ----
   ## for each scenario x target x test
@@ -461,44 +606,15 @@ if (flag_plot_predictions){
     theme_classic() +
     theme(legend.position = "bottom")
 
-
-
-
-  # individual
-  # ggsave_and_return(pl_scatter_gpp,     "fig_B2_pred-vs-obs_s1-to-s4_gpp.png",     width = 12, height = 8, units = "cm", scale = 2)
-  # ggsave_and_return(pl_scatter_vj,      "fig_B2_pred-vs-obs_s1-to-s4_vj.png",      width = 12, height = 8, units = "cm", scale = 2)
-  # ggsave_and_return(pl_scatter_bigD13C, "fig_B2_pred-vs-obs_s1-to-s4_bigD13C.png", width = 12, height = 8, units = "cm", scale = 2)
-
-  # ggsave_and_return(pl_scatter_gpp     %+% filter(pl_scatter_gpp$data,     dataset == "test", parameters == "MAP"), "fig_B2_pred-vs-obs_s1-to-s4_MAP_gpp.png",     width = 12, height = 8, units = "cm", scale = 2)
-  # ggsave_and_return(pl_scatter_vj      %+% filter(pl_scatter_vj$data,      dataset == "test", parameters == "MAP"), "fig_B2_pred-vs-obs_s1-to-s4_MAP_vj.png",      width = 12, height = 8, units = "cm", scale = 2)
-  # ggsave_and_return(pl_scatter_bigD13C %+% filter(pl_scatter_bigD13C$data, dataset == "test", parameters == "MAP"), "fig_B2_pred-vs-obs_s1-to-s4_MAP_bigD13C.png", width = 12, height = 8, units = "cm", scale = 2)
-
   # combined
   pl_scatter_all <- cowplot::plot_grid(pl_scatter_gpp, pl_scatter_vj, pl_scatter_bigD13C, nrow = 1)
   ggsave_and_return(pl_scatter_all,
                     paste0("fig_B2_pred-vs-obs_s1_s4_pred",outfname_suffix,".png"),
                     width = 12, height = 6, units = "cm", scale = 2)
-  # pl_scatter_S1S4_testonly <- cowplot::plot_grid(
-  #   pl_scatter_gpp %+% filter(pl_scatter_gpp$data, dataset == "test", !(Scenario %in% c("2","3"))),
-  #   pl_scatter_vj %+% filter(pl_scatter_vj$data, dataset == "test", !(Scenario %in% c("2","3"))),
-  #   pl_scatter_bigD13C %+% filter(pl_scatter_bigD13C$data, dataset == "test", !(Scenario %in% c("2","3"))),
-  #   nrow = 1)
-  # ggsave_and_return(pl_scatter_S1S4_testonly,
-  #                   "fig_B2_test_pred-vs-obs_s1_s4.png",   # here::here("fig","fig_B2_pred-vs-obs_s1_s4.png"),
-  #                   width = 12, height = 6, units = "cm", scale = 3)
-  #
-  # pl_scatter_S1S4 <- cowplot::plot_grid(
-  #   pl_scatter_gpp %+% filter(pl_scatter_gpp$data, !(Scenario %in% c("2","3"))),
-  #   pl_scatter_vj  %+% filter(pl_scatter_vj$data, !(Scenario %in% c("2","3"))),
-  #   pl_scatter_bigD13C %+% filter(pl_scatter_bigD13C$data, !(Scenario %in% c("2","3"))),
-  #   nrow = 1)
-  # ggsave_and_return(pl_scatter_S1S4,
-  #                   "fig_B2_both_pred-vs-obs_s1_s4.png",   # here::here("fig","fig_B2_pred-vs-obs_s1_s4.png"),
-  #                   width = 12, height = 6, units = "cm", scale = 3)
-  pl_scatter_gpp_bysite_test <- pl_scatter_gpp %+% (pl_scatter_gpp$data |> filter(y_facet == "Posterior", Scenario == "4")) +
+  pl_scatter_gpp_bysite_test <- pl_scatter_gpp %+% (pl_scatter_gpp$data |> filter(y_facet == "Posterior", Scenario %in% c("4","3"))) +
     facet_wrap(~sitename+dataset, ncol=13)
   pl_scatter_gpp_bysite_train<- pl_scatter_gpp %+% (df_B1and2and3$gpp |> filter(!is.na(obs), dataset =="train") |>
-                        filter(y_facet == "Posterior", Scenario == "4")) +
+                        filter(y_facet == "Posterior", Scenario %in% c("4","3"))) +
     facet_wrap(~sitename+dataset, ncol=6)
   ggsave_and_return(pl_scatter_gpp_bysite_test,
                     paste0("fig_B2b_pred-vs-obs_s4_test-sites",outfname_suffix,".png"),
@@ -506,6 +622,105 @@ if (flag_plot_predictions){
   ggsave_and_return(pl_scatter_gpp_bysite_train,
                     paste0("fig_B2b_pred-vs-obs_s4_train-sites",outfname_suffix,".png"),
                     width = 12, height = 10, units = "cm", scale = 2)
+
+
+            # individual
+            # ggsave_and_return(pl_scatter_gpp,     "fig_B2_pred-vs-obs_s1-to-s4_gpp.png",     width = 12, height = 8, units = "cm", scale = 2)
+            # ggsave_and_return(pl_scatter_vj,      "fig_B2_pred-vs-obs_s1-to-s4_vj.png",      width = 12, height = 8, units = "cm", scale = 2)
+            # ggsave_and_return(pl_scatter_bigD13C, "fig_B2_pred-vs-obs_s1-to-s4_bigD13C.png", width = 12, height = 8, units = "cm", scale = 2)
+
+            # ggsave_and_return(pl_scatter_gpp     %+% filter(pl_scatter_gpp$data,     dataset == "test", parameters == "MAP"), "fig_B2_pred-vs-obs_s1-to-s4_MAP_gpp.png",     width = 12, height = 8, units = "cm", scale = 2)
+            # ggsave_and_return(pl_scatter_vj      %+% filter(pl_scatter_vj$data,      dataset == "test", parameters == "MAP"), "fig_B2_pred-vs-obs_s1-to-s4_MAP_vj.png",      width = 12, height = 8, units = "cm", scale = 2)
+            # ggsave_and_return(pl_scatter_bigD13C %+% filter(pl_scatter_bigD13C$data, dataset == "test", parameters == "MAP"), "fig_B2_pred-vs-obs_s1-to-s4_MAP_bigD13C.png", width = 12, height = 8, units = "cm", scale = 2)
+
+            # pl_scatter_S1S4_testonly <- cowplot::plot_grid(
+            #   pl_scatter_gpp %+% filter(pl_scatter_gpp$data, dataset == "test", !(Scenario %in% c("2","3"))),
+            #   pl_scatter_vj %+% filter(pl_scatter_vj$data, dataset == "test", !(Scenario %in% c("2","3"))),
+            #   pl_scatter_bigD13C %+% filter(pl_scatter_bigD13C$data, dataset == "test", !(Scenario %in% c("2","3"))),
+            #   nrow = 1)
+            # ggsave_and_return(pl_scatter_S1S4_testonly,
+            #                   "fig_B2_test_pred-vs-obs_s1_s4.png",   # here::here("fig","fig_B2_pred-vs-obs_s1_s4.png"),
+            #                   width = 12, height = 6, units = "cm", scale = 3)
+            #
+            # pl_scatter_S1S4 <- cowplot::plot_grid(
+            #   pl_scatter_gpp %+% filter(pl_scatter_gpp$data, !(Scenario %in% c("2","3"))),
+            #   pl_scatter_vj  %+% filter(pl_scatter_vj$data, !(Scenario %in% c("2","3"))),
+            #   pl_scatter_bigD13C %+% filter(pl_scatter_bigD13C$data, !(Scenario %in% c("2","3"))),
+            #   nrow = 1)
+            # ggsave_and_return(pl_scatter_S1S4,
+            #                   "fig_B2_both_pred-vs-obs_s1_s4.png",   # here::here("fig","fig_B2_pred-vs-obs_s1_s4.png"),
+            #                   width = 12, height = 6, units = "cm", scale = 3)
+
+
+  ### REDO SCATTER FOR AVG OBS
+
+  ## for each scenario x target x test
+  pl_scatter_bigD13C <- ggplot(df_B2_scatter_avgObs$bigD13C, aes(x = modelled, y = obs_avg)) +
+    geom_hex(bins = 50, show.legend = FALSE) +
+    # layout:
+    # facet_grid(parameters+model_output_type ~ Scenario+dataset, labeller = labeller("Scenario" = label_both)) +
+    facet_grid(y_facet ~ Scenario+dataset, labeller = labeller("Scenario" = label_both)) +
+    khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+    labs(x=expression(paste("Predicted Δ13C (permil)")),
+         y=expression(paste("Avg. Observed Δ13C (permil)"))) +
+    # coord_fixed() +
+    # coord_cartesian(xlim = lims_bigD13C) +
+    # ylim(lims_bigD13C[[1]], lims_bigD13C[[2]]) +
+    theme_classic() +
+    theme(legend.position = "bottom")
+
+  pl_scatter_vj <- ggplot(data = df_B2_scatter_avgObs$vj, aes(x = modelled, y = obs_avg)) +
+    geom_hex(bins = 50, show.legend = FALSE) +
+    # layout:
+    # facet_grid(parameters+model_output_type ~ Scenario+dataset, labeller = labeller("Scenario" = label_both)) +
+    facet_grid(y_facet ~ Scenario+dataset, labeller = labeller("Scenario" = label_both)) +
+    khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+    labs(x=expression(paste("Predicted Vcmax/Jmax (-)")),
+         y=expression(paste("Avg. Observed Vcmax/Jmax (-)"))) +
+    # coord_fixed() +
+    # coord_cartesian(xlim = lims_vj) +
+    # ylim(lims_vj[[1]], lims_vj[[2]]) +
+    theme_classic() +
+    theme(legend.position = "bottom")
+
+  pl_scatter_gpp <- ggplot(data = df_B2_scatter_avgObs$gpp, aes(x = modelled, y = obs_avg)) +
+    geom_hex(bins = 50, show.legend = FALSE) +
+    # layout:
+    # facet_grid(parameters+model_output_type ~ Scenario+dataset, labeller = labeller("Scenario" = label_both)) +
+    facet_grid(y_facet ~ Scenario+dataset, labeller = labeller("Scenario" = label_both)) +
+    khroma::scale_fill_batlowW(trans = "log", reverse = TRUE) +
+    geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
+    labs(x=expression(paste("Predicted GPP (g C m"^-2, "s"^-1, ")")),
+         y=expression(paste("Avg. Observed GPP (g C m"^-2, "s"^-1, ")"))) +
+    coord_fixed() +
+    # coord_cartesian(xlim = c(0, lims)) +
+    # ylim(0, lims) +
+    theme_classic() +
+    theme(legend.position = "bottom")
+
+  # combined
+  pl_scatter_all <- cowplot::plot_grid(pl_scatter_gpp, pl_scatter_vj, pl_scatter_bigD13C, nrow = 1)
+  ggsave_and_return(pl_scatter_all,
+                    paste0("fig_B2_pred-vs-avgObs2_s1_s4_pred",outfname_suffix,".png"),
+                    width = 12, height = 6, units = "cm", scale = 2)
+
+  pl_scatter_gpp_bysite_test <- pl_scatter_gpp %+% (pl_scatter_gpp$data |> filter(y_facet == "Posterior", Scenario %in% c("4","3"))) +
+    facet_wrap(~sitename+dataset, ncol=13)
+  # pl_scatter_gpp_bysite_train<- pl_scatter_gpp %+% (df_B1and2and3$gpp |> filter(!is.na(obs_avg), dataset =="train") |>
+  #                       filter(y_facet == "Posterior", Scenario %in% c("4","3"))) +
+  #   facet_wrap(~sitename+dataset, ncol=6)
+  ggsave_and_return(pl_scatter_gpp_bysite_test,
+                    paste0("fig_B2b_pred-vs-avgObs2_s4_test-sites",outfname_suffix,".png"),
+                    width = 12, height = 10, units = "cm", scale = 2)
+  # ggsave_and_return(pl_scatter_gpp_bysite_train,
+  #                   paste0("fig_B2b_pred-vs-avgObs2_s4_train-sites",outfname_suffix,".png"),
+  #                   width = 12, height = 10, units = "cm", scale = 2)
+  ### END REDO SCATTER FOR AVG OBS
+
+
+
 
   ## Figure B: error distribution density plot ----
   ## for each scenario x target x test+train
@@ -553,13 +768,98 @@ if (flag_plot_predictions){
   #   aes(y=dataset) + labs(y=NULL) +
   #   facet_grid(Scenario~target, labeller = labeller("Scenario" = label_both), scales = "free_x") +
   #   scale_y_discrete(limits = rev)
-  pl_density_alltargets_v3 <- pl_density_alltargets +
-    aes(y=Scenario) + scale_y_discrete(limits = rev) +
-    facet_grid(~target, scales = "free_x",
-               labeller = as_labeller(c("gpp"="(a) GPP:", "vj"="(b) Vcmax/Jmax:", "bigD13C"="(c) Δ13C:"))) +
-    theme(strip.background = element_blank(), strip.text = element_text(hjust = 0, size = 12, face = "bold"))
+
+  dat_to_plot <- bind_rows(
+      df_B1_density$vj,
+      df_B1_density$bigD13C,
+      df_B1_density$gpp
+    ) |>
+    mutate(target = factor(target, levels = c("gpp","vj","bigD13C")))
+
+  dat_to_plot_avgObs <- bind_rows(
+      df_B1_density_avgObs$gpp |> select(names(df_B1_density_avgObs$bigD13C)),
+      df_B1_density_avgObs$vj,
+      df_B1_density_avgObs$bigD13C
+    ) |>
+    mutate(target = factor(target, levels = c("gpp","vj","bigD13C")))
+
+  pl_density_alltargets_v3 <- ggplot(dat_to_plot, aes(x = modelled - obs, y = Scenario)) +
+    scale_y_discrete(limits = rev) +
+    # add Posterior (fill):
+    ggridges::geom_density_ridges( data = function(df) {df |> filter(y_facet == "Posterior")},
+      mapping = aes(fill = dataset), # linetype = dataset
+      scale = 0.8) +
+    # add error (solid):
+    ggridges::geom_density_ridges( data = function(df) {df |> filter(y_facet == "Post.+Error")},
+      mapping = aes(color = dataset, linetype = "Post.+Error"),
+      scale = 0.8, fill = NA, key_glyph = "timeseries") + # "polygon" or "timeseries"
+    # # add MAP (dashed):
+    # ggridges::geom_density_ridges( data = function(df) {df |> filter(y_facet == "MAP")},
+    #   mapping = aes(color = dataset, linetype = "MAP"),
+    #   scale = 0.8, fill = NA, key_glyph = "timeseries") + # "polygon" or "timeseries"
+    # layout:
+    scale_fill_manual(NULL, aesthetics = c("fill", "colour"), values = c("test"="#29a274ff", "train" = t_col("#777055ff"))) +
+    scale_linetype_manual(NULL, values = c("Post.+Error" = "3313", "MAP"         = "3232", "fixed"       = "solid")) +
+    # theme:
+    theme_classic() +
+    theme(legend.position        = "inside",
+          legend.position.inside = c(0.02,0.02),
+          legend.justification   = c(0,0),
+          legend.direction       = "vertical",
+          legend.box             = "horizontal",
+          legend.background      = element_blank()) +
+    # add line at 0:
+    scale_x_continuous(minor_breaks = 0.00001) + # 0 makes it disappear
+    theme(panel.grid.minor.x = element_line()) +
+    # axis labels and facet grid labels
+    labs(x = "Predicted - Observed", linetype = NULL) +
+    facet_grid(
+      ~target,
+      scales = "free_x",
+      labeller = as_labeller(c("gpp"     = "(a) GPP:",
+                               "vj"      = "(b) Vcmax/Jmax:",
+                               "bigD13C" = "(c) Δ13C:"))) +
+    theme(strip.background = element_blank(),
+          strip.text       = element_text(hjust = 0, size = 12, face = "bold"))
+
+
   ggsave(here::here(file.path("fig",paste0("fig_B_predObs_errorDensity_s1s4",outfname_suffix,".png"))),
          plot = pl_density_alltargets_v3, width=12, height=8, units = "cm", scale = 1.3)
+
+  # redoc plot versus obs_avg instead of obs
+  pl_density_alltargets_v3_avgObs <- (pl_density_alltargets_v3 %+% dat_to_plot_avgObs) +
+    aes(x = modelled - obs_avg, y = Scenario) +
+    labs(x = "Predicted - Avg. Observed")
+  ggsave(here::here(file.path("fig",paste0("fig_Bb_predObs_errorDensity_s1s4",outfname_suffix,".png"))),
+         plot = pl_density_alltargets_v3_avgObs, width=12, height=8, units = "cm", scale = 1.3)
+
+  # and combine both, arranging axes:
+  # Extend x-axis limits of pl_density_alltargets_v3_avgObs to be the same as pl_density_alltargets_v3
+  # by using a geom_blank() layer (source: https://stackoverflow.com/a/21585521/3915004) :
+  pl_density_alltargets_v3_build <- ggplot2::ggplot_build(pl_density_alltargets_v3)
+  dummy <- data.frame(
+    target = c("gpp", "gpp",
+               "vj_obs__", "vj_obs__",
+               "bigD13C_obs_permil", "bigD13C_obs_permil") |>
+      factor(levels = c("gpp", "vj_obs__", "bigD13C_obs_permil")),
+    x      = c(pl_density_alltargets_v3_build$layout$get_scales(1)$x$range$range,
+               pl_density_alltargets_v3_build$layout$get_scales(2)$x$range$range,
+               pl_density_alltargets_v3_build$layout$get_scales(3)$x$range$range),
+    y = 1
+  )
+  pl_density_alltargets_v3_avgObs_xlimsExtended <- pl_density_alltargets_v3_avgObs + geom_blank(data = dummy, aes(x=x, y=y))
+  pl_density_alltargets_v3_comparison <- cowplot::plot_grid(
+    pl_density_alltargets_v3,
+    pl_density_alltargets_v3_avgObs_xlimsExtended +
+      facet_grid( ~target, scales = "free_x",
+      labeller = as_labeller(c("gpp"     = "(d) GPP:",
+                               "vj"      = "(e) Vcmax/Jmax:",
+                               "bigD13C" = "(f) Δ13C:"))),
+    ncol = 1, rel_heights = c(1,1))
+  ggsave(here::here(file.path("fig",paste0("fig_Bbb_predObs_errorDensity_s1s4",outfname_suffix,".png"))),
+       plot = pl_density_alltargets_v3_comparison, width=12, height=16, units = "cm", scale = 1.3)
+
+
 
             # pl_density_alltargets_v4 <- ggplot(data = bind_rows(df_B1_density$vj, df_B1_density$bigD13C, df_B1_density$gpp) |>
             #                     mutate(target = factor(target, levels = c("gpp","vj","bigD13C"))),
@@ -590,7 +890,7 @@ if (flag_plot_predictions){
 
   # Figure C2: plot of intra-site spread of observations ----
   # NOTE that this spread we won't be able to model
-  res_s3 <- setup_rsofun_calibration(scenario = 3)
+  res_s3 <- setup_rsofun_calibration(scenario = 3) # NOTE: this must remain scenario 3 since it has all the data...
   site_info <- bind_rows(
     res_s3$drivobs_train |> mutate(set = "train"),
     res_s3$drivobs_test |> mutate(set = "test")
@@ -656,7 +956,7 @@ if (flag_plot_predictions){
     labs(linetype=NULL)
   pl_density_obs
 
-  # Extend x-axis limits of pl_density_obs to be teh same as pl_density_alltargets_v3:
+  # Extend x-axis limits of pl_density_obs to be the same as pl_density_alltargets_v3:
 
   pl_density_alltargets_v3_build <- ggplot2::ggplot_build(pl_density_alltargets_v3)
   # pl_density_alltargets_v3_build$layout$panel_scales_x
@@ -680,19 +980,17 @@ if (flag_plot_predictions){
 
 
 
-ggplot(d, aes(x = pred, y = value)) +
-  facet_wrap(~variable, scales = "free") +
-  geom_point(size = 2.5) +
-  geom_blank(data=dummy) +
-  theme_bw()
+
+  ggsave(here::here(file.path("fig",paste0("fig_B1b_predObs_errorDensity_s1s4",outfname_suffix,".png"))),
+       plot = pl_density_alltargets_v3_withObs, width=12, height=12, units = "cm", scale = 1.3)
 
 
   ## Figure B3: make a proper gpp time series plot ----
-  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "1", dataset == "train"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s1_train",outfname_suffix,".png")))
-  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "4", dataset == "train"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s4_train",outfname_suffix,".png")))
+  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "1",          dataset == "train"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s1_train",outfname_suffix,".png")))
+  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario %in% c("4","3"), dataset == "train"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s4or3_train",outfname_suffix,".png")))
 
-  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "1", dataset == "test"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s1_test",outfname_suffix,".png")))
-  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "4", dataset == "test"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s4_test",outfname_suffix,".png")))
+  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "1",          dataset == "test"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s1_test",outfname_suffix,".png")))
+  plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario %in% c("4","3"), dataset == "test"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s4or3_test",outfname_suffix,".png")))
 
   plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "0", dataset == "train"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s0_train",outfname_suffix,".png")))
   plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "0", dataset == "test"), fpath = here::here("fig",paste0("fig_BXY_predObs_gppTimeSeries_s0_test",outfname_suffix,".png")))
