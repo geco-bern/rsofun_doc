@@ -10,6 +10,7 @@ library(ggplot2)
 library(patchwork)
 library(cowplot)
 library(ggridges)
+library(xtable)
 
 source(here::here("R/figure_helpers.R"))
 source(here::here("analysis/00_define_scenarios.R"))
@@ -1161,45 +1162,52 @@ if (flag_plot_general){
     unnest_wider(targets)
 
 
-  pl1_train <- rgeco:::plot_map_simpl() +
-    geom_point(size=0.1,shape = 20, color = "red",
-               data    = site_info |> filter(vj) |> filter(set == "train"),
-               mapping = aes(lon, lat)) + ggtitle("Vcmax/Jmax sites") + labs(caption = sprintf("Training set (n=%d)", site_info |> filter(vj) |> filter(set == "train") |> nrow()))
-  pl2_train <- rgeco:::plot_map_simpl() +
-    geom_point(size=0.1,shape = 20, color = "red",
-               data    = site_info |> filter(bigD13C) |> filter(set == "train"),
-               mapping = aes(lon, lat)) + ggtitle("Δ13C sites") + labs(caption = sprintf("Training set (n=%d)", site_info |> filter(bigD13C) |> filter(set == "train") |> nrow()))
-  pl3_train <- rgeco:::plot_map_simpl() +
+  pl1_train <- rgeco:::plot_map_simpl(dir_ne = tempdir()) +
     geom_point(size=0.1,shape = 20, color = "red",
                data    = site_info |> filter(gpp) |> filter(set == "train"),
                mapping = aes(lon, lat)) + ggtitle("GPP flux sites") + labs(caption = sprintf("Training set (n=%d)", site_info |> filter(gpp) |> filter(set == "train") |> nrow()))
+  pl2_train <- rgeco:::plot_map_simpl(dir_ne = tempdir()) +
+    geom_point(size=0.1,shape = 20, color = "red",
+               data    = site_info |> filter(vj) |> filter(set == "train"),
+               mapping = aes(lon, lat)) + ggtitle("Vcmax/Jmax sites") + labs(caption = sprintf("Training set (n=%d)", site_info |> filter(vj) |> filter(set == "train") |> nrow()))
+  pl3_train <- rgeco:::plot_map_simpl(dir_ne = tempdir()) +
+    geom_point(size=0.1,shape = 20, color = "red",
+               data    = site_info |> filter(bigD13C) |> filter(set == "train"),
+               mapping = aes(lon, lat)) + ggtitle("Δ13C sites") + labs(caption = sprintf("Training set (n=%d)", site_info |> filter(bigD13C) |> filter(set == "train") |> nrow()))
 
-  pl1_test <- rgeco:::plot_map_simpl() +
-    geom_point(size=0.1,shape = 20, color = "red",
-               data    = site_info |> filter(vj) |> filter(set == "test"),
-               mapping = aes(lon, lat)) + ggtitle(NULL) + labs(caption = #Vcmax/Jmax sites",
-                                                  sprintf("Test set (n=%d)", site_info |> filter(vj) |> filter(set == "test") |> nrow()))
-  pl2_test <- rgeco:::plot_map_simpl() +
-    geom_point(size=0.1,shape = 20, color = "red",
-               data    = site_info |> filter(bigD13C) |> filter(set == "test"),
-               mapping = aes(lon, lat)) + ggtitle(NULL) + labs(caption = #Δ13C sites",
-                                                  sprintf("Test set (n=%d)", site_info |> filter(bigD13C) |> filter(set == "test") |> nrow()))
-  pl3_test <- rgeco:::plot_map_simpl() +
+  pl1_test <- rgeco:::plot_map_simpl(dir_ne = tempdir()) +
     geom_point(size=0.1,shape = 20, color = "red",
                data    = site_info |> filter(gpp) |> filter(set == "test"),
                mapping = aes(lon, lat)) + ggtitle(NULL) + labs(caption = #"GPP flux sites",
                                                   sprintf("Test set (n=%d)", site_info |> filter(gpp) |> filter(set == "test") |> nrow()))
+  pl2_test <- rgeco:::plot_map_simpl(dir_ne = tempdir()) +
+    geom_point(size=0.1,shape = 20, color = "red",
+               data    = site_info |> filter(vj) |> filter(set == "test"),
+               mapping = aes(lon, lat)) + ggtitle(NULL) + labs(caption = #"Vcmax/Jmax sites",
+                                                  sprintf("Test set (n=%d)", site_info |> filter(vj) |> filter(set == "test") |> nrow()))
+  pl3_test <- rgeco:::plot_map_simpl(dir_ne = tempdir()) +
+    geom_point(size=0.1,shape = 20, color = "red",
+               data    = site_info |> filter(bigD13C) |> filter(set == "test"),
+               mapping = aes(lon, lat)) + ggtitle(NULL) + labs(caption = #"Δ13C sites",
+                                                  sprintf("Test set (n=%d)", site_info |> filter(bigD13C) |> filter(set == "test") |> nrow()))
 
   library(cowplot)
-  remove_labels <- theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank())
-  pl_targets <- cowplot::plot_grid(
+  remove_labels <- theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank(),
+    title = element_text(size=10), plot.caption = element_text(size=8)
+    )
+  pl_sitemap <- cowplot::plot_grid(
     pl1_train + remove_labels, pl2_train + remove_labels, pl3_train + remove_labels,
     pl1_test + remove_labels, pl2_test + remove_labels, pl3_test + remove_labels,
+    rel_heights = c(1.2,1),
+    # labels = c("(a)","(b)","(c)",NULL,NULL,NULL),
     ncol = 3)
 
   ggsave(
-    here::here("fig/fig_D_append_climate_MapTargetTrainingSites.png"),
-    pl_targets, width=7.2, height=1.8 * 2, units="in")
+    here::here("fig/fig_C_append_climate_MapTargetTrainingSites.png"),
+    pl_sitemap, width=12, height=5, units="cm", dpi=300, scale = 1.3)
 
   # Table a: site table [lon, lat, elv, climate, vegtype, train-or-test, targets, Nobs] ----
   Defourny_LCCS_to_IGBP_vegtype <- function(df){
@@ -1281,57 +1289,133 @@ if (flag_plot_general){
   table_a <- site_info_for_table_a |>
     rowwise() |> mutate(Nobs = nrow(data)) |> mutate(Nobs2 = count_obs(target, data)) |>
     select(sitename, lon, lat, elv, climate, igbp_vegtype, set, target, Nobs, Nobs2)
-  table_a
 
+  table_a %>%
+    xtable::xtable(
+      x = .,
+      caption = "Listing of sites in training and testing data sets.",
+      tabular.environment = "supertabular", floating = FALSE,
+      align = rep("l", (ncol(x = .) + 1))  # make all columns left-aligned
+    ) %>%
+    print(x = .,
+      hline.after = c(-1,0,nrow(.)),  caption.placement = "top",
+      file = here::here("fig/table-a_site_list.tex"),
+      include.rownames = FALSE
+    ) # this can be added to tex file as: \input{filename.tex})
 
 
   # Table b: prior ranges of estimated params ----
-  res_s3 <- setup_rsofun_calibration(scenario = 3)
-  res_s2 <- setup_rsofun_calibration(scenario = 2)
-  res_s1 <- setup_rsofun_calibration(scenario = 1)
+  # Symbol|Parameter name|Description|PriorS1|PriorS2|PriorS3|MAPS1|MAPS2|MAPS3
+  caption <- paste(
+    "Parameter listing including prior and Maximum A Posteriori (MAP) estimates.",
+    "The bounds of uniform or truncated normal prior distributions are given in square brackets.",
+    "Parameters that were held fixed for the calibration are marked with a single number in brackets and an asterisk (*)")
+
+  rsofun_symbol_parname_description <- tribble(
+    ~Parameter,             ~Symbol_tex,                              ~Units_tex,                     ~Symbol_R,           ~Description,
+    "kphio",                "$\\varphi_0$",                           "\\unit{mol\\,mol^{-1}}",       expression("TODO"),     "Quantum yield at optimal temperature" ,
+    "kphio_par_a",          "$a$",                                    "\\unit{°C^{-2}}",              expression("TODO"),     "Shape parameter for the temperature dependence of the quantum yield " ,
+    "kphio_par_b",          "$b$",                                    "\\unit{°C}",                   expression("TODO"),     "Optimal temperature for the quantum yield" ,
+    "soilm_thetastar",      "$\\theta^*$",                            "\\unit{mm}",                   expression("TODO"),     "Threshold plant-available soil water content in the soil moisture stress function" ,
+    "soilm_betao",          "$\\beta_0$",                             "unitless",                     expression("TODO"),     "Stress factor at low soil moisture, intercept for the soil moisture stress function" ,
+    "beta_unitcostratio",   "$\\beta$",                               "unitless",                     expression("TODO"),     "Unit cost ratio of carboxylation (maintenance of Vcmax) to transpiration" ,
+    "rd_to_vcmax",          "$b_0$",                                  "unitless",                     expression("TODO"),     "Ratio of temperature-normalised dark respiration ($R_{\\mathrm{d25}}$) to the temperature-normalised maximum carboxylation rate $V_{\\mathrm{cmax}}$ (eq. C8 in Stocker et al. 2020)" ,
+    "tau_acclim",           "$\\tau$",                                "days",                         expression("TODO"),     "Acclimation time scale of photosynthesis" ,
+    "kc_jmax",              "$c^{*}$",                                "unitless",                     expression("TODO"),     "Unit cost of electron transport (maintenance of $J_{\\mathrm{max}}$)" ,
+    "err_gpp",              "$\\epsilon_{\\mathrm{gpp}}$",            "\\unit{gC\\,m^{-2}\\,s^{-1}}", expression("TODO"),     "Gaussian error standard deviation of GPP" ,
+    "err_bigD13C",          "$\\epsilon_{\\mathrm{\\Delta^{13}C}}$",  "\\unit{\\permil}",             expression("TODO"),     "Gaussian error standard deviation of $\\Delta^{13}C$" ,
+    "err_vj",               "$\\epsilon_{\\mathrm{vj}}$",             "unitless",                     expression("TODO"),     "Gaussian error standard deviation of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$" ,
+    "errbias_bigD13C",      "$\\delta_{\\mathrm{\\Delta^{13}C}}$",    "\\unit{\\permil}",             expression("TODO"),     "Bias error term of $\\Delta^{13}C$ (= mod - obs)",
+    "errbias_vj",           "$\\delta_{\\mathrm{vj}}$",               "unitless",                     expression("TODO"),     "Bias error term of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$ (= mod - obs)"
+  )
+
+  res_s3 <- setup_rsofun_calibration(scenario = 113)
+  res_s2 <- setup_rsofun_calibration(scenario = 112)
+  res_s1 <- setup_rsofun_calibration(scenario = 111)
+  out_calib_s111DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen111_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s112DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen112_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
+  out_calib_s113DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds"))  # TODO change to 100k
 
 
-  par_prior_s1 <- as.data.frame(do.call("rbind", res_s1$par)) |> dplyr::add_rownames("parameter")|> mutate(scenario = "Scenario 1") |> mutate(value = sprintf("[%.3f to %.3f]", lower, upper))
-  par_prior_s2 <- as.data.frame(do.call("rbind", res_s2$par)) |> dplyr::add_rownames("parameter")|> mutate(scenario = "Scenario 2") |> mutate(value = sprintf("[%.3f to %.3f]", lower, upper))
-  par_prior_s3 <- as.data.frame(do.call("rbind", res_s3$par)) |> dplyr::add_rownames("parameter")|> mutate(scenario = "Scenario 3") |> mutate(value = sprintf("[%.3f to %.3f]", lower, upper))
 
-  par_fix_s1 <- as.data.frame(res_s1$par_fixed) |> pivot_longer(everything(), names_to = "parameter") |> mutate(value = sprintf("[%.2f]*", value))|> mutate(scenario = "Scenario 1")
-  # par_fix_s2 <- as.data.frame(res_s2$par_fixed) |> pivot_longer(everything(), names_to = "parameter") |> mutate(value = sprintf("[%.2f]*", value)) # NOTE: none are fixed
-  # par_fix_s3 <- as.data.frame(res_s3$par_fixed) |> pivot_longer(everything(), names_to = "parameter") |> mutate(value = sprintf("[%.2f]*", value)) # NOTE: none are fixed
 
-  table_b_v1 <- bind_rows(
-    par_prior_s1,
-    par_fix_s1,
-    par_prior_s2,
-    par_prior_s3
+  par_prior_s1 <- bind_rows(lapply(res_s1$par, as.data.frame), .id = "Parameter") |> mutate(scenario = "Scenario 1") |> mutate(prior_value = sprintf("[%.3f to %.3f]", lower, upper))
+  par_prior_s2 <- bind_rows(lapply(res_s2$par, as.data.frame), .id = "Parameter") |> mutate(scenario = "Scenario 2") |> mutate(prior_value = sprintf("[%.3f to %.3f]", lower, upper))
+  par_prior_s3 <- bind_rows(lapply(res_s3$par, as.data.frame), .id = "Parameter") |> mutate(scenario = "Scenario 3") |> mutate(prior_value = sprintf("[%.3f to %.3f]", lower, upper))
+
+  # replace normal distributions: \mathcal{N}(\mu,\,\sigma^{2})
+  # par_prior_s1 |> rowwise() |> mutate(prior_value = ifelse(!is.na(sd), sprintf("\\mathcal{N}(%.3f,\\,%.3f^{2})",mean,sd),prior_value))
+  par_prior_s2 <- par_prior_s2 |> rowwise() |> mutate(prior_value = ifelse(!is.na(sd), sprintf("$\\mathcal{N}(%.3f,\\,%.3f^{2})$ within %s",mean,sd,prior_value),prior_value))
+  par_prior_s3 <- par_prior_s3 |> rowwise() |> mutate(prior_value = ifelse(!is.na(sd), sprintf("$\\mathcal{N}(%.3f,\\,%.3f^{2})$ within %s",mean,sd,prior_value),prior_value))
+
+  par_fix_s1 <- as.data.frame(res_s1$par_fixed) |> pivot_longer(everything(), names_to = "Parameter", values_to="prior_value") |> mutate(scenario = "Scenario 1") |> mutate(prior_value = sprintf("[%.2f]*", prior_value))
+  par_fix_s2 <- as.data.frame(res_s2$par_fixed) |> pivot_longer(everything(), names_to = "Parameter", values_to="prior_value") |> mutate(scenario = "Scenario 2") |> mutate(prior_value = sprintf("[%.2f]*", prior_value))
+  par_fix_s3 <- as.data.frame(res_s3$par_fixed) |> pivot_longer(everything(), names_to = "Parameter", values_to="prior_value") |> mutate(scenario = "Scenario 3") |> mutate(prior_value = sprintf("[%.2f]*", prior_value))
+
+  par_MAP_s1 <- data.frame(MAP = MAP(out_calib_s111DREAMzs$mod, start = 25000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = "Scenario 1") |> mutate(MAP = sprintf("%.2f", MAP))
+  par_MAP_s2 <- data.frame(MAP = MAP(out_calib_s112DREAMzs$mod, start = 25000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = "Scenario 2") |> mutate(MAP = sprintf("%.2f", MAP))
+  par_MAP_s3 <- data.frame(MAP = MAP(out_calib_s113DREAMzs$mod, start = 12000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = "Scenario 3") |> mutate(MAP = sprintf("%.2f", MAP))
+
+  table_b_v1_prior <- bind_rows(
+    par_prior_s1, par_fix_s1,
+    par_prior_s2, par_fix_s2,
+    par_prior_s3, par_fix_s3,
   ) |>
-    select(parameter, value, scenario) |> pivot_wider(names_from = scenario, values_from = value)
+    select(Parameter, prior_value, scenario) |>
+    pivot_wider(names_from = scenario, values_from = prior_value, names_glue = "{.value}_{scenario}")
+
+  table_b_v1_MAP <- bind_rows(
+    par_MAP_s1,
+    par_MAP_s2,
+    par_MAP_s3,
+  ) |>
+    select(Parameter, MAP, scenario) |>
+    pivot_wider(names_from = scenario, values_from = MAP, names_glue = "{.value}_{scenario}")
+
+  table_b_v1 <- left_join(table_b_v1_prior, table_b_v1_MAP, by = join_by(Parameter))
+
+  # Symbol|Parameter name|Description|PriorS1|PriorS2|PriorS3|MAPS1|MAPS2|MAPS3
+  table_b_v1 <- right_join(
+    rsofun_symbol_parname_description |> select(Symbol=Symbol_tex, Parameter, Units_tex, Description),
+    table_b_v1,
+    #TODO: add MAP here
+    by = join_by(Parameter)
+  )
+
+  # remove some parameters:
+  table_b_v1_reduced <- table_b_v1 |> filter(!(Parameter %in% c("rd_to_vcmax", "soilm_betao")))
 
 
-          # priors_s3 <- s3_output_to_analyze[[1]]$setup$prior # extract prior from any chain
-          # priors_s3_tbl <- tibble(par = names(priors_s3$lower),
-          #                         lower = priors_s3$lower,
-          #                         upper = priors_s3$upper,
-          #                         scenario = 3)
-          # priors_s2 <- s2_output_to_analyze[[1]]$setup$prior # extract prior from any chain
-          # priors_s2_tbl <- tibble(par = names(priors_s2$lower),
-          #                         lower = priors_s2$lower,
-          #                         upper = priors_s2$upper,
-          #                         scenario = 2)
-          # priors_s1 <- s1_output_to_analyze[[1]]$setup$prior # extract prior from any chain
-          # priors_s1_tbl <- tibble(par = names(priors_s1$lower),
-          #                         lower = priors_s1$lower,
-          #                         upper = priors_s1$upper,
-          #                         scenario = 1)
-          #
-          # table_b_v2 <- bind_rows(priors_s1_tbl,priors_s2_tbl,priors_s3_tbl) |>
-          #   pivot_longer(c(lower, upper)) |> pivot_wider(names_from = c(scenario, name))
+  # export to LaTeX
+  table_b_v1 %>%
+    xtable::xtable(
+      x = .,
+      caption = caption, 
+      tabular.environment = "tabularx", width="\\textwidth",
+      # align="rXXXXXX" # make use of tabularx "X"-column
+      align = rep("l", (ncol(x = .) + 1))  # make all columns left-aligned
+    ) %>%
+    print(x = .,
+      hline.after = c(-1,0,nrow(.)), caption.placement = "top",
+      file = here::here("fig/table-b_parameters.tex"),
+      include.rownames = FALSE,
+      sanitize.text.function=function(x){x} # override normal sanitizing function since we have defined tex
+    ) # this can be added to tex file as: \input{filename.tex})
 
-
-  table_a |> View()
-  table_b_v1 |> View()
-  # TODO: make these into a LaTeX table
-
+  table_b_v1_reduced %>%
+    xtable::xtable(
+      x = .,
+      caption = caption,
+      tabular.environment = "tabularx", width="\\textwidth",
+      # align="rXXXXXX" # make use of tabularx "X"-column
+      align = rep("l", (ncol(x = .) + 1))  # make all columns left-aligned
+    ) %>%
+    print(x = .,
+      hline.after = c(-1,0,nrow(.)),  caption.placement = "top",
+      file = here::here("fig/table-b_parameters_reduced.tex"),
+      include.rownames = FALSE,
+      sanitize.text.function=function(x){x} # override normal sanitizing function since we have defined tex
+    ) # this can be added to tex file as: \input{filename.tex})
 }
 
 
