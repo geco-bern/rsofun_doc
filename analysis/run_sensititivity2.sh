@@ -1,5 +1,5 @@
 #! /usr/bin/bash -l
-#SBATCH --job-name="s113_posteriorSensitivity_train"
+#SBATCH --job-name="s113_1.5IQR_posteriorSensitivity_test_40_1000"
 #SBATCH --time=24:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
 #SBATCH --array=0-3              # specifies the slurm array job with the number of tasks
@@ -38,74 +38,88 @@ DATASET="train" # "train" or "test"
 
 NRUNS=40  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
 echo "Starting Stage 0: starting with $NRUNS"
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 0a reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=42  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 0b reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=45  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 0c reached on on: $(date --rfc-3339=seconds)"
 
 
 NRUNS=100  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
 echo "Starting Stage 1: starting with $NRUNS"
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 1a reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=110  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 1b reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=115  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 1c reached on on: $(date --rfc-3339=seconds)"
 
 
 NRUNS=200  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
 echo "Starting Stage 2: starting with $NRUNS"
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 2a reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=210  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 2b reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=215  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 2c reached on on: $(date --rfc-3339=seconds)"
 
 
 
 NRUNS=500  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
 echo "Starting Stage 3: starting with $NRUNS"
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 3a reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=510  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 3b reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=515  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 3c reached on on: $(date --rfc-3339=seconds)"
 
 
 
 NRUNS=1000  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
 echo "Starting Stage 4: starting with $NRUNS"
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 4a reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=1010  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 4b reached on on: $(date --rfc-3339=seconds)"
 
 NRUNS=1015  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
-Rscript "analysis/06_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
 echo "Stage 4c reached on on: $(date --rfc-3339=seconds)"
 
+
+
+NRUNS=2000  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
+echo "Starting Stage 5: starting with $NRUNS"
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+echo "Stage 5a reached on on: $(date --rfc-3339=seconds)"
+
+NRUNS=2010  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+echo "Stage 5b reached on on: $(date --rfc-3339=seconds)"
+
+NRUNS=2015  # how many iterations r (for Morris sensitivity the total number of model runs is r*(p=1)); where r = NRUNS, p = number of parameters
+Rscript "analysis/06b_sensitivity_analysis.R" "${RUN}" "${DATASET}" "${TARGET}" "${NRUNS}"
+echo "Stage 5c reached on on: $(date --rfc-3339=seconds)"
 
 echo "Finished on: $(date --rfc-3339=seconds)"
