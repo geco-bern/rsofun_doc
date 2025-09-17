@@ -17,6 +17,10 @@
 # args <- c("94", "train","gpp",     "10")
 # args <- c("94", "train","vj",      "10")
 # args <- c("94", "train","bigD13C", "3")
+# args <- c("113", "train","gpp", "3")
+# args <- c("113", "train","all", "3")
+# args <- c("113", "train","vj", "3")
+# args <- c("113", "train","bigD13C", "3")
 
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)
@@ -117,7 +121,7 @@ if (is.null(drivobs_to_use_for_sensitivity)) {stop(sprintf("Undefined target req
 
 # ii) define the range of the prior (use posterior of a calibration)
 posterior_path <- dplyr::case_when(
-  args[["scenario"]] == "113" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen113_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds",
+  args[["scenario"]] == "113" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen113_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   args[["scenario"]] == "94" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen94_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   args[["scenario"]] == "93" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen93_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   TRUE ~ ""
@@ -137,7 +141,7 @@ suffix_str <- sprintf(
 
 # undebug(run_sensitivity_rsofun)
 res <- run_sensitivity_rsofun(
-  iterations                = 2, #as.integer(args[["iterations"]]),
+  iterations                = as.integer(args[["iterations"]]),
   outpath                   = outpath,
   par_ranges_derived_from   = posterior_to_use_for_sensitivity$mod,
   drivobs                   = drivobs_to_use_for_sensitivity,
