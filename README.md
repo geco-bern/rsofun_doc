@@ -31,23 +31,27 @@ renv::run("data-raw/append_climate_data.R", name = "append_climate_data")
 renv::run("analysis/01_subset_test_train_sites.R", name = "subset_test_train_sites")
 
 # run calibration scenarions in sequential order:
-renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 73", args = c(73,0,50,8))
-renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 72", args = c(72,0,50,8))
-renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 71", args = c(71,0,50,8))
-renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 70", args = c(70,0,50,8))
+renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 123", args = c(123,0,50,8))
+renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 122", args = c(122,0,50,8))
+renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 121", args = c(121,0,50,8))
+renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibration 120", args = c(120,0,50,8))
 
 # or alternatively (running outside of RStudio directly from shell can be more robust):
 #   cd GitHub/geco-bern/rsofun_doc/
-#   tmux
-#   # open multiple tmux windows to run:
-#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(73,0,50,8))'
-#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(72,0,50,8))'
-#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(71,0,50,8))'
-#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(70,0,50,8))'
+#   tmux  # open multiple tmux windows to run:
+#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(123,0,50,8))'
+#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(122,0,50,8))'
+#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(121,0,50,8))'
+#   Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(120,0,50,8))'
+
+# Eventually, these codes were run on UBELIX with SLURM batch scripts:
+# sbatch ~/GitHub/geco-bern/analysis/run_analysis2.sh
+# sbatch ~/GitHub/geco-bern/analysis/run_predictions.sh
 
 # run sensitivity analysis
-# renv::run() # TODO
+# sbatch ~/GitHub/geco-bern/analysis/run_sensitivity2.sh
 
 # generate figures for manuscript
-renv::run()
+renv::run("analysis/05_make_figures.R", project = "../rsofun_doc")
+renv::run("analysis/05c_make_prediction_figures_111_113.R", project = "../rsofun_doc")
 ```
