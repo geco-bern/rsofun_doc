@@ -70,15 +70,15 @@ setup_rsofun_calibration <- function(scenario){
   ## Setup the settings for the different calibration scenarios ----
   ## Define default parameter
   default_par_fixed <- list(# fix parameter value from previous calibration
-    kphio              = 0.04998,
-    kphio_par_a        = 0.0,
-    kphio_par_b        = 1.0,
+    kphio              = 0.04998,    # value from Stocker et al. 2020
+    kphio_par_a        = 0.0,        # 0 corresponds to no temperature dependency of kphio (ORG setup in Stocker et al. 2020)
+    kphio_par_b        = 1.0,        #
     soilm_thetastar    = 0.6 * 240,  # to recover paper setup with soil moisture stress
-    soilm_betao        = 0.0,
-    beta_unitcostratio = 146.0,
+    soilm_betao        = 0.0,        # 1 corresponds to no reduction, 0 to full reduction at theta==0
+    beta_unitcostratio = 146.0,      # value from Stocker et al. 2020
     rd_to_vcmax        = 0.014,      # value from Atkin et al. 2015 for C3 herbaceous
-    tau_acclim         = 20.0,
-    kc_jmax            = 0.41
+    tau_acclim         = 14.0,       # value from Liu et al. 2024
+    kc_jmax            = 0.41        # value from Stocker et al. 2024 (citing Wang et al. 2017)
   )
 
   ## Define parameters to estimate and their priors
