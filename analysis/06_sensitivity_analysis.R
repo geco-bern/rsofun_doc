@@ -131,11 +131,12 @@ posterior_to_use_for_sensitivity <- readr::read_rds(posterior_path)
 
 # run sensitivity analysis
 suffix_str <- sprintf(
-    "_scen%s_%s-%diter_par-range-%s_target-%s-%s", # %dx%dchains_on_CPU%dx%d
-    args[["scenario"]], "morris", as.integer(args[["iterations"]]),
+    "_scen%s_%s_par-range-%s_target-%s-%s_%diter_", # %dx%dchains_on_CPU%dx%d
+    args[["scenario"]], "morris", 
     paste0("posterior-", args[["scenario"]]),
+    args[["dataset"]],
     args[["target"]],
-    args[["dataset"]]
+    as.integer(args[["iterations"]])
     # TODO: include further needed options from settings. (e.g. parse 'design')
   )
 

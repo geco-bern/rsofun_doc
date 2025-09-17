@@ -106,7 +106,7 @@ sensitivity_sofun_serialized <- function(
   # Save plot
   ggsave(here::here("fig", paste0("fig_D_sensitivity_",suffix,".pdf")), plot = gg, width = 5, height = 3, units = "in")
   ggsave(here::here("fig", paste0("fig_D_sensitivity_",suffix,".png")), plot = gg, width = 5, height = 3, units = "in")
-  ggsave(here::here("fig", paste0("fig_D2_sensitivity_",suffix,".png")), plot = gg, width = 8, height = 4.8, units = "cm")
+  # ggsave(here::here("fig", paste0("fig_D2_sensitivity_",suffix,".png")), plot = gg, width = 8, height = 4.8, units = "cm")
   ggsave(here::here("fig", paste0("fig_D3_sensitivity_",suffix,".png")),
          plot = gg %+% filter(gg$data, !grepl("^((err)|(errbias))_",parameter)), # remove the error parameters from the plot
          width = 8, height = 4.8, units = "cm")
