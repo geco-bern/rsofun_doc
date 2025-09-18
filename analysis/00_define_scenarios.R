@@ -174,8 +174,7 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$soilm_thetastar <- NULL
       par_to_estimate$soilm_betao     <- NULL
     }
-  } else if (scenario %in% c(122,123,124,125,126,127,128,                # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
-                             112,113,114,115,116,117,118,                # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
+  } else if (scenario %in% c(112,113,114,115,116,117,118,                # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
                              92,93,94,95,96,97,98,                       # the 90s are reruns from 2025-09-06
                              82,83,84,85,86,87,88,                       # the 80s (80,81,82,83,84,85,86,87,88) are reruns from 2025-09-05
                              72,73,74,75,76,77,78,                       # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
@@ -196,8 +195,7 @@ setup_rsofun_calibration <- function(scenario){
       errbias_bigD13C = list(lower =   -2, upper = 2, init = 0.0), # TODO: without bias_bigD13C and bias_vj this errors
       errbias_vj      = list(lower =   -2, upper = 2, init = 0.0)  # TODO: without err_bigD13C and err_vj this errors
     )
-    if (scenario %in% c(122,123,124,125,126,127,128,
-                        112,113,114,115,116,117,118,
+    if (scenario %in% c(112,113,114,115,116,117,118,
                         92,93,94,95,96,97,98,
                         82,83,84,85,86,87,88,
                         72,73,74,75,76,77,78)){ # use fixed rd_to_vcmax and use prior for tau_acclim
@@ -206,19 +204,17 @@ setup_rsofun_calibration <- function(scenario){
       if (scenario %in% c(82,83,84,85,86,87,88)){
         par_to_estimate$errbias_bigD13C = list(lower =   -4, upper = 4, init = 0.0)
         par_to_estimate$errbias_vj      = list(lower =   -4, upper = 4, init = 0.0)
-      } else if (scenario %in% c(122,123,124,125,126,127,128,
-                                 112,113,114,115,116,117,118,
+      } else if (scenario %in% c(112,113,114,115,116,117,118,
                                  92,93,94,95,96,97,98)){
         par_to_estimate$errbias_bigD13C = list(lower =   -8, upper = 8, init = 0.0)
         par_to_estimate$errbias_vj      = list(lower =   -1, upper = 1, init = 0.0)
       }
     }
-    if (scenario %in% c(122,123,124,125,126,127,128,
-                        112,113,114,115,116,117,118)){
+    if (scenario %in% c(112,113,114,115,116,117,118)){
       par_to_estimate$soilm_betao = NULL
     }
 
-    if (scenario %in% c(74, 84, 94, 114, 124,
+    if (scenario %in% c(74, 84, 94, 114,
                         14)) { # use priors from posterior of scenario 1 for kphio, kphio_par_a, kphio_par_b, soilm_thetastar, soilm_betao
 
       # read in posteriors from scenario 1 as prior for 14
