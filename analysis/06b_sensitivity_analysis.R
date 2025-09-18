@@ -105,16 +105,16 @@ library(dplyr)
 
 # i) define the target function (through defining the underlying driver/observation dataset (train/test, all/gpp/vj/bigD13C))
 
-res <- setup_rsofun_calibration(scenario = 93) # this must be 93 since it contains all targets
+res <- setup_rsofun_calibration(scenario = 123) # this must be scenario 3/93/113/123 since it contains all targets
 drivobs_to_use_for_sensitivity <- dplyr::case_when(
-  args[["target"]] == "all"     && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |>                    nest(targets = c(vj, bigD13C, gpp))),
-  args[["target"]] == "gpp"     && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |> filter(gpp)     |> nest(targets = c(vj, bigD13C, gpp))),
-  args[["target"]] == "vj"      && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |> filter(vj)      |> nest(targets = c(vj, bigD13C, gpp))),
-  args[["target"]] == "bigD13C" && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |> filter(bigD13C) |> nest(targets = c(vj, bigD13C, gpp))),
-  args[["target"]] == "all"     && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |>                    nest(targets = c(vj, bigD13C, gpp))),
-  args[["target"]] == "gpp"     && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |> filter(gpp)     |> nest(targets = c(vj, bigD13C, gpp))),
-  args[["target"]] == "vj"      && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |> filter(vj)      |> nest(targets = c(vj, bigD13C, gpp))),
-  args[["target"]] == "bigD13C" && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |> filter(bigD13C) |> nest(targets = c(vj, bigD13C, gpp))),
+  args[["target"]] == "all"     && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |>                          nest(targets = c(vj, bigD13C, gpp))),
+  args[["target"]] == "gpp"     && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |> filter(gpp)           |> nest(targets = c(vj, bigD13C, gpp))),
+  args[["target"]] == "vj"      && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |> filter(vj & !bigD13C) |> nest(targets = c(vj, bigD13C, gpp))),
+  args[["target"]] == "bigD13C" && args[["dataset"]] == "train" ~ list(res$drivobs_train |> unnest_wider(targets) |> filter(bigD13C & !vj) |> nest(targets = c(vj, bigD13C, gpp))),
+  args[["target"]] == "all"     && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |>                          nest(targets = c(vj, bigD13C, gpp))),
+  args[["target"]] == "gpp"     && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |> filter(gpp)           |> nest(targets = c(vj, bigD13C, gpp))),
+  args[["target"]] == "vj"      && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |> filter(vj & !bigD13C) |> nest(targets = c(vj, bigD13C, gpp))), # NOTE: filter(vj) would be enough, no double-sites in test ste
+  args[["target"]] == "bigD13C" && args[["dataset"]] == "test"  ~ list(res$drivobs_test  |> unnest_wider(targets) |> filter(bigD13C & !vj) |> nest(targets = c(vj, bigD13C, gpp))), # NOTE: filter(bigD13c) would be enough, no double-sites in test ste
   TRUE ~ list(NULL)
 )[[1]]
 if (is.null(drivobs_to_use_for_sensitivity)) {stop(sprintf("Undefined target requested for sensitivity: %s/%s", args[["target"]], args[["dataset"]]))}

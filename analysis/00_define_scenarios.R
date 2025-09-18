@@ -345,10 +345,7 @@ setup_rsofun_calibration <- function(scenario){
       unnest_wider(targets) |>
       filter(gpp) |>
       nest(targets = c(vj, bigD13C, gpp))
-    drivobs_test <- drivobs_test_bigD13C_vj_gpp # |> ## for the test data set keep all
-      # unnest_wider(targets) |>
-      # filter(gpp) |>
-      # nest(targets = c(vj, bigD13C, gpp))
+    drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
 
   } else if (scenario %in% c(123,124,125,      # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
                              113,114,115,      # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
@@ -367,18 +364,14 @@ setup_rsofun_calibration <- function(scenario){
                              16,17,18)) { # only traits data, either both, or vj only, or bigD13C only
     drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
-      filter(case_when(scenario %in% c(16,76,86,96,116,126) ~ vj | bigD13C,
-                       scenario %in% c(17,77,87,97,117,127) ~ vj,
-                       scenario %in% c(18,78,88,98,118,128) ~ bigD13C,
+      filter(case_when(scenario %in% c(16,76,86,96,116, 126) ~ vj | bigD13C,
+                       scenario %in% c(17,77,87,97,117     ) ~ vj,             # NOTE: this lets through three sites with bigD13C information
+                       scenario %in% c(18,78,88,98,118     ) ~ bigD13C,        # NOTE: this lets through three sites with vj       information
+                       scenario %in% c(                 127) ~ vj & !bigD13C,  # NOTE: this removes the three sites that have vj AND bigD13C
+                       scenario %in% c(                 128) ~ bigD13C & !vj,  # NOTE: this removes the three sites that have vj AND bigD13C
                        TRUE ~ TRUE)) |>
       nest(targets = c(vj, bigD13C, gpp))
-    drivobs_test <- drivobs_test_bigD13C_vj_gpp # |> ## for the test data set keep all
-      # unnest_wider(targets) |>
-      # filter(case_when(scenario %in% c(16,76,86,96,116,126) ~ vj | bigD13C,
-      #                  scenario %in% c(17,77,87,97,117,127) ~ vj,
-      #                  scenario %in% c(18,78,88,98,118,128) ~ bigD13C,
-      #                  TRUE ~ TRUE)) |>
-      # nest(targets = c(vj, bigD13C, gpp))
+    drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
   } else if (scenario %in% c(0, 70, 80, 90, 110, 120)) {  # only GPP data from FR-Pue
 
     drivobs_train <- tibble( # load it based on FR-Pue data:
