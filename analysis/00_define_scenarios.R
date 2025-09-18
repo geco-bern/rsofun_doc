@@ -82,7 +82,7 @@ setup_rsofun_calibration <- function(scenario){
   )
 
   ## Define parameters to estimate and their priors
-  if (scenario %in% c(120,121,122,123,124,125,126,127,128)){                # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01))
+  if (scenario %in% c(120,121,122,123,124,125,126,127,128,129)){                # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01))
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -119,6 +119,9 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$kphio_par_b     <- NULL
       par_to_estimate$soilm_thetastar <- NULL
       par_to_estimate$soilm_betao     <- NULL
+    }
+    if (scenario %in% c(129)){
+      par_to_estimate$errbias_bigD13C <- NULL
     }
 
   } else if (scenario %in% c(70,71, 80,81, 90,91, 0,1,4, 11, 31,32,33,34,35,36,37,38,39,40,41,42,     # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
@@ -338,6 +341,7 @@ setup_rsofun_calibration <- function(scenario){
     par_to_fix$soilm_betao     <- exp(-4.65845041863264)
   }
   if (scenario %in% c(115, 125)) {par_to_fix$soilm_betao <- 0}
+  if (scenario %in% c(129)) {     par_to_fix$errbias_bigD13C <- 0}
 
 
   ## Setup the data (drivers and obs) for the three calibration scenarios ----
@@ -371,7 +375,7 @@ setup_rsofun_calibration <- function(scenario){
 
     drivobs_train<- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
-  } else if (scenario %in% c(126,127,128,      # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
+  } else if (scenario %in% c(126,127,128,129,  # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
                              116,117,118,      # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
                              96,97,98, # the 90s are reruns from 2025-09-06
                              86,87,88, # the 80s (80,81,82,83,84,85,86,87,88) are reruns from 2025-09-05
@@ -383,7 +387,7 @@ setup_rsofun_calibration <- function(scenario){
                        scenario %in% c(17,77,87,97,117     ) ~ vj,             # NOTE: this lets through three sites with bigD13C information
                        scenario %in% c(18,78,88,98,118     ) ~ bigD13C,        # NOTE: this lets through three sites with vj       information
                        scenario %in% c(                 127) ~ vj & !bigD13C,  # NOTE: this removes the three sites that have vj AND bigD13C
-                       scenario %in% c(                 128) ~ bigD13C & !vj,  # NOTE: this removes the three sites that have vj AND bigD13C
+                       scenario %in% c(             129,128) ~ bigD13C & !vj,  # NOTE: this removes the three sites that have vj AND bigD13C
                        TRUE ~ TRUE)) |>
       nest(targets = c(vj, bigD13C, gpp))
     drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
