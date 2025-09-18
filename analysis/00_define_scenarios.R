@@ -106,6 +106,21 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$tau_acclim         <- NULL
       par_to_estimate$tau_acclim         <- NULL
     }
+    if (scenario %in% c(124)){
+      par_to_estimate$kphio           <- list(mean    = 0.0479684950570567,   sd    = 9.75104729575593e-05)
+      par_to_estimate$kphio_par_a     <- list(mean    = -0.00179211384220008, sd    = 2.98616456930556e-05)
+      par_to_estimate$kphio_par_b     <- list(mean    = 18.4293950588911,     sd    = 0.102867468875224)
+      par_to_estimate$soilm_thetastar <- list(mean    = 27.0859346061886,     sd    = 0.762249191490997)
+      par_to_estimate$soilm_betao     <- list(meanlog = -4.65845041863264,    sdlog = 1.31209247435319) # NOTE: use lognormal!
+    }
+    if (scenario %in% c(125)){
+      par_to_estimate$kphio           <- NULL
+      par_to_estimate$kphio_par_a     <- NULL
+      par_to_estimate$kphio_par_b     <- NULL
+      par_to_estimate$soilm_thetastar <- NULL
+      par_to_estimate$soilm_betao     <- NULL
+    }
+
   } else if (scenario %in% c(70,71, 80,81, 90,91, 0,1,4, 11, 31,32,33,34,35,36,37,38,39,40,41,42,     # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
                       110,111, # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
                       120,121, # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
