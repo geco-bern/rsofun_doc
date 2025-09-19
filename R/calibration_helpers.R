@@ -258,7 +258,8 @@ plot_prior_posterior_density_compare <- function(
         mapping = aes(yend = as.integer(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
         key_glyph = "vline", linetype = "solid")} +
       # layout:
-      facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
+      facet_wrap( ~ variable , nrow = 2, scales = "free_x", labeller = custom_labeller_variable) +
+      theme(strip.text = element_text(size=12)) +
       # scale_y_discrete(limits=rev) + # to have scenario 1 on top and 4 at bottom
       theme(legend.position = "bottom") + labs(x=NULL) +
       theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
@@ -283,7 +284,14 @@ plot_prior_posterior_density_compare <- function(
   return(gg)
 }
 
-plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, burnin_to_skip_gelman = burnin_to_skip, dont_thin=FALSE, end = NULL){
+#
+# out_calib <- out_calib_s320DREAMzs
+# library(latex2exp)
+# latex2exp::TeX(as.character(rsofun_symbol_parname_description$Symbol_tex))
+plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burnin_to_skip_gelman = burnin_to_skip, dont_thin=FALSE, end = NULL){
+  x <- out_calib$mod
+  title <- basename(out_calib$fpath)
+
   curr_iter <- x[[1]]$settings$iterations
   if(dont_thin || curr_iter < 10000){
     curr_thin <- 1
@@ -306,16 +314,15 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, burnin_to_ski
            chain_id_str = paste0(outerChain, letters[innerChain])) |>
     # fix order: in order of appearance
     mutate(variable = forcats::as_factor(variable))
-  # dat_to_plot |> select(chain_id, innerChain, outerChain, chain_id_str) |> distinct()
 
   pl <- ggplot(dat_to_plot,
          aes(x=iteration, y=value, color = outerChain, linetype = innerChain_str)) + geom_line() +
     # geom_rug(sides = "r") +
     theme_classic() +
     scale_x_continuous(labels = scales::label_number(scale_cut = scales::cut_short_scale())) +
-    facet_wrap(~variable,  nrow = 2, scales = "free_y") +
+    facet_wrap(~variable,  nrow = 2, scales = "free_y", labeller = custom_labeller_variable) +
     theme(
-      legend.position = "bottom"
+      legend.position = "bottom", strip.text = element_text(size=12)
     ) +
     labs(y="", color = "chain", linetype = "internal\nchains")
 
@@ -323,14 +330,15 @@ plot_mcmc_trace <- function(x, nr_internal_chains, burnin_to_skip, burnin_to_ski
   get_gelman_diag <- function(mcmc, burnin_to_skip, end){
     gelman_df <- BayesianTools::gelmanDiagnostics(mcmc, start = burnin_to_skip, end = end)
     psrf_values <- gelman_df$psrf[,"Point est."]
-    psrf_strings <- paste0(substr(names(psrf_values),1,3), "..=", sprintf("%.2f", psrf_values))
-    psrf_string <- paste0(psrf_strings, collapse = ",")
-    sprintf("GelmanDiagnostics: mpsrf=%.1f\npsrf:%s",
+    # psrf_strings <- paste0(substr(names(psrf_values),1,3), "..=", sprintf("%.2f", psrf_values))
+    psrf_strings <- paste0("'*",unname(label_vec[names(psrf_values)]), "*'=", sprintf("%.2f", psrf_values))
+    psrf_string <- paste0(psrf_strings, collapse = ", ")
+    subtitle <- sprintf("'GelmanDiagnostics: mpsrf=%.1f; psrf:%s'",
             gelman_df$mpsrf,
             psrf_string)
   }
   subtitle <- tryCatch(get_gelman_diag(x, burnin_to_skip_gelman + 1, end = end), error = function(e) {e}) # unsure why min burnin of 1 is needed
-  pl <- pl + ggtitle(NULL, subtitle = subtitle)
+  pl <- pl + ggtitle(NULL, subtitle = parse(text=subtitle))
 
   pl <- pl + geom_vline(xintercept = burnin_to_skip_gelman, color="red", linetype="dashed")
 

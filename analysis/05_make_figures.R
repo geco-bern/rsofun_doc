@@ -19,6 +19,43 @@ source(here::here("R/calibration_helpers.R"))
 source(here::here("R/prediction_helpers.R"))
 source(here::here("R/run_prediction_rsofun.R"))
 
+rsofun_symbol_parname_description <- tribble(
+  ~Parameter,             ~Symbol_tex,                              ~Units_tex,                     ~Symbol_R,                       ~Description,
+  # MODEL PARAMETER:
+  "kphio",                "$\\varphi_0$",                           "\\unit{mol\\,mol^{-1}}",       "phi[0]",                 "Quantum yield at optimal temperature" ,
+  "kphio_par_a",          "$\\varphi_a$",                           "\\unit{°C^{-2}}",              "phi[a]",                 "Shape parameter for the temperature dependence of the quantum yield" ,
+  "kphio_par_b",          "$\\varphi_b$",                           "\\unit{°C}",                   "phi[b]",                 "Optimal temperature for the quantum yield" ,
+  "soilm_thetastar",      "$\\theta^*$",                            "\\unit{mm}",                   "theta^'*'",              "Threshold plant-available soil water content in the soil moisture stress function" ,
+  "soilm_betao",          "$\\beta_0$",                             "unitless",                     "beta[0]",                "Stress factor at low soil moisture, intercept for the soil moisture stress function" ,
+  "beta_unitcostratio",   "$\\beta$",                               "unitless",                     "beta",                   "Unit cost ratio of carboxylation (maintenance of $V_{\\mathrm{cmax}}$) to transpiration" ,
+  "rd_to_vcmax",          "$b_0$",                                  "unitless",                     "b[0]",                   "Ratio of ($R_{\\mathrm{d25}}$) to the maximum carboxylation rate $V_{\\mathrm{cmax}}$ (both temperature-normalised dark respiration; eq. C8 in Stocker et al. 2020)" ,
+  "tau_acclim",           "$\\tau$",                                "days",                         "tau",                    "Acclimation time scale of photosynthesis" ,
+  "kc_jmax",              "$c^{*}$",                                "unitless",                     "c^'*'",                  "Unit cost of electron transport (maintenance of $J_{\\mathrm{max}}$)" ,
+  # ERROR PARAMETER:
+  "err_gpp",              "$\\epsilon_{\\mathrm{gpp}}$",            "\\unit{gC\\,m^{-2}\\,s^{-1}}", "epsilon['gpp']",         "Gaussian error standard deviation of GPP" ,
+  "err_bigD13C",          "$\\epsilon_{\\mathrm{\\Delta^{13}C}}$",  "\\unit{\\permil}",             "epsilon[Delta^'13'*C]",  "Gaussian error standard deviation of $\\Delta^{13}C$" ,
+  "err_vj",               "$\\epsilon_{\\mathrm{vj}}$",             "unitless",                     "epsilon['vj']",          "Gaussian error standard deviation of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$" ,
+  "errbias_bigD13C",      "$\\delta_{\\mathrm{\\Delta^{13}C}}$",    "\\unit{\\permil}",             "delta[Delta^'13'*C]",    "Bias error term of $\\Delta^{13}C$ (= mod - obs)",
+  "errbias_vj",           "$\\delta_{\\mathrm{vj}}$",               "unitless",                     "delta['vj']",            "Bias error term of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$ (= mod - obs)",
+  "errscale_gpp",         "$\\kappa_{\\mathrm{gpp}}$",              "unitless",                     "kappa['gpp']",           "Multiplicative bias error term of GPP"
+) |> mutate(Parameter = forcats::as_factor(Parameter),   # make factor to keep ordering
+            Symbol_tex = forcats::as_factor(Symbol_tex)) # make factor to keep ordering
+label_vec <- setNames(rsofun_symbol_parname_description$Symbol_R, rsofun_symbol_parname_description$Parameter)
+custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from label_parsed
+  replaced_labels <- left_join(select(labels, variable), # TODO: this has variable hardcoded
+                               select(rsofun_symbol_parname_description, variable = Parameter, label = Symbol_R),
+                               by = join_by(variable))
+  # print(tibble(replaced_labels))
+  replaced_labels <- replaced_labels |> select(-variable)
+  replaced_labels <- label_value(replaced_labels, multi_line = multi_line)
+  # print(replaced_labels)
+  lapply(unname(replaced_labels), lapply, function(values) {
+          c(parse(text = as.character(values)))
+      })
+}
+
+
+
 
 flag_plot_sampling_and_posteriors <- FALSE # possibility to switch this off
 if (flag_plot_sampling_and_posteriors){
@@ -1301,30 +1338,7 @@ if (flag_plot_general){
       include.rownames = FALSE
     ) # this can be added to tex file as: \input{filename.tex})
 
-
   # Table b: prior ranges of estimated params ----
-  rsofun_symbol_parname_description <- tribble(
-    ~Parameter,             ~Symbol_tex,                              ~Units_tex,                     ~Symbol_R,           ~Description,
-    # MODEL PARAMETER:
-    "kphio",                "$\\varphi_0$",                           "\\unit{mol\\,mol^{-1}}",       expression("TODO"),     "Quantum yield at optimal temperature" ,
-    "kphio_par_a",          "$a$",                                    "\\unit{°C^{-2}}",              expression("TODO"),     "Shape parameter for the temperature dependence of the quantum yield" ,
-    "kphio_par_b",          "$b$",                                    "\\unit{°C}",                   expression("TODO"),     "Optimal temperature for the quantum yield" ,
-    "soilm_thetastar",      "$\\theta^*$",                            "\\unit{mm}",                   expression("TODO"),     "Threshold plant-available soil water content in the soil moisture stress function" ,
-    "soilm_betao",          "$\\beta_0$",                             "unitless",                     expression("TODO"),     "Stress factor at low soil moisture, intercept for the soil moisture stress function" ,
-    "beta_unitcostratio",   "$\\beta$",                               "unitless",                     expression("TODO"),     "Unit cost ratio of carboxylation (maintenance of $V_{\\mathrm{cmax}}$) to transpiration" ,
-    "rd_to_vcmax",          "$b_0$",                                  "unitless",                     expression("TODO"),     "Ratio of ($R_{\\mathrm{d25}}$) to the maximum carboxylation rate $V_{\\mathrm{cmax}}$ (both temperature-normalised dark respiration; eq. C8 in Stocker et al. 2020)" ,
-    "tau_acclim",           "$\\tau$",                                "days",                         expression("TODO"),     "Acclimation time scale of photosynthesis" ,
-    "kc_jmax",              "$c^{*}$",                                "unitless",                     expression("TODO"),     "Unit cost of electron transport (maintenance of $J_{\\mathrm{max}}$)" ,
-    # ERROR PARAMETER:
-    "err_gpp",              "$\\epsilon_{\\mathrm{gpp}}$",            "\\unit{gC\\,m^{-2}\\,s^{-1}}", expression("TODO"),     "Gaussian error standard deviation of GPP" ,
-    "err_bigD13C",          "$\\epsilon_{\\mathrm{\\Delta^{13}C}}$",  "\\unit{\\permil}",             expression("TODO"),     "Gaussian error standard deviation of $\\Delta^{13}C$" ,
-    "err_vj",               "$\\epsilon_{\\mathrm{vj}}$",             "unitless",                     expression("TODO"),     "Gaussian error standard deviation of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$" ,
-    "errbias_bigD13C",      "$\\delta_{\\mathrm{\\Delta^{13}C}}$",    "\\unit{\\permil}",             expression("TODO"),     "Bias error term of $\\Delta^{13}C$ (= mod - obs)",
-    "errbias_vj",           "$\\delta_{\\mathrm{vj}}$",               "unitless",                     expression("TODO"),     "Bias error term of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$ (= mod - obs)",
-    "errscale_gpp",         "$\\kappa_{\\mathrm{gpp}}$",              "unitless",                     expression("TODO"),     "Multiplicative bias error term of GPP"
-  ) |> mutate(Parameter = forcats::as_factor(Parameter),   # make factor to keep ordering
-              Symbol_tex = forcats::as_factor(Symbol_tex)) # make factor to keep ordering
-
   caption <- paste(
     "Parameter listing including prior and Maximum A Posteriori (MAP) estimates.",
     "The bounds of uniform or truncated normal prior distributions are given in square brackets.",
