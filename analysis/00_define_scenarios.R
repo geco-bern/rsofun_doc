@@ -104,7 +104,7 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$beta_unitcostratio <- NULL
       par_to_estimate$rd_to_vcmax        <- NULL
       par_to_estimate$tau_acclim         <- NULL
-      par_to_estimate$tau_acclim         <- NULL
+      par_to_estimate$kc_jmax            <- NULL
     }
     if (scenario %in% c(124)){
       par_to_estimate$kphio           <- list(mean    = 0.0479684950570567,   sd    = 9.75104729575593e-05)
