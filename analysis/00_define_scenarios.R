@@ -111,13 +111,13 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$tau_acclim         <- NULL
       par_to_estimate$kc_jmax            <- NULL
     }
-    if (scenario %in% c(124)){
+    if (scenario %in% c(124,224,324)){
       par_to_estimate$kphio           <- list(mean    = 0.0479684950570567,   sd    = 9.75104729575593e-05)
       par_to_estimate$kphio_par_a     <- list(mean    = -0.00179211384220008, sd    = 2.98616456930556e-05)
       par_to_estimate$kphio_par_b     <- list(mean    = 18.4293950588911,     sd    = 0.102867468875224)
       par_to_estimate$soilm_thetastar <- list(mean    = 27.0859346061886,     sd    = 0.762249191490997)
     }
-    if (scenario %in% c(125)){
+    if (scenario %in% c(125,225,325)){
       par_to_estimate$kphio           <- NULL
       par_to_estimate$kphio_par_a     <- NULL
       par_to_estimate$kphio_par_b     <- NULL
@@ -342,14 +342,20 @@ setup_rsofun_calibration <- function(scenario){
 
   # Remove parameters that are defined to be estimated from default_par_fixed
   par_to_fix <- default_par_fixed[!(names(default_par_fixed) %in% names(par_to_estimate))]
-  if (scenario %in% c(15, 75, 85, 95, 115, 125)) {
+  if (scenario %in% c(15, 75, 85, 95)) {
     par_to_fix$kphio           <- 0.0479684950570567
     par_to_fix$kphio_par_a     <- -0.00179211384220008
     par_to_fix$kphio_par_b     <- 18.4293950588911
     par_to_fix$soilm_thetastar <- 27.0859346061886
     par_to_fix$soilm_betao     <- exp(-4.65845041863264)
   }
-  if (scenario %in% c(115, 125)) {par_to_fix$soilm_betao <- 0}
+  if (scenario %in% c(115, 125,225,325)) {
+    par_to_fix$kphio           <- 0.0479684950570567
+    par_to_fix$kphio_par_a     <- -0.00179211384220008
+    par_to_fix$kphio_par_b     <- 18.4293950588911
+    par_to_fix$soilm_thetastar <- 27.0859346061886
+    par_to_fix$soilm_betao <- 0
+  }
 
   ## Setup the data (drivers and obs) for the three calibration scenarios ----
 
