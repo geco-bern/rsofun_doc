@@ -34,22 +34,77 @@ module load R/4.4.2-gfbf-2024a
 DREAMZS_OR_DEZS="DREAMzs" # either DREAMzs or DEzs # needed for the inital run
 
 ## Run the Bayesian calibration (MCMC sampling)
+## Initial phase with 1k or 2k steps:
+NEW_NRUNS=1000  # how many samples to add
+echo "Starting Stage 0.1: starting with $NEW_RUNS"
+Rscript "analysis/03_bayesian_calibration_${DREAMZS_OR_DEZS}.R" $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
+echo "Stage 0.1 reached on on: $(date --rfc-3339=seconds)"
+
+PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+NEW_NRUNS=1000       # how many samples to add
+echo "Starting Stage 0.1b: adding $NEW_RUNS runs to $PREV_NRUNS"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1.rds" "${NEW_NRUNS}"
+echo "Stage 0.1b reached on on: $(date --rfc-3339=seconds)"
+
+PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+NEW_NRUNS=1000       # how many samples to add
+echo "Starting Stage 0.2: adding $NEW_RUNS runs to $PREV_NRUNS"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+echo "Stage 0.2 reached on on: $(date --rfc-3339=seconds)"
+
+PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+NEW_NRUNS=1000       # how many samples to add
+echo "Starting Stage 0.2b: adding $NEW_RUNS runs to $PREV_NRUNS"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+echo "Stage 0.2b reached on on: $(date --rfc-3339=seconds)"
+
+PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+NEW_NRUNS=2000  # how many samples to add
+echo "Starting Stage 0.3: adding $NEW_RUNS runs to $PREV_NRUNS"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+echo "Stage 0.3 reached on on: $(date --rfc-3339=seconds)"
+
+PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+NEW_NRUNS=2000  # how many samples to add
+echo "Starting Stage 0.4: adding $NEW_RUNS runs to $PREV_NRUNS"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+echo "Stage 0.4 reached on on: $(date --rfc-3339=seconds)"
+
+PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+NEW_NRUNS=2000  # how many samples to add
+echo "Starting Stage 0.5: adding $NEW_RUNS runs to $PREV_NRUNS"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+echo "Stage 0.5 reached on on: $(date --rfc-3339=seconds)"
+
+
+
+
+
+
+## Middle phase and end phase with 10k and 20k steps:
 NEW_NRUNS=10000  # how many samples to add
 echo "Starting Stage 1: starting with $NEW_RUNS"
 Rscript "analysis/03_bayesian_calibration_${DREAMZS_OR_DEZS}.R" $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
 echo "Stage 1 reached on on: $(date --rfc-3339=seconds)"
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+
 NEW_NRUNS=10000       # how many samples to add
 echo "Starting Stage 1b: adding $NEW_RUNS runs to $PREV_NRUNS"
-Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1.rds" "${NEW_NRUNS}"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
 echo "Stage 1b reached on on: $(date --rfc-3339=seconds)"
 
-
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
-NEW_NRUNS=20000       # how many samples to add
+NEW_NRUNS=10000       # how many samples to add
 echo "Starting Stage 2: adding $NEW_RUNS runs to $PREV_NRUNS"
 Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
 echo "Stage 2 reached on on: $(date --rfc-3339=seconds)"
+
+PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
+NEW_NRUNS=10000       # how many samples to add
+echo "Starting Stage 2b: adding $NEW_RUNS runs to $PREV_NRUNS"
+Rscript analysis/03b_continue_mcmc_rsofun.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_${DREAMZS_OR_DEZS}-${PREV_NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "${NEW_NRUNS}"
+echo "Stage 2b reached on on: $(date --rfc-3339=seconds)"
+
 
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
 NEW_NRUNS=20000  # how many samples to add
