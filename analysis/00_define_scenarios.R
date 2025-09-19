@@ -87,7 +87,8 @@ setup_rsofun_calibration <- function(scenario){
   ## Define parameters to estimate and their priors
   if (scenario %in% c(120,121,122,123,124,125,126,127,1270,128,129,  # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01))
                       220,221,222,223,224,225,226,227,228,           # the 220s are reruns from 2025-09-19 that remove again the bias))
-                      320,321,322,323,324,325,326,327,328)){         # the 320s are reruns from 2025-09-20 that add a multiplicative bias to gpp))
+                      320,321,322,323,324,325,326,327,328,           # the 320s are reruns from 2025-09-20 that add a multiplicative bias to gpp
+                      420,421,422,423,424,425,426,427,428)){         # the 420s are reruns from 2025-09-20 that add a multiplicative bias to gpp with a normal prior around 1
     par_to_estimate <- list(
       kphio           = list(lower = 0.02, upper = 0.15, init = 0.05),
       kphio_par_a     = list(lower = -0.004, upper = -0.001, init = -0.0025),
@@ -104,20 +105,20 @@ setup_rsofun_calibration <- function(scenario){
       errbias_bigD13C = list(lower =   -8, upper = 8, init = 0.0),
       errbias_vj      = list(lower =   -1, upper = 1, init = 0.0)
     )
-    if (scenario %in% c(120,121,220,221,320,321)){
+    if (scenario %in% c(120,121,220,221,320,321,420,421)){
       # reduce number of parameters to estimate:
       par_to_estimate$beta_unitcostratio <- NULL
       par_to_estimate$rd_to_vcmax        <- NULL
       par_to_estimate$tau_acclim         <- NULL
       par_to_estimate$kc_jmax            <- NULL
     }
-    if (scenario %in% c(124,224,324)){
+    if (scenario %in% c(124,224,324,424)){
       par_to_estimate$kphio           <- list(mean    = 0.0479684950570567,   sd    = 9.75104729575593e-05)
       par_to_estimate$kphio_par_a     <- list(mean    = -0.00179211384220008, sd    = 2.98616456930556e-05)
       par_to_estimate$kphio_par_b     <- list(mean    = 18.4293950588911,     sd    = 0.102867468875224)
       par_to_estimate$soilm_thetastar <- list(mean    = 27.0859346061886,     sd    = 0.762249191490997)
     }
-    if (scenario %in% c(125,225,325)){
+    if (scenario %in% c(125,225,325,425)){
       par_to_estimate$kphio           <- NULL
       par_to_estimate$kphio_par_a     <- NULL
       par_to_estimate$kphio_par_b     <- NULL
@@ -136,6 +137,12 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$errbias_bigD13C <- NULL
       par_to_estimate$errbias_vj      <- NULL
       par_to_estimate$errscale_gpp    <- list(lower = 0.3, upper = 3.0, init = 1.0)
+    }
+    if (scenario %in% c(420,421,422,423,424,425,426,427,428)){         # the 420s are reruns from 2025-09-20 that add a multiplicative bias to gpp with a normal prior around 1))
+      par_to_estimate$err_bigD13C     <- list(lower = 0.01, upper = 15, init = 0.8)
+      par_to_estimate$errbias_bigD13C <- NULL
+      par_to_estimate$errbias_vj      <- NULL
+      par_to_estimate$errscale_gpp    <- list(mean = 1, sd = 0.25, lower = 0.25, upper = 3) # truncated normal
     }
   } else if (scenario %in% c(70,71, 80,81, 90,91, 0,1,4, 11, 31,32,33,34,35,36,37,38,39,40,41,42,     # the 70s (70,71,72,73,74,75,76,77,78) are reruns from 2025-09-03
                       110,111, # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
@@ -349,7 +356,7 @@ setup_rsofun_calibration <- function(scenario){
     par_to_fix$soilm_thetastar <- 27.0859346061886
     par_to_fix$soilm_betao     <- exp(-4.65845041863264)
   }
-  if (scenario %in% c(115, 125,225,325)) {
+  if (scenario %in% c(115, 125,225,325,425)) {
     par_to_fix$kphio           <- 0.0479684950570567
     par_to_fix$kphio_par_a     <- -0.00179211384220008
     par_to_fix$kphio_par_b     <- 18.4293950588911
@@ -371,7 +378,7 @@ setup_rsofun_calibration <- function(scenario){
     test_obs,
     by = join_by(sitename, run_model))
 
-  if (scenario %in% c(1,2,11,12, 71,72, 81,82, 91,92, 111,112, 121,122, 221,222, 321, 322)){ # only GPP data
+  if (scenario %in% c(1,2,11,12, 71,72, 81,82, 91,92, 111,112, 121,122, 221,222, 321,322, 421,422)){ # only GPP data
 
     drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
@@ -379,7 +386,8 @@ setup_rsofun_calibration <- function(scenario){
       nest(targets = c(vj, bigD13C, gpp))
     drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
 
-  } else if (scenario %in% c(323,324,325,      # the 320s are reruns from 2025-09-20))
+  } else if (scenario %in% c(423,424,425,      # the 420s are reruns from 2025-09-20))
+                             323,324,325,      # the 320s are reruns from 2025-09-20))
                              223,224,225,      # the 220s are reruns from 2025-09-19 that remove again the bias))
                              123,124,125,      # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
                              113,114,115,      # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
@@ -390,7 +398,8 @@ setup_rsofun_calibration <- function(scenario){
 
     drivobs_train<- drivobs_train_bigD13C_vj_gpp
     drivobs_test <- drivobs_test_bigD13C_vj_gpp
-  } else if (scenario %in% c(326,327,328,           # the 220s are reruns from 2025-09-20))
+  } else if (scenario %in% c(426,427,428,           # the 220s are reruns from 2025-09-20))
+                             326,327,328,           # the 220s are reruns from 2025-09-20))
                              226,227,228,           # the 220s are reruns from 2025-09-19 that remove again the bias))
                              126,127,1270,128,129,  # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
                              116,117,118,      # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
@@ -400,15 +409,15 @@ setup_rsofun_calibration <- function(scenario){
                              16,17,18)) { # only traits data, either both, or vj only, or bigD13C only
     drivobs_train <- drivobs_train_bigD13C_vj_gpp |>
       unnest_wider(targets) |>
-      filter(case_when(scenario %in% c(16,76,86,96,116, 126,226,326) ~ vj | bigD13C,
+      filter(case_when(scenario %in% c(16,76,86,96,116, 126,226,326,426) ~ vj | bigD13C,
                        scenario %in% c(17,77,87,97,117     ) ~ vj,             # NOTE: this lets through three sites with bigD13C information
                        scenario %in% c(18,78,88,98,118     ) ~ bigD13C,        # NOTE: this lets through three sites with vj       information
-                       scenario %in% c(            1270,127,227,327) ~ vj & !bigD13C,  # NOTE: this removes the three sites that have vj AND bigD13C
-                       scenario %in% c(             129,128,228,328) ~ bigD13C & !vj,  # NOTE: this removes the three sites that have vj AND bigD13C
+                       scenario %in% c(            1270,127,227,327,427) ~ vj & !bigD13C,  # NOTE: this removes the three sites that have vj AND bigD13C
+                       scenario %in% c(             129,128,228,328,428) ~ bigD13C & !vj,  # NOTE: this removes the three sites that have vj AND bigD13C
                        TRUE ~ TRUE)) |>
       nest(targets = c(vj, bigD13C, gpp))
     drivobs_test <- drivobs_test_bigD13C_vj_gpp ## for the test data set keep all
-  } else if (scenario %in% c(0, 70, 80, 90, 110, 120, 220, 320)) {  # only GPP data from FR-Pue
+  } else if (scenario %in% c(0, 70, 80, 90, 110, 120, 220, 320, 420)) {  # only GPP data from FR-Pue
 
     drivobs_train <- tibble( # load it based on FR-Pue data:
       sitename    = rsofun::p_model_drivers$sitename,
