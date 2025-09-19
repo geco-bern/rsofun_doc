@@ -1320,7 +1320,8 @@ if (flag_plot_general){
     "err_bigD13C",          "$\\epsilon_{\\mathrm{\\Delta^{13}C}}$",  "\\unit{\\permil}",             expression("TODO"),     "Gaussian error standard deviation of $\\Delta^{13}C$" ,
     "err_vj",               "$\\epsilon_{\\mathrm{vj}}$",             "unitless",                     expression("TODO"),     "Gaussian error standard deviation of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$" ,
     "errbias_bigD13C",      "$\\delta_{\\mathrm{\\Delta^{13}C}}$",    "\\unit{\\permil}",             expression("TODO"),     "Bias error term of $\\Delta^{13}C$ (= mod - obs)",
-    "errbias_vj",           "$\\delta_{\\mathrm{vj}}$",               "unitless",                     expression("TODO"),     "Bias error term of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$ (= mod - obs)"
+    "errbias_vj",           "$\\delta_{\\mathrm{vj}}$",               "unitless",                     expression("TODO"),     "Bias error term of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$ (= mod - obs)",
+    "errscale_gpp",         "$\\kappa_{\\mathrm{gpp}}$",              "unitless",                     expression("TODO"),     "Multiplicative bias error term of GPP"
   ) |> mutate(Parameter = forcats::as_factor(Parameter),   # make factor to keep ordering
               Symbol_tex = forcats::as_factor(Symbol_tex)) # make factor to keep ordering
 
@@ -1348,7 +1349,7 @@ if (flag_plot_general){
       Parameter %in% c("kphio_par_b","soilm_thetastar","tau_acclim",
                        "beta_unitcostratio")    ~ "[%.1f to %.1f]",
       Parameter %in% c("kphio", "err_gpp", "rd_to_vcmax", "soilm_betao",
-                       "err_bigD13C", "err_vj", "errbias_bigD13C", "errbias_vj",
+                       "err_bigD13C", "err_vj", "errbias_bigD13C", "errbias_vj","errscale_gpp",
                        "kc_jmax")               ~ "[%.2f to %.2f]",
       Parameter %in% c("kphio_par_a")           ~ "[%.3f to %.3f]",
       TRUE ~                                      "[%.3f to %.3f]")) |>
@@ -1367,7 +1368,7 @@ if (flag_plot_general){
       Parameter %in% c("kphio_par_b","soilm_thetastar","tau_acclim",
                        "beta_unitcostratio")    ~ "[%.1f]*",
       Parameter %in% c("kphio", "err_gpp", "rd_to_vcmax", "soilm_betao",
-                       "err_bigD13C", "err_vj", "errbias_bigD13C", "errbias_vj",
+                       "err_bigD13C", "err_vj", "errbias_bigD13C", "errbias_vj","errscale_gpp",
                        "kc_jmax")               ~ "[%.2f]*",
       Parameter %in% c("kphio_par_a")           ~ "[%.3f]*",
       TRUE ~                                      "[%.3f]*")) |>
@@ -1384,7 +1385,7 @@ if (flag_plot_general){
       Parameter %in% c("kphio_par_b","soilm_thetastar","tau_acclim",
                        "beta_unitcostratio")    ~ "%.1f",
       Parameter %in% c("kphio", "err_gpp", "rd_to_vcmax", "soilm_betao",
-                       "err_bigD13C", "err_vj", "errbias_bigD13C", "errbias_vj",
+                       "err_bigD13C", "err_vj", "errbias_bigD13C", "errbias_vj","errscale_gpp",
                        "kc_jmax")               ~ "%.2f",
       Parameter %in% c("kphio_par_a")           ~ "%.3f",
       TRUE ~                                      "%.3f")) |>

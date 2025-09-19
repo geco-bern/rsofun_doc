@@ -194,8 +194,8 @@ createMixedPrior <- function(prior_definitions, best = NULL){
 # sensitivity analysis.
 getPriorMinMaxRanges <- function(morrisSetup_prior, settings_par){
   # by default use BayesianTool defined ranges
-  inflim_arg <- morrisSetup_prior$lower    # named vector: e.g. c(kphio = 0.02, kphio_par_a = -0.004, err_gpp = 0.1, err_bigD13C = 0.1, err_vj = 0.1, errbias_bigD13C = -8, errbias_vj = -1)
-  suplim_arg <- morrisSetup_prior$upper    # named vector: e.g. c(kphio = 0.15, kphio_par_a = -0.001, err_gpp = 3,   err_bigD13C = 3,   err_vj = 3,   errbias_bigD13C = 8,  errbias_vj = 1)
+  inflim_arg <- morrisSetup_prior$lower    # named vector: e.g. c(kphio = 0.02, kphio_par_a = -0.004, err_gpp = 0.1, ... )
+  suplim_arg <- morrisSetup_prior$upper    # named vector: e.g. c(kphio = 0.15, kphio_par_a = -0.001, err_gpp = 3,   ... )
 
   # Fallback if this fails with more complex priors
   if(is.null(inflim_arg) || is.null(suplim_arg)){
