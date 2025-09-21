@@ -281,6 +281,99 @@ plot_prior_posterior_density_compare <- function(
       theme(legend.position = "bottom") +
       labs(x="Parameter value")
   }
+
+  return(gg)
+}
+
+
+
+
+plot_prior_posterior_density_compare2 <- function(
+    named_list_scen,
+    burnin_to_skip,
+    add_MAP = FALSE,
+    param_order,
+    params_not_to_plot = c("rd_to_vcmax"), # HARDCODED by default, do not plot rd_to_vcmax
+    scenario_labels_arg = scenario_labels
+  ){
+
+  require(BayesianTools)
+  require(dplyr)
+  require(tidyr)
+  require(ggplot2)
+
+  # Get matrices of prior and posterior samples
+  priorMat_list <- lapply(
+    named_list_scen[grepl("[Pp]rior", names(named_list_scen))] |> rev(), # rev is for to have later scenarios with more parameters determine order
+    function(x){
+      priorMat <- getSetup(x)$prior$sampler(10000) # nPriorDraws = 10000
+      colnames(priorMat) <- x[[1]]$setup$names
+      return(as_tibble(priorMat))
+    }
+  )
+  posteriorMat_list <- lapply(
+    named_list_scen[!grepl("[Pp]rior", names(named_list_scen))] |> rev(), # rev is for to have later scenarios with more parameters determine order
+    function(x){
+      as_tibble(getSample(x, parametersOnly = TRUE, start = burnin_to_skip))
+  })
+  MAP_list <- lapply(
+    named_list_scen[!grepl("[Pp]rior", names(named_list_scen))] |> rev(), # rev is for to have later scenarios with more parameters determine order
+    function(x){as_tibble(as.list(BayesianTools::MAP(x)$parametersMAP))}
+  )
+  # add fixed parameter values
+  fixed_list <- lapply(names(MAP_list), function(scenario_name){
+    as_tibble(setup_rsofun_calibration(as.integer(scenario_name))$par_fixed)
+  })
+  names(fixed_list) <- names(MAP_list) # ensure names are there
+
+  # Create data frame for plotting
+  df_plot <- bind_rows(dplyr::bind_rows(priorMat_list,     .id = "par_estimation"),
+                       dplyr::bind_rows(posteriorMat_list, .id = "par_estimation"),
+                       dplyr::bind_rows(MAP_list,          .id = "par_estimation") |> mutate(par_estimation = paste0("MAP ", par_estimation)),
+                       dplyr::bind_rows(fixed_list,        .id = "par_estimation") |> mutate(par_estimation = paste0("Fixed ", par_estimation)) |>
+                         select(-any_of(params_not_to_plot))
+                       ) |>
+    pivot_longer(-c(par_estimation), names_to = "variable") |>
+    mutate(variable = forcats::fct(variable, levels = param_order)) # order the facets
+  # Plot with facet wrap
+  df_plot2 <- df_plot |>
+    mutate(scenario = as.integer(gsub("((Prior)|(MAP)|(Fixed)) ", "", par_estimation))) |>
+    mutate(Distribution = case_when(grepl("Prior ", par_estimation) ~ "Prior",
+                                    grepl("MAP ",   par_estimation) ~ "MAP",
+                                    grepl("Fixed ", par_estimation) ~ "Fixed",
+                                    TRUE                            ~ "Posterior")) |>
+    # ensure plotting order by defining Scenario as factor
+    left_join(scenario_labels_arg,
+              by = join_by(scenario)) |> mutate(label = if_else(is.na(label), as.character(scenario), label),
+                                                label_targets = if_else(is.na(label_targets), as.character(scenario), label_targets)) |>
+    arrange(desc(label), Distribution) |>
+    mutate(Scenario = forcats::as_factor(as.character(label_targets)),
+           scenario_int = as.integer(Scenario))
+
+  gg <- ggplot(df_plot2, aes(x=value, y=Scenario)) +
+    theme_classic() +
+    scale_y_discrete(NULL, labels = \(x) parse(text = x)) + theme(axis.text.y = element_text(hjust=0)) +
+    geom_density_ridges(
+      data =  df_plot2 |> filter(!grepl("((MAP)|(Fixed)) ", par_estimation)),
+      mapping = aes(fill = Distribution)) +
+    geom_segment(
+      data = df_plot2 |> filter(grepl("MAP ", par_estimation)) |> filter(!is.na(value)),
+      mapping = aes(yend = as.numeric(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
+      key_glyph = "vline", linetype = "2121") + # "dashed"
+    geom_segment(
+      data = df_plot2 |> filter(grepl("Fixed ", par_estimation)) |> filter(!is.na(value)),
+      mapping = aes(yend = as.numeric(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
+      key_glyph = "vline", linetype = "solid") +
+    # layout:
+    facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
+    theme(strip.text = element_text(size=12)) +
+    theme(legend.position = "bottom") + labs(x=NULL) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    scale_fill_manual(NULL, aesthetics = c("fill","colour"),
+                      values = c("Posterior"="#29a274ff", "Prior" = t_col("#777055ff"),  # GECO colors
+                                 "MAP"      = "black",    "Fixed" = "black"))
+
+  if(!is.null(custom_labeller_variable)){  gg <- gg + facet_wrap( ~ variable , nrow = 2, scales = "free_x", labeller = custom_labeller_variable)}
   return(gg)
 }
 
@@ -338,7 +431,7 @@ plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burni
             psrf_string)
   }
   subtitle <- tryCatch(get_gelman_diag(x, burnin_to_skip_gelman + 1, end = end), error = function(e) {e}) # unsure why min burnin of 1 is needed
-  pl <- pl + ggtitle(NULL, subtitle = parse(text=subtitle))
+  pl <- pl + ggtitle(title, subtitle = parse(text=subtitle))
 
   pl <- pl + geom_vline(xintercept = burnin_to_skip_gelman, color="red", linetype="dashed")
 

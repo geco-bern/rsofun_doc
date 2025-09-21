@@ -87,7 +87,7 @@ setup_rsofun_calibration <- function(scenario){
   ## Define parameters to estimate and their priors
   if (scenario %in% c(120,121,122,123,124,125,126,127,1270,128,129,  # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01))
                       220,221,222,223,224,225,226,227,228,           # the 220s are reruns from 2025-09-19 that remove again the bias))
-                      229,230,                                       # 229,230 are like 223 but using posteriors from 226
+                      229,230,231,                                   # 229,230,231 are like 223 but using posteriors from 226
                       320,321,322,323,324,325,326,327,328,           # the 320s are reruns from 2025-09-20 that add a multiplicative bias to gpp
                       420,421,422,423,424,425,426,427,428)){         # the 420s are reruns from 2025-09-20 that add a multiplicative bias to gpp with a normal prior around 1
     par_to_estimate <- list(
@@ -129,7 +129,7 @@ setup_rsofun_calibration <- function(scenario){
       par_to_estimate$errbias_bigD13C <- NULL
     }
     if (scenario %in% c(220,221,222,223,224,225,226,227,228,           # the 220s are reruns from 2025-09-19 that remove again the bias
-                        229,230)){                                     # 229,230 are like 223 but using posteriors from 226
+                        229,230,231)){                                 # 229,230,231 are like 223 but using posteriors from 226
       par_to_estimate$err_bigD13C     <- list(lower = 0.01, upper = 15, init = 0.8)
       par_to_estimate$errbias_bigD13C <- NULL
       par_to_estimate$errbias_vj      <- NULL
@@ -348,7 +348,7 @@ setup_rsofun_calibration <- function(scenario){
     stop(sprintf("Unsupported scenario: %d", scenario))
   }
 
-  if (scenario %in% c(229)){   # 229 is like 223 but using posteriors from 226 for beta_unitcostratio and kc_jmax as priors
+  if (scenario %in% c(229,231)){   # 229 is like 223 but using posteriors from 226 for beta_unitcostratio and kc_jmax as priors
                 # read in posteriors from scenario 1 as prior for 14
                 calib_scen226 <- readr::read_rds(file.path(rsofun_doc_output_path, "data","calibrations","out_calib__scen226_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
                 # "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen226_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"
@@ -373,6 +373,10 @@ setup_rsofun_calibration <- function(scenario){
 
     par_to_estimate$beta_unitcostratio <- list(mean    = 207.86, sd    = 6.79)
     par_to_estimate$kc_jmax            <- list(mean    = 0.4244, sd    = 0.0217)
+    if (scenario %in% c(231)){
+      par_to_estimate$beta_unitcostratio <- list(mean    = 207.86, sd    = 6.79,    lower = 207.86 - 3*6.79, upper = 207.86 + 3*6.79)   # truncated normal
+      par_to_estimate$kc_jmax            <- list(mean    = 0.4244, sd    = 0.0217)
+    }
   }
   if (scenario %in% c(230)){   # 230 is like 223 but using posteriors from 226 for beta_unitcostratio and kc_jmax as fixed
     par_to_estimate$beta_unitcostratio <- NULL
@@ -425,7 +429,7 @@ setup_rsofun_calibration <- function(scenario){
   } else if (scenario %in% c(423,424,425,      # the 420s are reruns from 2025-09-20))
                              323,324,325,      # the 320s are reruns from 2025-09-20))
                              223,224,225,      # the 220s are reruns from 2025-09-19 that remove again the bias))
-                             229,230,          #     229,230 are like 223 but using posteriors from 226
+                             229,230,231,          #     229,230,231 are like 223 but using posteriors from 226
                              123,124,125,      # the 120s are reruns from 2025-09-17 that lower the prior bound of beta_unitcostratio to 0.01
                              113,114,115,      # the 110s are reruns from 2025-09-11 that fix soilm_betao to 0.0
                              103,104,93,94,95, # the 90s are reruns from 2025-09-06

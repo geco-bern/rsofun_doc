@@ -52,6 +52,7 @@ renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibra
 # sbatch ~/GitHub/geco-bern/analysis/run_sensitivity2.sh
 
 # generate figures for manuscript
-renv::run("analysis/05_make_figures.R", project = "../rsofun_doc")
-renv::run("analysis/05c_make_prediction_figures_111_113.R", project = "../rsofun_doc")
+renv::run("analysis/05d_make_figures.R", project = "../rsofun_doc")
+# renv::run("analysis/05_make_figures.R", project = "../rsofun_doc")
+# renv::run("analysis/05c_make_prediction_figures_111_113.R", project = "../rsofun_doc")
 ```
