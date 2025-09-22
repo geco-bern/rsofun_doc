@@ -102,6 +102,7 @@ run_sensitivity_rsofun <- function(
 run_sensitivity_rsofun_1point5IQR <- function(
     iterations = 3,
     par_ranges_derived_from, # this could either be of class "prior" or of class "mcmcSamplerList" i.e. posterior
+    burnins,
     drivobs,
     design, # to be handed to morris::sensitivity()
     outpath,
@@ -125,11 +126,11 @@ run_sensitivity_rsofun_1point5IQR <- function(
     df_posterior <- BayesianTools::getSample(
         par_ranges_derived_from,
         parametersOnly = TRUE,
-        start = 25000) |>
+        start = burnins) |>
       as.data.frame()
     # BayesianTools::getCredibleIntervals(par_ranges_derived_from)
     # BayesianTools::getPredictiveIntervals(par_ranges_derived_from)
-    browser()
+
     par_ranges <- lapply(df_posterior, \(vec) {
         quantile(vec, c(0.25, 0.75)) |> purrr::set_names(c("lower_quartile","upper_quartile"))
       }) |>
@@ -175,10 +176,24 @@ run_sensitivity_rsofun_1point5IQR <- function(
     stop("Error received `par_ranges_derived_from` that is neither of class 'prior' nor 'mcmcSamplerList'")
   }
 
+  # NEW: remove error model parameters from sensitivity analysis since they are interacting extremely with the other parameters
+  par_ranges_no_errors <- par_ranges |>
+    filter(!grepl("^err",parameter_name)) # catches err_gpp, errscale_gpp, errbias_gpp, etc...
+  par_fixed_df <- par_ranges |>
+    filter(grepl("^err",parameter_name)) |> # catches err_gpp, errscale_gpp, errbias_gpp, etc...
+    mutate(mean = (lower + upper)/2)
+  par_fixed <- par_fixed_df$mean
+  names(par_fixed) <- par_fixed_df$parameter_name
+
+  # also ensure that we have the scale and bias parameters set
+  par_fixed2 <- c(par_fixed, list(errscale_gpp = 1, errbias_vj = 0, errbias_bigD13C=0)) # TODO: this might introduce an error if they are now double
+  stopifnot(length(names(par_fixed2)) == length(unique(names(par_fixed2))))
+
   # Setup Morris sensitivity analysis
   sensitivity_sofun_settings <- list(
     metric = cost_likelihood_pmodel_bigD13C_vj_gpp,
-    par_ranges = par_ranges,
+    par_ranges = par_ranges_no_errors,
+    par_fixed = par_fixed2,
     control = list(
       settings = list(
         iterations = iterations,

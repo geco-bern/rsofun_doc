@@ -21,6 +21,7 @@
 # args <- c("113", "train","all", "3")
 # args <- c("113", "train","vj", "3")
 # args <- c("113", "train","bigD13C", "3")
+# args <- c("231", "train","gpp", "3")
 
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)
@@ -121,10 +122,18 @@ if (is.null(drivobs_to_use_for_sensitivity)) {stop(sprintf("Undefined target req
 
 # ii) define the range of the prior (use posterior of a calibration)
 posterior_path <- dplyr::case_when(
+  args[["scenario"]] == "231" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen231_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds", # TODO: switch to 100k
   args[["scenario"]] == "113" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen113_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   args[["scenario"]] == "94" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen94_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   args[["scenario"]] == "93" ~ "/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen93_DEzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds",
   TRUE ~ ""
+)
+burnins <- dplyr::case_when(
+  args[["scenario"]] == "231" ~ 8000, # TODO: switch to 25k
+  args[["scenario"]] == "113" ~ 25000,
+  args[["scenario"]] == "94" ~ 25000,
+  args[["scenario"]] == "93" ~ 25000,
+  TRUE ~ NA_integer_
 )
 if (posterior_path == "") {stop(sprintf("Undefined posterior rds-file for scenario %s", args[["scenario"]]))}
 posterior_to_use_for_sensitivity <- readr::read_rds(posterior_path)
@@ -145,6 +154,7 @@ res <- run_sensitivity_rsofun_1point5IQR(
   iterations                = as.integer(args[["iterations"]]),
   outpath                   = outpath,
   par_ranges_derived_from   = posterior_to_use_for_sensitivity$mod,
+  burnins                   = burnins,
   drivobs                   = drivobs_to_use_for_sensitivity,
   design                    = list(type = "oat", levels = 20, grid.jump = 3), # handed on to sensitivity::morris()
   suffix_str                = suffix_str

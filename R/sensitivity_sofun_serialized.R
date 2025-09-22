@@ -41,7 +41,8 @@ sensitivity_sofun_serialized <- function(
 
   # setup the bayesian sampling as a way to define the likelihood as target function for sensitivity::morris()
   morrisSetup <- createBayesianSetup(
-    likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp),
+    likelihood = ll_factory(obs, drivers, parnames, get_mod_obs = get_mod_obs_pmodel_bigD13C_vj_gpp,
+                            par_fixed = settings$par_fixed), # e.g. list(errscale_gpp = 1, errbias_vj = 0, errbias_bigD13C=0)
     prior      = NULL,
     lower      = binf_arg,
     upper      = bsup_arg,
@@ -104,12 +105,8 @@ sensitivity_sofun_serialized <- function(
     )
 
   # Save plot
-  ggsave(here::here("fig", paste0("fig_D_sensitivity_",suffix,".pdf")), plot = gg, width = 5, height = 3, units = "in")
-  ggsave(here::here("fig", paste0("fig_D_sensitivity_",suffix,".png")), plot = gg, width = 5, height = 3, units = "in")
-  # ggsave(here::here("fig", paste0("fig_D2_sensitivity_",suffix,".png")), plot = gg, width = 8, height = 4.8, units = "cm")
-  ggsave(here::here("fig", paste0("fig_D3_sensitivity_",suffix,".png")),
-         plot = gg %+% filter(gg$data, !grepl("^((err)|(errbias))_",parameter)), # remove the error parameters from the plot
-         width = 8, height = 4.8, units = "cm")
+  ggsave(here::here("fig", paste0("fig_D_sensitivity_",suffix,".pdf")), plot = gg, width = 8, height = 4.8, units = "cm")
+  ggsave(here::here("fig", paste0("fig_D_sensitivity_",suffix,".png")), plot = gg, width = 8, height = 4.8, units = "cm")
 
   # Save RDS and return value:
   return_value <- list(stats   = morris_stats,
