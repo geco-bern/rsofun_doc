@@ -1,5 +1,5 @@
 # This script appends climate data to the the input forcings for
-# 'df_chi_forcing' and 'df_vj_forcing' by using the {ingestr} package.
+# 'df_bigD13C_forcing' and 'df_vj_forcing' by using the {ingestr} package.
 # And then combines it to
 #
 # It needs access to worldclim data set in the form of *.tif files
@@ -12,22 +12,21 @@ library(rpmodel)
 library(rgeco) # pak::pkg_install("geco-bern/rgeco")
 library(dplyr)
 library(purrr)
-# pak::pkg_install("geco-bern/rsofun@23e818b3f964bd80fc3ff8adfce8bb13c99d6631")
-# library(rsofun)  # install from branch simple_pmodel_v2
-# pak::pkg_install("geco-bern/ingestr")
 library(ingestr)
 library(terra)
+library(patchwork)
+library(ggplot2)
 
 
 # Load data --------------------------------------------------------------------
-df_chi_forcing <- read_rds(here::here("data/00_chi_forcing.rds"))
+df_bigD13C_forcing <- read_rds(here::here("data/00_bigD13C_forcing.rds"))
 df_vj_forcing  <- read_rds(here::here("data/00_vj_forcing.rds"))
 
-df_chi_target <- read_rds(here::here("data/00_chi_target.rds"))
+df_bigD13C_target <- read_rds(here::here("data/00_bigD13C_target.rds"))
 df_vj_target  <- read_rds(here::here("data/00_vj_target.rds"))
 
       # # TODO: just checking for gpp sites: if ingestr-derived ppfd agrees with "rsofun_driver_data_v3.4.2.rds"
-      #   NOTE: we normally do this later when combining the forcing data for the chi and vj data with the gpp data
+      #   NOTE: we normally do this later when combining the forcing data for the bigD13C and vj data with the gpp data
       # #   Download FluxDataKit data from Zenodo:
       # #   sudo apt install librdf0-dev
       # #   install.packages("zen4R")
@@ -61,7 +60,7 @@ df_vj_target  <- read_rds(here::here("data/00_vj_target.rds"))
 
 
 # Prepare ingestr --------------------------------------------------------------
-siteinfo_all <- bind_rows(df_chi_forcing, df_vj_forcing) |>
+siteinfo_all <- bind_rows(df_bigD13C_forcing, df_vj_forcing) |>
   # ensure no duplicated sites
   select(sitename, year) |> # drop lon, lat (derive from sitename)
   ungroup() |>
@@ -224,9 +223,172 @@ df_worldclim_raw <- ingest(
 # df_worldclim_raw |> unnest(c(data)) |>
 #   filter(if_any(everything(), is.na)) |>
 #   slice(1)
-df_worldclim <- df_worldclim_raw |> unnest(c(data)) |>
+df_worldclim_monthly <- df_worldclim_raw |>
+  unnest(c(data)) |>
   filter(!if_any(everything(), is.na)) |>
-  nest(data = -c(sitename))
+  nest(data = -c(sitename)) |>
+  ungroup()
+
+# Temporally disaggregate/downscale monthly climate to daily climate values  ------------------------
+# COPYING/ADAPTING FUNCTIONS FROM INGESTR:
+
+# Interpolates monthly data to daily data using polynomials or linear
+# for a single year
+expand_clim_worldclim_monthly <- function( mdf, worldclim_vars ){
+  # define variables
+  sitename <- year <- NULL
+
+  ddf <- mdf |>
+    # apply it separately for each site and each year
+    group_split(sitename, year) |>
+    purrr::map(\(df) expand_clim_worldclim_monthly_byyr(first(df$year), df, worldclim_vars) |>
+                 mutate('sitename' = first(df$sitename)) #ensure to keep sitename
+    ) |>
+    bind_rows()
+
+  return( ddf )
+
+}
+# Interpolates monthly data to daily data using polynomials or linear
+# for a single year
+expand_clim_worldclim_monthly_byyr <- function( yr, mdf, worldclim_vars ){
+  mdf <- mdf |> rename( # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    vapr = vapr_kPa,    # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    srad = srad_kJm2d,  # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tavg = tavg_degC,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmin = tmin_degC,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmax = tmax_degC)   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+
+  # define variables
+  year <- ccov_int <- NULL
+  nmonth <- 12
+
+  startyr <- mdf$year %>% first()
+  endyr   <- mdf$year %>% last()
+
+  yr_pvy <- max(startyr, yr-1)
+  yr_nxt <- min(endyr, yr+1)
+
+  # add first and last year to head and tail of 'mdf'
+  first <- mdf[1:12,] %>% mutate( year = year - 1)
+  last  <- mdf[(nrow(mdf)-11):nrow(mdf),] %>% mutate( year = year + 1 )
+
+  ddf <- ingestr:::init_dates_dataframe( yr, yr )
+
+
+  # air temperature: interpolate using polynomial
+  polynomial_interpolate <- function(mdf, yr, yr_pvy, yr_nxt, var = "tavg"){
+    mval     <- dplyr::filter( mdf, year==yr     )[[var]]
+    mval_pvy <- dplyr::filter( mdf, year==yr_pvy )[[var]]
+    mval_nxt <- dplyr::filter( mdf, year==yr_nxt )[[var]]
+    if (length(mval_pvy)==0){mval_pvy <- mval}
+    if (length(mval_nxt)==0){mval_nxt <- mval}
+
+    return(
+      init_dates_dataframe( yr, yr ) %>%
+        mutate(
+          "{var}" := ingestr:::monthly2daily( mval, "polynom", mval_pvy[nmonth], mval_nxt[1], leapyear = lubridate::leap_year(yr) ) )
+    )
+  }
+  if ("tavg" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "tavg") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # daily minimum and maximum air temperature: interpolate using polynomial
+  if ("tmin" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "tmin") %>%
+      right_join( ddf, by = c("date") )
+  }
+  if ("tmax" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "tmax") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # cloud cover: interpolate using polynomial
+  if ("ccov" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "ccov") %>%
+      rename(ccov_int = ccov) %>%
+      # Reduce CCOV to a maximum 100%
+      mutate( ccov = ifelse( ccov_int > 100, 100, ccov_int ) ) %>%
+      right_join( ddf, by = c("date") ) %>%
+      select(-ccov_int)
+  }
+
+  # solar radiation: interpolate using polynomial
+  if ("srad" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "srad") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # VPD: interpolate vapor pressure 'vapr' using polynomial
+  if ("vapr" %in% worldclim_vars){
+    ddf <- polynomial_interpolate( mdf, yr, yr_pvy, yr_nxt, var = "vapr") %>%
+      right_join( ddf, by = c("date") )
+  }
+
+  # precipitation: interpolate using weather generator
+
+  if ("prec" %in% worldclim_vars){
+    mprec <- dplyr::filter( mdf, year==yr )$prec
+    mwetd <- dplyr::filter( mdf, year==yr )$wetd
+
+    if (any(!is.na(mprec))&&any(!is.na(mwetd))){
+      ddf <-  init_dates_dataframe( yr, yr ) %>%
+        mutate( prec = get_daily_prec( mprec, mwetd, leapyear = lubridate::leap_year(yr) ) ) %>%
+        right_join( ddf, by = c("date") )
+    }
+  }
+
+  ddf <- ddf |> rename(  # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    vapr_kPa   = vapr,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    srad_kJm2d = srad,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tavg_degC  = tavg,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmin_degC  = tmin,   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+    tmax_degC  = tmax)   # TODO: just for in-script use, to be removed when integrating into {ingestr}
+
+  return( ddf )
+
+}
+
+mdf <- df_worldclim_monthly |>
+  # slice_sample(n=10) |> # for development
+  unnest(data) |>
+  mutate(date = make_date(month = month, day = 1)) |>
+  mutate(year = year(date)) |>
+  group_by(sitename) |>
+  ungroup()
+
+# worldclim_vars <- c("tavg_degC", "tmin_degC", "tmax_degC", "vapr_kPa", "srad_kJm2d")
+worldclim_vars <- c("tavg", "tmin", "tmax", "vapr", "srad")
+df_worldclim <-
+  expand_clim_worldclim_monthly( mdf, worldclim_vars ) |>
+    group_by(sitename) |>
+    select(sitename, date, tavg_degC, tmin_degC, tmax_degC, vapr_kPa, srad_kJm2d) |>
+    nest(data = -c(sitename))
+
+# Illustrate temporal disaggregation of monthly climate values
+set.seed(1982)
+df_for_plot_monthly <- df_worldclim_monthly |> slice_sample(n=10) |> unnest(data) |> mutate(date = make_date(month = month, day = 1))
+df_for_plot_daily   <- df_worldclim |> unnest(data) |> filter(sitename %in% df_for_plot_monthly$sitename)
+
+pl_disaggregation <- ggplot(df_for_plot_monthly, aes(x = date, y = tavg_degC, group = sitename)) + # color = sitename
+  scale_x_date(date_breaks = "month", date_labels = "%b, %dst") +
+  # monthly data:
+  geom_step(direction = "hv") + # since we put the monthly avg at the first of each month
+  # daily data:
+  geom_line(data = df_for_plot_daily, color = "red")
+pl_disagg <-
+  ( # first row
+    (pl_disaggregation + aes(y=tavg_degC)) +
+      (pl_disaggregation + aes(y=tmin_degC)) +
+      (pl_disaggregation + aes(y=tmax_degC))
+  )/( # second row
+    (pl_disaggregation + aes(y=vapr_kPa))
+  )/( # third row
+      (pl_disaggregation + aes(y=srad_kJm2d))
+  )
+ggsave(here::here("fig/00_fig_A_append_climate_disaggregate.png"), pl_disagg, width=7.2, height=7.2, units="in")
 
 
 # Derive single values of co2, patm, ppfd, tgrowth, vpd (representing average growing conditions) ------------------------
@@ -318,7 +480,8 @@ df_worldclim2 <- df_worldclim |>
     # tgrowth:
     # (i.e. average temperature during daytime, considering daylength, assuming sinusoidal temp profile):
     # eq.5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
-    doy             = lubridate::make_date(1970, month, 15) |> lubridate::yday(),
+    # doy             = lubridate::make_date(1970, month, 15) |> lubridate::yday(),
+    doy             = lubridate::yday(date),
     # tgrowth_degC    = ingestr::calc_tgrowth(tmin_degC,tmax_degC,lat=lat,doy=doy),
     tgrowth_degC   = myingestr_calc_tgrowth(tmin_degC,tmax_degC,lat=lat,doy=doy),
 
@@ -333,16 +496,16 @@ df_worldclim2 <- df_worldclim |>
 stopifnot(0 == nrow(df_worldclim2 |> filter(is.na(tgrowth_degC)))) # assert tgrowth_degC correctly computed
 
 # df_worldclim2 |> filter(is.na(tgrowth_degC))  |> group_by(sitename) |> slice(1)   # 0 sites have NA in tgrowth
-# df_worldclim2 |> filter(!is.na(tgrowth_degC)) |> group_by(sitename) |> slice(1)   # 585 sites have at least 1 non-NA tgrowth
+# df_worldclim2 |> filter(!is.na(tgrowth_degC)) |> group_by(sitename) |> slice(1)   # 571 sites have at least 1 non-NA tgrowth
 
 # temp:
-# - growing season: mean across months for which monthly tmean > 0 deg C
+# - growing season: mean across days for which disaggregated daily tmean > 0 deg C
 # - daytime temperature: derived as a function of tmin and tmax, see equation 5 in Peng et al., 2023 (https://onlinelibrary.wiley.com/doi/abs/10.1111/1365-2745.14208)
 
 # vpd:
 # - vpd abgeleitet aus vapour pressure (Worldclim), gemäss code in ingestr für watch-wfdei
 # - (vpd(tmin) + vpd(tmax))/2
-# - average only over months with tmean > 0
+# - average only over days with tavg > 0
 
 # ppfd:
 #   - aus solar radiation, multiplikation mit faktor (2....) gemäss anderen datenprodukten in ingestr
@@ -353,9 +516,12 @@ df_worldclim_agg <-
   # compute means across growing season (i.e. across months for which monthly tmean > 0 deg C)
   filter(growing_season) |>
   summarise(
-    growing_season_months = paste0(month,collapse = ","),
-    growing_season_length = length(month),
-    # growing_season_length2= n(), # NOTE: this was for double checking
+    # with monthly data:
+    # growing_season_months = paste0(month,collapse = ","),
+    # growing_season_length = length(month),
+    # with daily data:
+    # growing_season_doys = paste0(doy,collapse = ","),
+    growing_season_length = length(doy),
 
     temp = mean(tgrowth_degC),
 
@@ -413,25 +579,76 @@ df_worldclim_agg <-
       # plot_comparison # THIS LOOKS GOOD
       # # END TODO
 
+
+
+
+## Subset vj and bigD13C sites ----
+# - do not use croplands and wetlands
+# - do not use
+
+classes_to_remove_from_vj_bigD13C <- c(
+  "Bare areas",
+  "Cropland, irrigated or post-flooding",
+  "Cropland, rainfed",
+  "Mosaic cropland (>50%) / natural vegetation (tree, shrub, herbaceous cover) (<50%)",
+  "Lichens and mosses",
+  "Permanent snow and ice",
+  "Water bodies",
+  "Urban areas",
+  "Tree cover, flooded, fresh or brackish water", "Tree cover, flooded, saline water", "Shrub or herbaceous cover, flooded, fresh/saline/brackish water"
+)
+siteinfo |>
+  mutate(to_remove = Defourny_LCCS %in% classes_to_remove_from_vj_bigD13C) |>
+  group_by(to_remove, Defourny_LCCS) |> summarise(n()) |> print(n=100)
+
+sites_to_remove2 <- siteinfo |>
+  mutate(to_remove = Defourny_LCCS %in% classes_to_remove_from_vj_bigD13C) |>
+  filter(to_remove) |>
+  magrittr::extract2("sitename")
+
+      # gpp_sites_to_use <- fdk_site_info |>
+      #   filter(!(igbp_land_use %in% c("CRO", "WET"))) |>
+      #   left_join(
+      #     fdk_site_fullyearsequence,
+      #     by = "sitename"
+      #   ) |>
+      #   filter(nyears_gpp > 5)
+      #
+      # df_gpp_forcingtarget <- gpp_sites_to_use |>
+      #   select(sitename, nyears_gpp,
+      #          FDK_koeppen_code = koeppen_code, FDK_igbp_land_use = igbp_land_use,
+      #          year_start_gpp, year_end_gpp) |>
+      #   left_join(drivers, by = join_by(sitename)) |>
+      #   # nest the additional columns into site_info
+      #   unnest(site_info) |>
+      #   nest(site_info = c(
+      #     lon, lat, elv, whc, canopy_height, reference_height,
+      #     nyears_gpp, FDK_koeppen_code, FDK_igbp_land_use, year_start_gpp, year_end_gpp)) |>
+      #   select(sitename, params_siml, site_info, forcing)
+      #
+      #
+
 # Combine and output
 
 # since we did not get worldclim data for 10 sites
 # and only 0 temperature for another 1 sites:
 # `df_trait_forcing_filled` is missing these 11 sites
 # anti_join(df_co2_agg, df_worldclim_agg)$sitename |> dput()
-sites_to_remove <- c(
+sites_to_remove1 <- c(
   "lon_+158.80_lat_-054.50", "lon_-041.75_lat_-022.38", "lon_-063.80_lat_-064.80",
   "lon_-063.82_lat_-064.82", "lon_-069.83_lat_+011.61", "lon_-072.38_lat_+078.53",
   "lon_-074.60_lat_+078.58", "lon_-075.92_lat_+078.88", "lon_-079.38_lat_+008.97",
   "lon_-086.70_lat_+076.35", "lon_+113.83_lat_+004.18"
 )
-sites_to_remove
+
+sites_to_remove <- c(sites_to_remove1, sites_to_remove2)
+
 
 df_trait_forcing_filled <-
   dplyr::full_join(df_etopo_agg |> nest(patm = c(elv_masl, patm_Pa)) |> filter(!(sitename %in% sites_to_remove)),
                     df_co2_agg  |> nest(co2  = c(co2_ppm))           |> filter(!(sitename %in% sites_to_remove)),
                     by = join_by(sitename)) |>
-  dplyr::full_join(df_worldclim_agg |> nest(clim = c(growing_season_months,growing_season_length,temp,vpd,ppfd)),
+  dplyr::full_join(df_worldclim_agg |> nest(clim = c(growing_season_length,temp,vpd,ppfd)) |> filter(!(sitename %in% sites_to_remove)),
                     by = join_by(sitename)) |>
   # re-append lon, lat
   dplyr::left_join(siteinfo, by = join_by(sitename)) |>
@@ -440,10 +657,10 @@ df_trait_forcing_filled <-
 
 df_trait_targets <-
   dplyr::full_join(
-    df_chi_target |> select(-c(lon,lat)) |> nest(chi = -sitename) |> filter(!(sitename %in% sites_to_remove)),
-    df_vj_target  |> select(-c(lon,lat)) |> nest(vj  = -sitename) |> filter(!(sitename %in% sites_to_remove)),
+    df_bigD13C_target |> select(-c(lon,lat)) |> nest(bigD13C = -sitename) |> filter(!(sitename %in% sites_to_remove)),
+    df_vj_target      |> select(-c(lon,lat)) |> nest(vj  = -sitename) |> filter(!(sitename %in% sites_to_remove)),
     by = join_by(sitename)) |>
-  select(sitename, chi, vj) |>
+  select(sitename, bigD13C, vj) |>
   ungroup() |>
   distinct()
 
@@ -453,9 +670,9 @@ check1 <- anti_join(df_trait_targets, df_trait_forcing_filled, by = join_by(site
 
 stopifnot(all(df_trait_targets$sitename == df_trait_forcing_filled$sitename)) # ensure same ordering
 
-# write_rds(df_trait_forcing_filled, file = here::here("data/01_chi-vj_forcing.rds"),
+# write_rds(df_trait_forcing_filled, file = here::here("data/01_bigD13C-vj_forcing.rds"),
 #         compress = "xz")
-# write_rds(df_trait_targets,        file = here::here("data/01_chi-vj_targets.rds"),
+# write_rds(df_trait_targets,        file = here::here("data/01_bigD13C-vj_targets.rds"),
 #         compress = "xz")
 
 
@@ -466,9 +683,9 @@ pl_grow_season <- rgeco:::plot_map_simpl() +
   geom_point(
     data    = unnest(df_trait_forcing_filled, clim),
     mapping = aes(lon, lat, color = growing_season_length)) +
-  labs(color = "Length of\ngrowing\nseason\n(months)")
+  labs(color = "Length of\ngrowing\nseason\n(days)")
 pl_grow_season
-ggsave(here::here("fig/fig_01_append_climate.png"), pl_grow_season, width=7.2, height=3.6, units="in")
+ggsave(here::here("fig/00_fig_B_append_climate_MaplengthGrowSeason.png"), pl_grow_season, width=7.2, height=3.6, units="in")
 
 
 # Check all input data
@@ -479,15 +696,14 @@ plot_clim <- function(colname_to_plot, label = NULL){
       data    = unnest(df_trait_forcing_filled, clim),
       mapping = aes(lon, lat, color = .data[[colname_to_plot]]))
 }
-library(patchwork)
-p1 <- plot_clim("growing_season_length", "Length of\ngrowing\nseason\n(months)")
+p1 <- plot_clim("growing_season_length", "Length of\ngrowing\nseason\n(days)")
 p2 <- plot_clim("ppfd", "PPFD\n(mol/m2/s)")
 p3 <- plot_clim("temp", "Mean\ngrowth\ntemp\n(deg C)")
 p4 <- plot_clim("vpd",  "VPD\nmean(\n  f(Tmin),\n  f(Tmax)\n)\n(Pa)")
 pl_all_climate <-
   (p1+p2)/
   (p3+p4)
-ggsave(here::here("fig/fig_02_append_climate.png"), pl_all_climate, width=7.2*2, height=3.6*2, units="in")
+ggsave(here::here("fig/00_fig_C_append_climate_MapClimateVars.png"), pl_all_climate, width=7.2*2, height=3.6*2, units="in")
 
 plot_hist <- function(colname_to_plot, label = NULL){
   unnest(df_trait_forcing_filled, c(clim,patm,co2)) |>
@@ -495,7 +711,7 @@ plot_hist <- function(colname_to_plot, label = NULL){
     {if(!is.null(label)) labs(x = label) } +
     geom_histogram(bins = 30) + theme_bw()
 }
-p1 <- plot_hist("growing_season_length", "Length of growing season (months)")
+p1 <- plot_hist("growing_season_length", "Length of growing season (days)")
 p2 <- plot_hist("ppfd", "PPFD (mol/m2/s)")
 p3 <- plot_hist("temp", "Mean growth temp (deg C)")
 p4 <- plot_hist("vpd",  "VPD=mean(f(Tmin),f(Tmax)), (Pa)")
@@ -504,7 +720,7 @@ p6 <- plot_hist("co2_ppm", "CO2 (ppm)")
 p7 <- plot_hist("elv_masl", "Elevation (masl)")
 p8 <- plot_hist("patm_Pa", "Atmospheric. pressure (Pa)")
 
-p9  <- ggplot(unnest(df_trait_targets, c("chi")), aes(x=chi_obs__)) + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed chi = Ci/Ca")
+p9  <- ggplot(unnest(df_trait_targets, c("bigD13C")), aes(x=bigD13C_obs_permil)) + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed bigD13C = Ci/Ca")
 p10 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vj_obs__))  + geom_histogram(bins=30, fill = "green4") + theme_bw() + labs(x = "Observed VJ = VCmax/Jmax")
 p11 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=vcmax_obs_molm2s*10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed VCmax (umol/m2/s)")
 p12 <- ggplot(unnest(df_trait_targets, c("vj")),  aes(x=jmax_obs_molm2s *10^6))  + geom_histogram(bins=30, fill = "red3") + theme_bw() + labs(x = "Observed Jmax (umol/m2/s)")
@@ -517,10 +733,8 @@ pl_all_climate_and_target_hist <-
   (p9+p10)/
   (p11+p12)
 ggsave(
-  here::here("fig/fig_03_append_climate.png"),
+  here::here("fig/00_fig_D_append_climate_HistOnestepSites.png"),
   pl_all_climate_and_target_hist, width=3.6 * 2, height=1.8 * 5, units="in")
-
-
 
 
 
@@ -587,19 +801,19 @@ ggsave(
 
 # Combine with daily forcing data for gpp --------------------------------------------------------------
 
-## Load chi, vj data ----
-# chi_vj_forcing <- read_rds(file = here::here("data/01_chi-vj_forcing.rds"))
-# chi_vj_targets <- read_rds(file = here::here("data/01_chi-vj_targets.rds"))
-chi_vj_forcing <- df_trait_forcing_filled
-chi_vj_targets <- df_trait_targets
+## Load bigD13C, vj data ----
+# bigD13C_vj_forcing <- read_rds(file = here::here("data/01_bigD13C-vj_forcing.rds"))
+# bigD13C_vj_targets <- read_rds(file = here::here("data/01_bigD13C-vj_targets.rds"))
+bigD13C_vj_forcing <- df_trait_forcing_filled
+bigD13C_vj_targets <- df_trait_targets
 
 ## Load gpp data ----
 gpp_forcingtarget <- read_rds(file = here::here("data/00_gpp_forcingtarget.rds"))
 
 
-## Prepare chi, vj, gpp data (drivers and targets) ----
-# format chi_vj_forcing similarly to rsofun::p_model_drivers
-chi_vj_drivers <- chi_vj_forcing |>
+## Prepare bigD13C, vj, gpp data (drivers and targets) ----
+# format bigD13C_vj_forcing similarly to rsofun::p_model_drivers
+bigD13C_vj_drivers <- bigD13C_vj_forcing |>
   unnest(c(patm, co2, clim)) |>
   ## 1) nest forcing
   select(sitename,
@@ -619,20 +833,20 @@ chi_vj_drivers <- chi_vj_forcing |>
   # order
   select(sitename, run_model, params_siml, site_info, forcing)
 
-# format chi_vj_targets similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
-chi_vj_obs <- chi_vj_targets |>
+# format bigD13C_vj_targets similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
+bigD13C_vj_obs <- bigD13C_vj_targets |>
   ## 1) add additional info
   rowwise() |> mutate(
     run_model   = "onestep",
     targets = list(list(
-      vj  = is.null(vj),
-      chi = is.null(chi),
-      gpp = FALSE
+      vj      = !is.null(vj),
+      bigD13C = !is.null(bigD13C),
+      gpp     = FALSE
     ))
   ) |>
   ## 2) nest data
   ungroup() |>
-  nest(data = c(chi,vj)) |>
+  nest(data = c(bigD13C,vj)) |>
   # order
   select(sitename, run_model, targets, data)
 
@@ -640,74 +854,122 @@ chi_vj_obs <- chi_vj_targets |>
 gpp_drivers <- gpp_forcingtarget |>
   mutate(run_model = "daily") |> # either "onestep" or "daily"
   # order
-  select(sitename, run_model, params_siml, site_info, forcing)
+  select(sitename, run_model, params_siml, site_info, forcing) |>
+  # reduce columns in forcing:
+  mutate(forcing = purrr::map(forcing, \(nested_forcing_df){
+    nested_forcing_df |>
+      select(date, temp, vpd, ppfd, netrad, patm, snow, rain, tmin, tmax, vwind, fapar, co2, ccov)
+      # thereby unselecting: select(-c(gpp, gpp_qc, nee, nee_qc, le, le_qc))
+  }))
 
 # format gpp_forcingtarget similarly to bind_rows(rsofun::p_model_validation, rsofun::p_model_validation_vcmax25)
-gpp_obs <- gpp_forcingtarget |>
+gpp_obs_nonQC <- gpp_forcingtarget |>
   select(sitename, forcing) |> unnest(forcing) |>
   select(sitename, date, gpp, gpp_qc, nee, nee_qc, le, le_qc) |>
   nest(data = -c(sitename)) |>
   mutate(run_model = "daily", # either "onestep" or "daily"
          targets = list(list(
-           vj  = FALSE,
-           chi = FALSE,
-           gpp = TRUE
+           vj      = FALSE,
+           bigD13C = FALSE,
+           gpp     = TRUE
          ))) |>
   # order
   select(sitename, run_model, targets, data)
+gpp_obs <- gpp_obs_nonQC |>
+  # remove rows corresponding to low quality gpp observations
+  # previously low quality gpp were overwritten with NA
+  # since we couldn't remove the rows due to the forcing
+  # Now that this is split we can remove those rows
+  mutate(data = purrr::map(data, \(nested_forcing_df){
+    nested_forcing_df |> filter(!is.na(gpp))
+  }))
+
+# Visualize QC operation:
+# pl_QC_a <- gpp_forcingtarget |> unnest(forcing) |>
+#   group_by(sitename) |> filter(any(is.na(gpp))) |>
+#   mutate(flag = case_when(gpp_qc<0.8~"low_quality",
+#                           is.na(gpp)~"NA",
+#                           TRUE~"good_quality")) |>
+#   ggplot(aes(x=date,y=sitename, color = flag)) + geom_point() +
+#   theme_classic()
+pl_QC_b <- gpp_obs_nonQC |> unnest(data) |>
+  group_by(sitename) |> filter(any(is.na(gpp))) |>
+  mutate(flag = case_when(gpp_qc<0.8~"low_quality",
+                          is.na(gpp)~"NA",
+                          TRUE~"good_quality")) |>
+  ggplot(aes(x=date,y=sitename, color = flag)) + geom_point() +
+  theme_classic()
+# gpp_obs |> unnest(data) |>
+#   group_by(sitename) |> filter(any(is.na(gpp))) |>
+#   mutate(flag = case_when(gpp_qc<0.8~"low_quality",
+#                           is.na(gpp)~"NA",
+#                           TRUE~"good_quality")) |>
+#   ggplot(aes(x=date,y=sitename, color = flag)) + geom_point() +
+#   theme_classic()
+stopifnot(
+  gpp_obs |>
+    unnest(data) |>
+    group_by(sitename) |>
+    filter(any(is.na(gpp))) |>
+    nrow() == 0)
+
+ggsave(here::here("fig/00_fig_E_append_climate_GPP-QC.png"),
+       pl_QC_b, width=7.2, height=7.2, units="in", scale = 1.5)
 
 
-## Combine chi, vj, gpp data (drivers and targets) ----
-chi_vj_gpp_drivers <- bind_rows(gpp_drivers, chi_vj_drivers)
-chi_vj_gpp_obs     <- bind_rows(gpp_obs, chi_vj_obs)
-# chi_vj_gpp_drivers_obs <- dplyr::inner_join( # TODO: check if this is computationally more efficient for calib_sofun()
-#   chi_vj_gpp_drivers,
-#   chi_vj_gpp_obs,
+
+
+## Combine bigD13C, vj, gpp data (drivers and targets) ----
+bigD13C_vj_gpp_drivers <- bind_rows(gpp_drivers, bigD13C_vj_drivers)
+bigD13C_vj_gpp_obs     <- bind_rows(gpp_obs, bigD13C_vj_obs)
+# bigD13C_vj_gpp_drivers_obs <- dplyr::inner_join( # TODO: check if this is computationally more efficient for calib_sofun()
+#   bigD13C_vj_gpp_drivers,
+#   bigD13C_vj_gpp_obs,
 #   by = join_by(sitename, run_model))
 
 write_rds(
-  chi_vj_gpp_drivers,
-  file = here::here("data/01_chi-vj-gpp_calibsofun_drivers.rds"),
+  bigD13C_vj_gpp_drivers,
+  file = here::here("data/01_bigD13C-vj-gpp_calibsofun_drivers.rds"),
   compress = "xz")
 
 write_rds(
-  chi_vj_gpp_obs,
-  file = here::here("data/01_chi-vj-gpp_calibsofun_obs.rds"),
+  bigD13C_vj_gpp_obs,
+  file = here::here("data/01_bigD13C-vj-gpp_calibsofun_obs.rds"),
   compress = "xz")
 
 
 
 
 ## Plot the available data
-chi_vj_gpp_obs |> unnest_wider(targets) |> filter(vj)
-chi_vj_gpp_obs |> unnest_wider(targets) |> filter(chi)
-chi_vj_gpp_obs |> unnest_wider(targets) |> filter(gpp)
+bigD13C_vj_gpp_obs |> unnest_wider(targets) |> filter(vj)
+bigD13C_vj_gpp_obs |> unnest_wider(targets) |> filter(bigD13C)
+bigD13C_vj_gpp_obs |> unnest_wider(targets) |> filter(gpp)
 
-coordinates <- chi_vj_gpp_drivers |> unnest(site_info) |> select(sitename, lon,lat,elv)
+coordinates <- bigD13C_vj_gpp_drivers |> unnest(site_info) |> select(sitename, lon,lat,elv)
 
 pl1 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
-    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
+    data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
       filter(vj) |>
       left_join(coordinates),
-    mapping = aes(lon, lat)) + ggtitle("V/J sites")
+    mapping = aes(lon, lat)) + ggtitle("Vcmax/Jmax sites")
 pl2 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
-    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
-      filter(chi) |>
+    data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
+      filter(bigD13C) |>
       left_join(coordinates),
-    mapping = aes(lon, lat)) + ggtitle("Ci/Ca sites")
+    mapping = aes(lon, lat)) + ggtitle("Δ13C sites")
 pl3 <- rgeco:::plot_map_simpl() +
   geom_point(size=0.1,shape = 20,
-    data    = chi_vj_gpp_obs |> unnest_wider(targets) |>
+    data    = bigD13C_vj_gpp_obs |> unnest_wider(targets) |>
       filter(gpp) |>
       left_join(coordinates),
     mapping = aes(lon, lat)) + ggtitle("GPP flux sites")
+
 pl_targets <-
   (pl1 + theme(axis.text.x = element_blank()))/
   (pl2 + theme(axis.text.x = element_blank()))/
   pl3
-
 ggsave(
-  here::here("fig/fig_05_append_climate.png"),
+  here::here("fig/00_fig_F_append_climate_MapTargetSites.png"),
   pl_targets, width=3.6, height=1.8 * 3, units="in")

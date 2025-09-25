@@ -1,199 +1,110 @@
+#!/usr/bin/env Rscript
+
+# TO BE DELETED ONCE NO JOBS ARE RUNNING, since it is replaced by DEzs
+
 # Script running Bayesian calibration
 
+# script is called with three arguments for sampling:
+# 1. calibration scenario [0,1,2,3]
+# 2. burnin iterations
+# 3. total iterations (incl. burnin)
+
+# Note that these arguments can be used to distribute over multiple nodes.
+# Distribution over CPU cores of a single node is handled by multidplyr
+# and argument ncores in the script.
+
+# Example:
+# Rscript -e 'renv::run("analysis/03_bayesian_calibration_DEzs.R", project = "../rsofun_doc", args = c(3,11,51))'
+
+# # When using this script directly from RStudio, not from the shell, specify
+# args <- c("3", "11", "51", "3")
+# args <- c("0", "11", "51", "3")
+# args <- c("99", "0", "12", "1")
+# args <- c("31", "0", "12", "1")
+# args <- c("18", "0", "12", "2")
+# args <- c("17", "0", "12", "2")
+# args <- c("16", "0", "12", "2")
+# args <- c("70", "0", "12", "1")
+# args <- c("71", "0", "12", "1")
+# args <- c("72", "0", "12", "1")
+# args <- c("94", "0", "12", "1")
+
+# to receive arguments to script from the shell
+args = commandArgs(trailingOnly=TRUE)
+stopifnot(length(args) %in% c(3,4))
+if(length(args)==3) {args <- c(args, "1")}
+args <- as.integer(args)
+names(args) <- c("scenario","burnin","iterations","parallel")
+
+stopifnot(length(args[["scenario"]])>=1)
+stopifnot(length(args[["burnin"]])==1)
+stopifnot(length(args[["iterations"]])==1)
+stopifnot(length(args[["parallel"]])==1)
+
+print(sprintf(
+  "Requested scenario #%d, for (%d-%d) iterations (on %d core(s))",
+  args[["scenario"]],
+  args[["iterations"]],
+  args[["burnin"]],
+  args[["parallel"]]
+))
+
+# pak::pkg_install("geco-bern/rsofun@ebb6b208e72f83d7cb13c5802239b122f6853a52")
+
 # Load libraries
-library(rsofun)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
+renv::restore(prompt = FALSE)
 library(BayesianTools)
-library(tictoc)
+library(foreach)
+library(doParallel)
+library(tidyr)
+library(dplyr)
+library(readr)
+library(rsofun)
 
-## Function definitions ----------------------------------------------------------
-source(here::here("R/calibration_helpers.R"), echo = TRUE)
+source(here::here("R/run_mcmc_rsofun.R"), echo = TRUE)
 
-# get_runtime <- function(out_calib) {# function(settings_calib){
-#   total_time_secs <- sum(unlist(lapply(
-#     out_calib$mod,
-#     function(curr_chain){curr_chain$settings$runtime[["elapsed"]]})))
-#   return(sprintf("Total runtime: %.0f secs", total_time_secs))
-# }
+# setup output function
+fname <- sprintf("timings_scen%s_%s",
+                 paste0(args, collapse="-"),
+                 format(Sys.time(), "%Y-%m-%d_%Hh%Mm%Ss"))
+# outpath <- here::here("data")
+outpath <- file.path(rsofun_doc_output_path,"data")
+dir.create(dirname(outpath), showWarnings = FALSE, recursive = TRUE)
+
+timings_to_rds_csv <- function(timings, filename = here::here("data","timings","timings_FB")){
+  if (!dir.exists(dirname(filename))) {dir.create(dirname(filename), recursive = T)}
+
+  # to *.rds
+  timings |> readr::write_rds(paste0(filename,".rds"))
+
+  # to *.csv
+  timings |>
+    mutate(across(
+      where(lubridate::is.difftime),
+      ~sprintf("%8.1fmin", round(as.numeric(.x, "mins"),1))
+    )) |>
+    readr::write_csv(paste0(filename,".csv"))
+}
 
 
-## Read data -------------------------------------------------------------------
-# Read data produced with 01_sample_sites.R
-drivers <- read_rds(here::here("data/drivers_train.rds"))
+# run MCMC
+timings <- tibble(); timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 
-# Validation data is in the driver objects (ultimately obtained from FluxDataKit)
-validation <- drivers |>
-  select(sitename, data = forcing) |>
-  mutate(data = purrr::map(data, ~select(., date, gpp)))
-
-## Run calibrations ------------------------------------------------------------
-
-### Global calibration (all sites) ---------------------------------------------
-#### Setup s1: global, reduced parameter set, only GPP as target ----------------
-settings_calib <- list(
-  method = "BayesianTools",
-  metric = rsofun::cost_likelihood_pmodel,
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 10000,
-      iterations = 50000,
-      nrChains = 3,       # number of independent chains
-      startValue = 3      # number of internal chains to be sampled
-    )),
-  par = list(
-    kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
-    kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
-    kphio_par_b = list(lower = 10, upper = 30, init = 20),
-    soilm_thetastar = list(lower = 1, upper = 250, init = 40),
-    soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
-    err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
-  )
+timings <- run_mcmc_rsofun(
+  # calibration scenario:
+  curr_calibration_scenario    = args["scenario"],
+  # mcmc setup:
+  iterations = args[["iterations"]], burnin = args[["burnin"]],
+  n_chains_independent      = args[["parallel"]],
+  n_chains_within_sampler   = 3,
+  # parallelization
+  n_parallel_independent    = args[["parallel"]],     # with '= 1' the 3 chains are run in sequence (set to 3 if you want in parallel)
+  n_parallel_within_sampler = FALSE,
+  outpath = outpath, logpath = file.path(outpath, "timings", paste0(fname,"_log.txt"))
 )
-
-set.seed(1982)
-
-out <- calib_sofun(
-  drivers = drivers,
-  obs = validation,
-  settings = settings_calib,
-  par_fixed = list(
-    beta_unitcostratio = 146.0,
-    kc_jmax            = 0.41,
-    rd_to_vcmax        = 0.014,
-    tau_acclim         = 20.0
-  ),
-  targets = "gpp"
-)
-
-out$name <- "s1"
-settings_string <- get_calibration_settings_str(out)
-write_rds(out, file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
-        compress = "xz")
-
-# # Plot MCMC diagnostics
-# plot(out$mod)
-# summary(out$mod) # Gives Gelman Rubin multivariate of 1.019
-# summary(out$par)
-# print(get_runtime(out))
-#
-# # Plot prior and posterior distributions
-# gg <- plot_prior_posterior_density(out$mod)
-#
-# ggsave(here::here("fig/prior_posterior_s1.pdf"), plot = gg, width = 6, height = 5)
-# ggsave(here::here("fig/prior_posterior_s1.png"), plot = gg, width = 6, height = 5)
-
-#### Setup s2: global, full parameter set, only GPP as target -------------------
-settings_calib <- list(
-  method = "BayesianTools",
-  metric = rsofun::cost_likelihood_pmodel,
-  control = list(
-    sampler = "DEzs",
-    settings = list(
-      burnin = 10000,
-      iterations = 50000,
-      nrChains = 3,       # number of independent chains
-      startValue = 3      # number of internal chains to be sampled
-    )),
-  par = list(
-    kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
-    kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
-    kphio_par_b = list(lower = 10, upper = 30, init = 20),
-    soilm_thetastar = list(lower = 1, upper = 250, init = 40),
-    soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
-    err_gpp = list(lower = 0.1, upper = 3, init = 0.8),
-    beta_unitcostratio = list(lower = 50, upper = 250, init = 146.0),
-    kc_jmax = list(lower = 0.1, upper = 0.8, init = 0.41),
-    tau_acclim = list(lower = 2, upper = 100, init = 20.0)
-  )
-)
-
-set.seed(1982)
-
-out <- calib_sofun(
-  drivers = drivers,
-  obs = validation,
-  settings = settings_calib,
-  par_fixed = list(rd_to_vcmax = 0.014),
-  targets = "gpp"
-)
-
-out$name <- "s2"
-settings_string <- get_calibration_settings_str(out)
-write_rds(out, file = here::here(paste0("data/out_calib_", settings_string, ".rds")),
-        compress = "xz")
-
-#### Setup s3: global, full parameter set, GPP and traits as target -------------
-# Todo:
-#   - select target dataset for Vcmax:Jmax and for d13C
-#   - derive ci:ca from d13C data
-#   - generate driver object for both datasets (using lon, lat info from their sites)
-#   - define likelihood function for parallel targets (Vcmax:Jmax, ci:ca, GPP)
-
-# From https://traitecoevo.r-universe.dev/leaf13C
-# install.packages('leaf13C', repos = c('https://traitecoevo.r-universe.dev', 'https://cloud.r-project.org'))
-# df_d13c <- leaf13C::get_data()
+timings_to_rds_csv(timings, file.path(outpath, "timings", fname))
 
 
 
 
 
-# # Function to run calibration and write output for an individual calibration setup (e.g., by site)
-# calib_sofun_bycase <- function(drivers_bycase, settings, case_name = "global"){
-#
-#   validation_bycase <- drivers_bycase |>
-#     select(sitename, data = forcing) |>
-#     mutate(data = purrr::map(data, ~select(., date, gpp)))
-#
-#   # Common calibration settings for all cases
-#   settings_calib <- list(
-#     method = "BayesianTools",
-#     metric = rsofun::cost_likelihood_pmodel,
-#     control = list(
-#       sampler = "DEzs",
-#       settings = list(
-#         burnin = 10000,
-#         iterations = 50000,
-#         nrChains = 3,       # number of independent chains
-#         startValue = 3      # number of internal chains to be sampled
-#       )),
-#     par = list(
-#       kphio = list(lower = 0.02, upper = 0.15, init = 0.05),
-#       kphio_par_a =list(lower = -0.004, upper = -0.001, init = -0.0025),
-#       kphio_par_b = list(lower = 10, upper = 30, init = 20),
-#       soilm_thetastar = list(
-#         lower = 0.01 * drivers_bycase$site_info[[1]]$whc,
-#         upper = 1.0  * drivers_bycase$site_info[[1]]$whc,
-#         init  = 0.6  * drivers_bycase$site_info[[1]]$whc
-#       ),
-#       soilm_betao = list(lower = 0.0, upper = 1.0, init = 0.0),
-#       err_gpp = list(lower = 0.1, upper = 3, init = 0.8)
-#     )
-#   )
-#
-#   out <- calib_sofun(
-#     drivers = drivers_bycase,
-#     obs = validation_bycase,
-#     settings = settings_calib,
-#     par_fixed = list(
-#       beta_unitcostratio = 146.0,
-#       kc_jmax            = 0.41,
-#       rd_to_vcmax        = 0.014,
-#       tau_acclim         = 20.0
-#       ),
-#     targets = "gpp"
-#   )
-#
-#   out$name <- case_name
-#
-#   settings_string <- get_calibration_settings_str(out)
-#
-#   filnam <- here::here(paste0("data/out_calib_", settings_string, ".rds"))
-#
-#   write_rds(out, file = filnam)
-#
-#   return(filnam)
-#
-# }

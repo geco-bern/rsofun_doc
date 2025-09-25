@@ -37,3 +37,11 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+
+# manually defined
+data-previous*/
+timings*
+data/*.rds
+data/predictions/*.rds
+slurm-logs/*

@@ -1,0 +1,537 @@
+%% Copernicus Publications Manuscript Preparation Template for LaTeX Submissions
+%% ---------------------------------
+%% This template should be used for copernicus.cls
+%% The class file and some style files are bundled in the Copernicus Latex Package, which can be downloaded from the different journal webpages.
+%% For further assistance please contact Copernicus Publications at: production@copernicus.org
+%% https://publications.copernicus.org/for_authors/manuscript_preparation.html
+
+
+%% Please use the following documentclass and journal abbreviations for preprints and final revised papers.
+
+%% 2-column papers and preprints
+
+\documentclass[gmd, manuscript]{copernicus}
+
+%% Journal abbreviations (please use the same for preprints and final revised papers)
+% ...
+% Geoscientific Model Development (gmd)
+% ...
+
+
+%% \usepackage commands included in the copernicus.cls:
+%\usepackage[german, english]{babel}
+%\usepackage{tabularx}
+%\usepackage{cancel}
+%\usepackage{multirow}
+%\usepackage{supertabular}
+%\usepackage{algorithmic}
+%\usepackage{algorithm}
+%\usepackage{amsthm}
+%\usepackage{float}
+%\usepackage{subfig}
+%\usepackage{rotating}
+
+
+\begin{document}
+
+\title{rsofun v5.0: A model-data integration framework for simulating ecosystem processes}
+
+% \Author[affil]{given_name}{surname}
+
+%% The [] brackets identify the author with the corresponding affiliation. 1, 2, 3, etc. should be inserted.
+%% If an author is deceased, please add \deceased[$Deceased date if applicable$]{$Author number$} (e.g. \deceased[13 November 2015]{2}) at the end of the affiliations. The author number depends on the placement of the author in the author list, e.g. the third author has number 3.
+%% If authors contributed equally, please add \equalcontrib{$Author numbers$} (e.g. \equalcontrib{1,3}) at the end of the affiliations. The author number depends on the placement of the author in the author list, e.g. the third author has number 3.
+\Author[1,2]{Josefa Arán}{Paredes}
+\Author[1,2]{Koen}{Hufkens}
+\Author[1,2]{Mayeul}{Marcadella}
+\Author[1,2]{Fabian}{Bernhard}
+\Author[1,2]{Benjamin D.}{Stocker} %% correspondence author
+
+\affil[1]{Institute of Geography, University of Bern, Hallerstrasse 12, 3012 Bern, Switzerland}
+\affil[2]{Oeschger Center for Climate Change Research (OCCR), University of Bern, Hochschulstrasse 6, 3012 Bern, Switzerland}
+
+\runningtitle{rsofun v5.0: model-data integration framework}
+
+\runningauthor{Paredes et al.}
+
+\received{}
+\pubdiscuss{} %% only important for two-stage journals
+\revised{}
+\accepted{}
+\published{}
+
+%% These dates will be inserted by Copernicus Publications during the typesetting process.
+
+\firstpage{1}
+
+\maketitle
+
+\begin{abstract}
+
+Mechanistic vegetation models serve to estimate terrestrial carbon fluxes and climate impacts on ecosystems across diverse biotic and abiotic conditions.
+Systematically informing them with data is key for enhancing their predictive accuracy and estimating uncertainty.
+Here we present the Simulating Optimal FUNctioning \{rsofun\} R package, providing a computationally efficient and parallelizable implementation of the P-model for site-scale simulations of ecosystem photosynthesis, complemented with functionalities for Bayesian model-data integration and estimation of parameters and uncertainty.
+We describe a use case to demonstrate the package functionalities for modelling ecosystem gross \chem{CO_2} uptake at one flux measurement site, including model sensitivity analysis, Bayesian parameter calibration, and prediction uncertainty estimation.
+\{rsofun\} lowers the bar of entry to ecosystem modelling and model-data integration and serves as an open-access resource for model development and dissemination.
+\end{abstract}
+
+% \copyrightstatement{TEXT} %% This section is optional and can be used for copyright transfers.
+
+
+\introduction  %% \introduction[modified heading if necessary]
+
+The modelling of land ecosystem processes and structure, water, and carbon fluxes relies on both mechanistic and statistical approaches \citep{dietze2018, hartig2012, vanoijen2005}. Mechanistic models are formulated as mathematical descriptions of functional relationships between the abiotic environment and ecosystem states, rates, and dynamics. These descriptions reflect available theory and general empirical patterns and provide a means for "translating" hypotheses about governing principles and causal relationships into testable predictions \citep{marquet2014}, and for upscaling model-based estimates in geographical space and to novel environmental conditions. However, mechanistic models rely also on statistical (empirical) descriptions of processes at varying levels of abstraction.
+
+Mechanistic models have model parameters that are either specified directly or fitted to data. A great advantage of mechanistic models is that they explicitly link known physical constants with process representations (e.g., molecular mass of \chem{CO_2} for diffusion and assimilation, or the gravitational constant and viscosity of water for its transport and transpiration). Other parameters may be specified based on independent measurements under controlled conditions (e.g., the activation energy of Arrhenius-type metabolic rates), or represent measurable plant functional traits, taken as constant over time and within plant functional types (PFTs - the basic unit in mechanistic vegetation models). Both types of parameters have traditionally been specified in models directly ('direct parameterization', \citep{hartig2012}). Yet other model parameters may not be directly observable and describe processes that are not explicitly resolved but can be described at a higher level of abstraction. Such parameters are often fitted to data such that the agreement between one (or several) related model predictions and observations is optimised. Parameter estimation for mechanistic vegetation models typically employs generic optimization algorithms or Bayesian statistical approaches and is often used for specifying diverse types of parameters (except for universal physical constants). Bayesian methods have the advantage that they enable a systematic assessment of the correlation structure among multiple fitted parameters, provide a means for considering uncertainty in observations and available prior information, generate probabilistic parameter estimations and model predictions, and provide a basis to quantifying the constraints by various of calibration target data or to identifying errors arising from model structural choices \citep{bagnara2015, dietze2018, hartig2012, vanoijen2013, raj2018, vanoijen2005, xiao2014}.
+
+As the number of parameters increases in state-of-the-art mechanistic vegetation models, taking into account multiple PFTs and ecosystem components (e.g. soil, microbes, hydrology), larger amounts of data and computing resources are required to fully explore the parameter space \citep{hartig2012}. This poses a limitation for systematic model-data integration and Bayesian parameter estimation. Eco-evolutionary optimality (EEO) principles have been proposed for reducing model complexity and for a robust grounding of models in governing principles \citep{franklin2020, harrison2021}. They enable parameter-sparse representations, limit the distinction of separate PFTs, and may enable better model generalisations to novel environmental regimes. EEO principles make predictions of plant functional traits that would otherwise have to be prescribed -- typically as temporally fixed model parameters. However, although parameter-sparse, EEO-based vegetation models are not devoid of model parameters. Ideally, remaining parameters represent known physical constants or quantities that can be measured independently. But remaining parameters in optimality models typically also represent quantities that are not directly measurable -- e.g., the marginal cost of water in \citet{cowan1977}, or the unit cost ratio in \citet{prentice2014}. These are considered to be more universally valid (e.g., without distinctions between PFTs), but still must be fitted to data.
+
+The P-model \citep{prentice2014, stocker2020, wang2017} is an example of an EEO-guided model for terrestrial photosynthesis and its acclimation. It avoids the requirement for prescribing PFT-specific parameters of photosynthesis and stomatal regulation but instead predicts them from universal EEO principles for the full range of environmental conditions across the Earth's (\chem{C_3} photosynthesis-dominated) biomes. However, not directly observable parameters of the underlying EEO theory and of additional empirical parameterizations employed in the P-model \citep{stocker2020} remain and must be specified or fitted to data (Tab. 2).
+
+Here, we provide a solution for this challenge, acknowledging that the data is an integral part of the modelling process \citep{dietze2013} - even in theory-based models of ecosystem processes. We show how the most important parameters contributing to uncertainty in the P-model can be estimated using observations of ecosystem-level photosynthetic \chem{CO_2} uptake (gross primary productivity, GPP). We provide a brief description of the theory embodied in the P-model and introduce the P-model implementation in the Simulating Optimal FUNctioning \{rsofun\} version v5.0 modelling framework, made available as an R package. A more comprehensive P-model description can be found in \citet{stocker2020}. We demonstrate the functionalities of \{rsofun\} through a case study for simulating GPP at a single flux measurement site. The case study includes sensitivity analysis, Bayesian model calibration, and inference -- the prediction of GPP with an estimation of its uncertainty. This paper presents the calibration to GPP observations only, but the package allows calibration to multiple targets simultaneously, including fluxes and leaf traits.
+
+\section{P-model description}
+
+The P-model predicts the acclimation of leaf-level photosynthesis to a (slowly varying) environment based on EEO principles. It thereby yields a parameter-sparse representation of ecosystem-level quantities, generalising across (\chem{C_3} photosynthesis-dominated) vegetation types and biomes. The P-model combines established theory for \chem{C_3} photosynthesis following the Farquhar-von Caemmerer-Berry (FvCB, \citep{farquhar1980}) model with the Least-Cost hypothesis for the optimal balancing of water loss and carbon gain \citep{prentice2014}, and the coordination hypothesis \citep{wang2017}, which states that the light and Rubisco-limited assimilation rates (as described by the FvCB model) are equal for representative daytime environmental conditions. Based on these theoretical foundations, gross primary productivity (GPP) can be modelled as the product of absorbed photosynthetically active radiation, specified by the locally measured photosynthetically active radiation (PAR) and remotely sensed fAPAR, and the theory-based prediction of the ecosystem-level light use efficiency (LUE) \citep{stocker2020, wang2017}. LUE acclimates to preceding environmental conditions with a characteristic, empirically determined (calibrated), time scale $\tau$. Two latent (not directly observable) parameters govern the optimality-guided water-carbon trade-off: the unit cost ratio $\beta$ (governing the balancing of maintaining the carboxylation capacity versus the transpiration stream) and $c^*$ (the marginal cost of maintaining the electron transport rate). These have previously been calibrated separately to data and specified as fixed model parameters in the P-model \citep{stocker2020, wang2017}. The theory for predicting acclimated LUE then requires only the atmospheric environment to be specified (meteorological variables and \chem{CO_2}). A set of corollary predictions, physically and physiologically consistent with the simulated LUE, follows. These include the acclimated base rates of photosynthetic capacities in the FvCB model ($V_{\mathrm{cmax25}}$ and $J_{\mathrm{max25}}$), the acclimated average ratio of leaf internal-to-ambient \chem{CO_2} concentration ($c_i:c_a$), acclimated average daytime stomatal conductance ($g_s$), and the acclimated base rate of leaf dark respiration ($R_{\mathrm{d25}}$). Physical constants and additional parameters that determine the instantaneous temperature dependence of $V_{\mathrm{cmax}}$, $J_{\mathrm{max}}$, $R_d$, and parameters in the FvCB model are prescribed and held fixed in the P-model (Tab. A2 in \citep{stocker2020}).
+
+For simulating GPP, the P-model is conceived as a single-big-leaf model (Fig. 1). While describing leaf-level quantities at relatively high mechanistic detail, the link between the leaf and the canopy-scale is not explicitly resolved. Instead, an empirical approach for leaf-to-canopy scaling of \chem{CO_2} uptake is employed by treating the quantum yield parameter $\varphi_0$ to be representative for the canopy-scale and allowing it to be calibrated to ecosystem-level \chem{CO_2} flux data. The implementation of the P-model in the \{rsofun\} package (version v5.0) further includes an empirical parameterization of the temperature dependency of the quantum yield $\varphi_0$, generalising the approach taken in \citet{stocker2020}, and an empirical soil moisture stress function, generalising the approach taken in \citet{stocker2020} (Appendix A). Acclimating quantities are derived by employing the P-model theory to gradually varying environmental conditions where variations are damped and lagged by a characteristic (calibrated) time scale $\tau$. The continuous treatment of the acclimation time scale is different from \citet{stocker2020}, where monthly mean values of environmental variables were considered for the acclimation. The temperature dependency of $\varphi_0$ can be turned off by setting $a$ (see Tab. 2 and Appendix A) to 0 ('ORG' model setup in \citep{stocker2020}). The soil moisture stress function can be turned off by setting $\beta_0$ (see Tab. 2 and Appendix A) to 1 ('BRC' model setup in \citep{stocker2020}). Taken together, the P-model approach is guided by EEO and thus yields predictions for quantities that otherwise must be prescribed and fitted to data. Yet, a small set of model parameters, related to empirical parametrizations and latent quantities remain and must be calibrated to data. See Tab. 2 for a list of all (calibratable) model parameters of the P-model implementation in the \{rsofun\} package.
+
+\begin{figure*}[t]
+\includegraphics[width=12cm]{figures/fig01_from_Word.png}
+\caption{P-model inputs, outputs, and target observations for the calibration. The model takes as inputs static site information (longitude, latitude, elevation and root zone water storage capacity), time series of meteorological forcings (listed in Tab. 1), simulation parameters (spinup years, recycle period length, vegetation type (evergreen, deciduous, grass (\chem{C_3}/\chem{C_4}) with/without N-fixation) and, common for all sites, model parameters (listed in Tab. 2). The simulation returns a time series of several ecosystem fluxes, acclimating leaf traits and ecosystem water balance quantities. By comparing these outputs to field measurements and flux data in a Bayesian calibration routine, model parameters can be estimated.}
+\end{figure*}
+
+\begin{table}[t]
+\caption{Forcing time series. Daily time series of the following meteorological variables are required for simulation. If a spin-up period is specified, the corresponding years are recycled for the spin-up.}
+\begin{tabular}{lll}
+\tophline
+Parameter name & Description & Units \\
+\middlehline
+temp & Daytime average air temperature & °C \\
+tmin & Daily minimum air temperature & °C \\
+tmax & Daily maximum air temperature & °C \\
+vpd & Daytime average vapour pressure deficit & Pa \\
+ppfd & Photosynthetic photon flux density (PPFD) & mol m$^{-2}$ s$^{-1}$ \\
+netrad & Net radiation & W m$^{-2}$ \\
+patm & Atmospheric pressure & Pa \\
+rain & Rainfall as precipitation in liquid form & mm s$^{-1}$ \\
+snow & Snowfall in water equivalents & mm s$^{-1}$ \\
+fapar & Fraction of photosynthetic active radiation (fAPAR) & unitless \\
+ccov & Cloud coverage & \% \\
+co2 & Atmospheric \chem{CO_2} concentration & ppm \\
+\bottomhline
+\end{tabular}
+\belowtable{}
+\end{table}
+
+\begin{table*}[t]
+\caption{Calibratable parameters in the \{rsofun\} P-model implementation. The maximum a posteriori (MAP) estimates from the Bayesian model calibration (Sec. 4.2) are listed in column 'Values'. The bounds of uniform prior distributions are given in parentheses. Parameters that were held fixed for the calibration are marked with an asterisk (*). Fixed site information was: longitude = 3.6°E, latitude = 43.7°N, elevation = 270 m a.s.l., and total root zone water storage capacity = 432 mm.}
+\begin{tabular}{lllll}
+\tophline
+Symbol & Parameter name & Description & Units & Values \\
+\middlehline
+$\varphi_0$ & kphio & Quantum yield at optimal temperature & mol mol$^{-1}$ & 0.041 (0.02, 0.15) \\
+$a$ & kphio\_par\_a & Shape parameter for the temperature dependence of the quantum yield & °C$^{-2}$ & -0.0023 (-0.004, -0.001) \\
+$b$ & kphio\_par\_b & Optimal temperature for the quantum yield & °C & 15.3 (10, 30) \\
+$\theta^*$ & soilm\_thetastar & Threshold plant-available soil water content in the soil moisture stress function & mm & 158 (4.3, 432) \\
+$\beta_0$ & soilm\_betao & Stress factor at low soil moisture, intercept for the soil moisture stress function & unitless & 0.0001 (0, 1) \\
+$\beta$ & beta\_unitcostratio & Unit cost ratio of carboxylation (maintenance of $V_{\mathrm{cmax}}$) to transpiration & unitless & 146* \\
+$b_0$ & rd\_to\_vcmax & Ratio of temperature-normalised dark respiration ($R_{\mathrm{d25}}$) to the temperature-normalised maximum carboxylation rate $V_{\mathrm{cmax25}}$ & unitless & 0.014* \\
+$\tau$ & tau\_acclim & Acclimation time scale of photosynthesis & days & 20* \\
+$c^*$ & kc\_jmax & Unit cost of electron transport (maintenance of $J_{\mathrm{max}}$) & unitless & 0.41* \\
+\bottomhline
+\end{tabular}
+\belowtable{}
+\end{table*}
+
+\section{The \{rsofun\} model framework}
+
+\{rsofun\} implements the P-model \citep{stocker2020} and provides off-the-shelf methods for Bayesian (probabilistic) parameter and prediction uncertainty estimation. \{rsofun\} is distributed as an R package on R's central and public package repository. \{rsofun\} also implements the BiomeE vegetation demography model \citep{weng2019, weng2015}. The latter is not further described here and is implemented at an experimental stage in \{rsofun\} version v5.0. The P-model implementation in \{rsofun\} is designed for time series simulations by accounting for temporal dependencies in the acclimation to a continuously varying environment (Tab. 1). Function wrappers in R make the simulation workflow user-friendly and all functions and input forcing data structures are comprehensively documented (https://geco-bern.github.io/rsofun/).
+
+In \{rsofun\}, model parameters can be calibrated using a calibration function \texttt{calib\_sofun()}, providing two modes of calibration, one based on generalised simulated annealing (\{GenSA\} R package) for global optimization \citep{xiang2013} and one based on Markov chain Monte Carlo (MCMC) implemented by the \{BayesianTools\} R package, giving access to a wide variety of Bayesian methods \citep{hartig2023}. The former being fast, while the latter provides more informed parameter optimization statistics \citep{clark2004, dietze2013}. This gives the option for both exploratory and more in-depth analysis of estimated parameters. A set of standard cost functions are provided for the calibration, facilitating the exploration of various metrics or target variables and the specification of calibrated model parameters. Furthermore, the vignettes accompanying the package (https://geco-bern.github.io/rsofun/articles/) explain how to customise the calibration cost functions and interpret the calibration results.
+
+\section{Case study}
+
+We use \{rsofun\} to model GPP as estimated from ecosystem flux measurements taken at one site using the eddy-covariance technique. The site, selected here for demonstration purposes, is Puéchabon \citep{rambal2004}, an evergreen Mediterranean forest, dominated by \textit{Quercus ilex}, growing on relatively shallow soil on karstic bedrock, and located in southern France. The climate is governed by a distinct seasonality in solar radiation and temperature, peaking in summer, and a dry period during summer months with recurrent ecosystem water limitation in late summer \citep{rambal2004}. Data used here cover years 2007-2012. Both the model target data (GPP) and model forcing data (see Fig. 1) were measured at the site and obtained from the FLUXNET2015 dataset \citep{pastorello2020}. Data for years 2013 and 2014 were available from FLUXNET2015 but removed here due to unexpectedly low GPP measurements (\textit{pers. comm.} Jean-Marc Limousin). GPP data is taken as the FLUXNET standard variable ('GPP\_NT\_VUT\_REF') derived from the nighttime flux partitioning method \citep{reichstein2005} and was filtered to retain only (daily) values that were derived from at least 80\% measured or good-quality gap-filled (half-hourly) values.
+
+\subsection{Sensitivity analysis}
+
+The P-model implementation in \{rsofun\} has a total of nine model parameters that are available for calibration (Tab. 2). Due to the relatively high computational cost of simultaneously calibrating all nine model parameters, we start by performing a sensitivity analysis to determine the most influential parameters on the model fit and exclude the least influential ones for the subsequent calibration step. Here, we apply the Morris method for global sensitivity analysis \citep{morris1991} from the \{sensitivity\} R package \citep{looss2023} and compute the sensitivity metrics $\mu^*$, indicating the magnitude of the overall influence of a given parameter on the prediction, and $\sigma$, a measure of the heterogeneity of a parameter's influence on the prediction across the parameter space. We assume an additive and normally distributed model error term for the GPP prediction by the P-model \citep{trotsiuk2020} and express the fit to observed data via the Gaussian log-likelihood. The sensitivity analysis result (Fig. 2) indicates that the quantum yield intercept parameter $\varphi_0$ is the most influential parameter, followed by the unit cost of electron transport $c^*$ and the optimal temperature for the quantum yield $b$. The remaining parameters have relatively little influence on the evaluation of daily GPP predictions from the single site considered here and $b_0$, the ratio of dark respiration to the temperature-normalised maximum carboxylation rate, has no influence on GPP predictions, which follows from the model structure. Additional analyses (not shown here) indicated that the convergence of the parameter calibration (shown in the next section) is undermined when calibrating $\beta$ and $c^*$ simultaneously with other model parameters. Therefore, and based on the sensitivity analysis (Fig. 2), we chose to hold $c^*$, $\beta$, $\tau$, and $b_0$ constant and thereby excluded them from the Bayesian calibration procedure described in the next section.
+
+\begin{figure}[t]
+\includegraphics[width=8.3cm]{figures/fig012_from_Word.png}
+\caption{Results from the Morris sensitivity analysis. The y-axis represents all nine model parameters and the Gaussian error standard deviation (error\_gpp) and the x-axis the values of the statistics $\mu^*$ and $\sigma$ (unitless, like the log-likelihood). $\mu^*$ indicates the magnitude of the overall influence of a certain parameter on the P-model output, while $\sigma$ measures the heterogeneity of such influence across the parameter space. The parameter names are described and identified with corresponding symbols in Tab. 2.}
+\end{figure}
+
+\subsection{Bayesian calibration}
+
+We simultaneously calibrate a subset of the model parameters that have been identified as particularly influential (Sec. 4.1.). These include the model error term, $\varphi_0$, $a$, $b$, $\theta^*$ and $\beta_0$. We use the Differential-Evolution MCMC zs (DEzs) sampler \citep{terbraak2008}, implemented in \{BayesianTools\} \citep{hartig2023}, to estimate the posterior distribution of the calibrated parameters (Fig. 3). All parameters are given a uniform prior with bounds informed by their physical interpretations (Tab. 2). The prediction error is assumed to be normally distributed, as in the Morris analysis. On a 12th Gen Intel Core i7-1270P processor, it took 1100 sec. to run 3 independent MCMC chains of 24000 iterations (of which 12000 are discarded as burn-in period). The algorithm converged with a scale reduction factor \citep{gelman1992} of 1.05 ($\leq$1.1). More detail, examples, and explanations of calibration diagnostics are provided through the example vignettes in the package documentation or can be inferred directly from archived the scripts used to create the results (for both, see Sections on Code availability and Data availability). The calculation of the log-likelihood is implemented in the function \texttt{cost\_likelihood\_pmodel()}, enabling custom calibrations, also for multiple target variables that are considered simultaneously during model calibration (examples also provided in the package documentation).
+
+\begin{figure*}[t]
+\includegraphics[width=12cm]{figures/fig03_from_Word.png}
+\caption{Prior and posterior distributions of the calibrated model parameters and error term. The maximum a posteriori (MAP) estimate for the gaussian error standard deviation is 1.06 and the estimate for each calibrated parameter are given in Tab. 2.}
+\end{figure*}
+
+\subsection{Inference and prediction uncertainty estimation}
+
+The parameter sets generated by the MCMC chains provide the basis for inference (model prediction) and prediction uncertainty estimation, allowing us to get insights into the sources of uncertainty. We consider a simple representation of the uncertainty, split between the parameter uncertainty and the model error \citep{dietze2017}.
+
+\begin{figure}[t]
+\includegraphics[width=8.3cm]{figures/fig04_from_Word.png}
+\caption{Predicted and observed daily mean GPP. The comparison is provided for the first year of GPP observations (black dots) at the site FR-Pue against GPP predictions (red line), calculated as the median of the posterior distribution. A light green band indicates the 90\% credible interval for GPP predictions, which captures parameter uncertainty, while the 90\% predictive interval for GPP predictions (in orange) captures model uncertainty.}
+\end{figure}
+
+Retaining 600 samples from the combined Markov chains, statistically representative of the joint parameter posterior distribution (estimated during the calibration), we ran the P-model for each set of parameters to predict GPP. The credible interval was computed for each time step from the posterior distribution of predicted GPP. The prediction interval for GPP was computed by adding the Gaussian error standard deviation error, to the predicted GPP. Fig. 4 shows that the uncertainty ascribable to the parameters (in green) is much smaller than the uncertainty due to the model error (orange area). A point estimate of GPP at each time step is calculated as the median of the posterior distribution of GPP (dark orange line).
+
+\section{Discussion}
+
+The \{rsofun\} R package provides a user-friendly and fast implementation of the P-model. It implements off-the-shelf model-data assimilation routines with simple function calls, while maintaining flexibility for future experiments and further development of model uncertainty estimation. The \{rsofun\} vegetation modelling framework is designed to strike a balance between integration and flexibility, enabled by extensible and user-defined calibration specifications and the parallelizable and fast low-level code implementation in Fortran. Its high computational efficiency offers the potential for effective model parameter and uncertainty estimation using Bayesian statistical methods - as demonstrated here.
+
+With the function \texttt{calib\_sofun()}, \{rsofun\} provides a blueprint for model-data assimilation and an implementation of the likelihood function with flexibility in selecting among a predefined list of model parameters and target observations. We have demonstrated here how ecosystem flux measurements of GPP from a single site can be used to estimate model parameters of the P-model and generate estimations of prediction uncertainty. The approach taken here (as in previous studies with the P-model) was to specify latent parameters directly, based on independent observations. In \citet{wang2017}, $\beta$ and $c^*$ were determined from observations of $V_{\mathrm{cmax}}$, $J_{\mathrm{max}}$, and $c_i:c_a$. These were then used as constants for modelling GPP, while additional parameters related to empirical photosynthesis stress parameterizations were calibrated to GPP observations. Exploratory analyses (not shown) indicated that complementary observational constraints are necessary when calibrating $\beta$ and $c^*$ simultaneously with other model parameters. We have thus followed a simplified setup - used here for demonstration purposes. Future applications may use $V_{\mathrm{cmax}}$, $J_{\mathrm{max}}$, or $c_i:c_a$ data directly as additional calibration targets to provide such complementary constraints. Note also that the FvCB photosynthesis model contains additional parameters (see Tab. A2 in \citep{stocker2020}) that are treated as constants here - as in previous publications \citep{bloomfield2023, mengoli2022, stocker2020, tan2021, wang2017}.
+
+Our model implementation as an R package takes inspiration from the \{r3PG\} forest model \citep{trotsiuk2020}, and our implementation of model-data integration on the basis of ecosystem data serves similar, yet reduced, aims and functionalities compared to PEcAn (https://pecanproject.github.io/index.html) \citep{lebauer2013}. \{rsofun\} is designed to be minimally reliant on package dependencies and connections to specific data, while limiting the scope to a predefined set of process models (currently P-model, BiomeE at an experimentation stage). Note that the \{rpmodel\} R package (available on CRAN) also provides an implementation of the P-model but is written fully in R and in the form of a function of a given environment - without a treatment of temporal dependencies and without the functionalities for model-data integration.
+
+\conclusions  %% \conclusions[modified heading if necessary]
+
+We have demonstrated how important parameters contributing to uncertainty in GPP predictions by the P-model can be estimated using observations of ecosystem-level photosynthetic \chem{CO_2} uptake flux time series. The Bayesian approach to model-data integration enables a probabilistic prediction of GPP and estimation of model parameters. The \{rsofun\} model implementation as an R package makes it possible to leverage a set of methods and complementary libraries for parameter estimation, sensitivity analysis, and calibration diagnostics - as demonstrated here. Its low-level code in Fortran is geared towards computational efficiency. Provision of \{rsofun\} as an open-access library aims at lowering the bar of entry to vegetation modelling for both field ecologists and computational ecologists and serves as an Open Science resource for future model development and experimentation and the further development of model uncertainty estimation.
+
+%% The following commands are for the statements about the availability of data sets and/or software code corresponding to the manuscript.
+%% It is strongly recommended to make use of these sections in case data sets and/or software code have been part of your research the article is based on.
+
+\codedataavailability{The \{rsofun\} R package can be installed from CRAN (https://cran.r-project.org/package=rsofun) or directly from its source code on GitHub (publicly available at https://github.com/geco-bern/rsofun under an AGPLv3 licence). Versioned releases of the GitHub repository are deposited on Zenodo (https://doi.org/10.5281/zenodo.15189864). Code to reproduce the analysis and plots presented here is contained in the repository (subdirectory 'analysis/') and is demonstrated on the model documentation website (https://geco-bern.github.io/rsofun/, article 'Sensitivity analysis and calibration interpretation'). The model forcing and evaluation data is based on the publicly available FLUXNET2015 data for the site FR-Pue, prepared by FluxDataKit v3.4.2 (10.5281/zenodo.14808331), taken here as a subset of the originally published data for years 2007-2012. It is accessible through the \{rsofun\} R package and is contained as part of the repository (https://github.com/geco-bern/rsofun and https://doi.org/10.5281/zenodo.15189864) as CSV files in the subdirectory 'analysis/paper\_inputs\_csv/'. Scripts for generating these data files from open access sources are contained in the repository in the subdirectory 'data-raw/'. Outputs of the analysis presented here are archived in the 'analysis/paper\_results\_files/' subdirectory.}
+
+\appendix
+
+\section{Calibrated empirical functions}    %% Appendix A
+
+% \appendixfigures  %% needs to be added in front of appendix figures
+% \appendixtables   %% needs to be added in front of appendix tables
+%% Please add \clearpage between each table and/or figure. Further guidelines on figures and tables can be found below.
+
+A new formulation of the temperature dependency of the quantum yield efficiency $\varphi_0$ is introduced in the \{rsofun\} package, allowing more flexibility than Eq. 18 in \citet{stocker2020}. It is expressed as follows:
+
+\begin{align}
+\varphi_0(T) &= c(1 + a(T - b)^2) \quad \text{if } 0 < c(1 + a(T - b)^2) < 1, \\
+\varphi_0(T) &= 0 \quad \text{if } c(1 + a(T - b)^2) \leq 0, \\
+\varphi_0(T) &= 1 \quad \text{if } c(1 + a(T - b)^2) \geq 1.
+\end{align}
+
+Where $T$ stands for temperature, $c$ is the quantum yield efficiency at optimal temperature (in mol mol$^{-1}$), $a$ is a unitless shape parameter and $b$ is the optimal temperature. Whenever $a = 0$, the quantum yield efficiency is kept constant at $\varphi_0 = c$. A possible improvement for the model would be to use a peaked Arrhenius function instead of a parabola \citep{medlyn2002}. Furthermore, the soil moisture stress function follows \citet{stocker2020}, but the parameters considered for calibration there differ from the calibratable parameters in the package:
+
+\begin{align}
+\beta(\theta) &= \frac{\beta_0 - 1}{\theta^{*2}}(\theta - \theta^*)^2 + 1 \quad \text{if } 0 \leq \theta \leq \theta^*, \\
+\beta(\theta) &= 1 \quad \text{if } \theta > \theta^*.
+\end{align}
+
+In the equation above, $\theta$ stands for the plant-available soil water (in mm) and $\theta^*$ for the threshold indicating when the plants start being water stressed. The intercept $\beta_0$ is the $\beta$ reduction at low soil moisture, that is $\beta_0 = \beta(0)$. This intercept is now calibrated directly, rather than expressed as a function of mean aridity (see eq. 20 in \citep{stocker2020}).
+
+\noappendix       %% use this to mark the end of the appendix section. Otherwise the figures might be numbered incorrectly (e.g. 10 instead of 1).
+
+%% Regarding figures and tables in appendices, the following two options are possible depending on your general handling of figures and tables in the manuscript environment:
+
+%% Option 1: If you sorted all figures and tables into the sections of the text, please also sort the appendix figures and appendix tables into the respective appendix sections.
+%% They will be correctly named automatically.
+
+%% Option 2: If you put all figures after the reference list, please insert appendix tables and figures after the normal tables and figures.
+%% To rename them correctly to A1, A2, etc., please add the following commands in front of them:
+
+\authorcontribution{B.D.S. wrote the Fortran code and designed the study. K.H. initiated the implementation of the calibration procedure and wrote the initial draft of the manuscript. J.A.P. documented the package, implemented the Bayesian calibration, sensitivity analysis and uncertainty estimation, and contributed to manuscript writing. M.M. and F.B. prepared the package for publication to CRAN and finalized the manuscript.} %% this section is mandatory
+
+\competinginterests{The authors declare that they have no conflict of interest.} %% this section is mandatory even if you declare that no competing interests are present
+
+\begin{acknowledgements}
+We thank Florian Hartig for advice on uncertainty modelling and the maintenance of the BayesianTools package, Volodymyr Trotsiuk for an initial template of the R package, and Colin Prentice for comments on the manuscript. B.D.S. was funded by the Swiss National Science Foundation grant PCEFP2\_181115. This work is a contribution to the LEMONTREE (Land Ecosystem Models based On New Theory, obseRvations and ExperimEnts) project, funded through the generosity of Eric and Wendy Schmidt by recommendation of the Schmidt Futures program (K.H., B.D.S.).
+
+\end{acknowledgements}
+
+
+
+
+%% REFERENCES
+
+%% The reference list is compiled as follows:
+
+\begin{thebibliography}{}
+
+\bibitem[Bagnara et~al.(2015)]{bagnara2015}
+Bagnara, M., Harrison, S. P., Prentice, I. C., Bartlein, P. J., Kelley, D. I., Daniau, A. L., Krawchuk, M. A., and Moritz, M. A.: A model-based approach to predicting fire weather and carbon dynamics in Mediterranean ecosystems, Biogeosciences, 12, 6173–6196, https://doi.org/10.5194/bg-12-6173-2015, 2015.
+
+\bibitem[Bloomfield et~al.(2023)]{bloomfield2023}
+Bloomfield, K. J., van Hoolst, R., Balzarolo, M., Janssens, I. A., Vicca, S., Ghent, D., and Prentice, I. C.: Towards a General Monitoring System for Terrestrial Primary Production: A Test Spanning the European Drought of 2018, Remote Sensing, 15, 1693, https://doi.org/10.3390/rs15061693, 2023.
+
+\bibitem[Clark(2004)]{clark2004}
+Clark, J. S.: Why environmental scientists are becoming Bayesians: Modelling with Bayes, Ecology Letters, 8, 2–14, https://doi.org/10.1111/j.1461-0248.2004.00702.x, 2004.
+
+\bibitem[Cowan and Farquhar(1977)]{cowan1977}
+Cowan, I. R. and Farquhar, G. D.: Stomatal function in relation to leaf metabolism and environment. In: Integration of Activity in the Higher Plant, 471–505, 1977.
+
+\bibitem[Dietze(2017)]{dietze2017}
+Dietze, M. C.: Ecological Forecasting, Princeton University Press, https://doi.org/10.2307/j.ctvc7796h, 2017.
+
+\bibitem[Dietze et~al.(2013)]{dietze2013}
+Dietze, M. C., Lebauer, D. S., and Kooper, R.: On improving the communication between models and data, Plant, Cell \& Environment, 36, 1575–1585, https://doi.org/10.1111/pce.12043, 2013.
+
+\bibitem[Dietze et~al.(2018)]{dietze2018}
+Dietze, M. C., Fox, A., Beck-Johnson, L. M., Betancourt, J. L., Hooten, M. B., Jarnevich, C. S., Keitt, T. H., Kenney, M. A., Laney, C. M., Larsen, L. G., Loescher, H. W., Lunch, C. K., Pijanowski, B. C., Randerson, J. T., Read, E. K., Tredennick, A. T., Vargas, R., Weathers, K. C., and White, E. P.: Iterative near-term ecological forecasting: Needs, opportunities, and challenges, Proc. Natl. Acad. Sci. U.S.A., 115, 1424–1432, https://doi.org/10.1073/pnas.1710231115, 2018.
+
+\bibitem[Farquhar et~al.(1980)]{farquhar1980}
+Farquhar, G. D., Caemmerer, S., and Berry, J.: A biochemical model of photosynthetic CO$_2$ assimilation in leaves of C$_3$ species, Planta, 149, 78–90, 1980.
+
+\bibitem[Franklin et~al.(2020)]{franklin2020}
+Franklin, O., Harrison, S. P., Dewar, R., Farrior, C. E., Brännström, Å., Dieckmann, U., Pietsch, S., Falster, D., Cramer, W., Loreau, M., Wang, H., Mäkelä, A., Rebel, K. T., Meron, E., Schymanski, S. J., Rovenskaya, E., Stocker, B. D., Zaehle, S., Manzoni, S., Van Oijen, M., Wright, I. J., Ciais, P., Van Bodegom, P. M., Peñuelas, J., Hofhansl, F., Terrer, C., Soudzilovskaia, N. A., Midgley, G., and Prentice, I. C.: Organizing principles for vegetation dynamics, Nat. Plants, 6, 444–453, https://doi.org/10.1038/s41477-020-0655-x, 2020.
+
+\bibitem[Gelman and Rubin(1992)]{gelman1992}
+Gelman, A. and Rubin, D. B.: Inference from Iterative Simulation Using Multiple Sequences, Statist. Sci., 7, https://doi.org/10.1214/ss/1177011136, 1992.
+
+\bibitem[Harrison et~al.(2021)]{harrison2021}
+Harrison, S. P., Cramer, W., Franklin, O., Prentice, I. C., Wang, H., Brännström, Å., de Boer, H., Dieckmann, U., Joshi, J., Keenan, T. F., Lavergne, A., Manzoni, S., Mengoli, G., Morfopoulos, C., Peñuelas, J., Pietsch, S., Rebel, K. T., Ryu, Y., Smith, N. G., Stocker, B. D., and Wright, I. J.: Eco-evolutionary optimality as a means to improve vegetation and land-surface models, New Phytologist, 231, 2125–2141, https://doi.org/10.1111/nph.17558, 2021.
+
+\bibitem[Hartig et~al.(2012)]{hartig2012}
+Hartig, F., Dyke, J., Hickler, T., Higgins, S. I., O'Hara, R. B., Scheiter, S., and Huth, A.: Connecting dynamic vegetation models to data - an inverse perspective: Dynamic vegetation models - an inverse perspective, J. Biogeogr., 39, 2240–2252, https://doi.org/10.1111/j.1365-2699.2012.02745.x, 2012.
+
+\bibitem[Hartig et~al.(2023)]{hartig2023}
+Hartig, F., Minunno, F., Paul, S., Cameron, D., Ott, T., and Pichler, M.: BayesianTools: General-Purpose MCMC and SMC Samplers and Tools for Bayesian Statistics, 2023.
+
+\bibitem[LeBauer et~al.(2013)]{lebauer2013}
+LeBauer, D. S., Wang, D., Richter, K. T., Davidson, C. C., and Dietze, M. C.: Facilitating feedbacks between field measurements and ecosystem models, Ecological Monographs, 83, 133–154, 2013.
+
+\bibitem[Looss et~al.(2023)]{looss2023}
+Looss, B., Iooss, B., Prieur, C., Veiga, S. de, Koehler, J. R., Pujol, G., and Saltelli, A.: sensitivity: Global Sensitivity Analysis of Model Outputs, https://cran.r-project.org/package=sensitivity, 2023.
+
+\bibitem[Marquet et~al.(2014)]{marquet2014}
+Marquet, P. A., Allen, A. P., Brown, J. H., Dunne, J. A., Enquist, B. J., Gillooly, J. F., Gowaty, P. A., Green, J. L., Harte, J., Hubbell, S. P., O'Dwyer, J., Okie, J. G., Ostling, A., Ritchie, M., Storch, D., and West, G. B.: On Theory in Ecology, BioScience, 64, 701–710, https://doi.org/10.1093/biosci/biu098, 2014.
+
+\bibitem[Medlyn et~al.(2002)]{medlyn2002}
+Medlyn, B. E., Dreyer, E., Ellsworth, D., Forstreuter, M., Harley, P. C., Kirschbaum, M. U. F., Le Roux, X., Montpied, P., Strassemeyer, J., Walcroft, A., Wang, K., and Loustau, D.: Temperature response of parameters of a biochemically based model of photosynthesis. II. A review of experimental data, Plant, Cell \& Environment, 25, 1167–1179, https://doi.org/10.1046/j.1365-3040.2002.00891.x, 2002.
+
+\bibitem[Mengoli et~al.(2022)]{mengoli2022}
+Mengoli, G., Agustí-Panareda, A., Boussetta, S., Harrison, S. P., Trotta, C., and Prentice, I. C.: Ecosystem Photosynthesis in Land-Surface Models: A First-Principles Approach Incorporating Acclimation, Journal of Advances in Modeling Earth Systems, 14, e2021MS002767, https://doi.org/10.1029/2021MS002767, 2022.
+
+\bibitem[Morris(1991)]{morris1991}
+Morris, M. D.: Factorial Sampling Plans for Preliminary Computational Experiments, Technometrics, 33, 161–174, https://doi.org/10.1080/00401706.1991.10484804, 1991.
+
+\bibitem[Pastorello et~al.(2020)]{pastorello2020}
+Pastorello, G., Trotta, C., Canfora, E., Chu, H., Christianson, D., Cheah, Y.-W., Poindexter, C., Chen, J., Elbashandy, A., Humphrey, M., Isaac, P., Polidori, D., Reichstein, M., Ribeca, A., van Ingen, C., Vuichard, N., Zhang, L., Amiro, B., Ammann, C., Arain, M. A., and others: The FLUXNET2015 dataset and the ONEFlux processing pipeline for eddy covariance data, Sci Data, 7, 225, https://doi.org/10.1038/s41597-020-0534-3, 2020.
+
+\bibitem[Prentice et~al.(2014)]{prentice2014}
+Prentice, I. C., Dong, N., Gleason, S. M., Maire, V., and Wright, I. J.: Balancing the costs of carbon gain and water transport: testing a new theoretical framework for plant functional ecology, Ecol Lett, 17, 82–91, https://doi.org/10.1111/ele.12211, 2014.
+
+\bibitem[Raj et~al.(2018)]{raj2018}
+Raj, R., Hamm, N. A. S., van der Tol, C., and Stein, A.: Uncertainty analysis of gross primary production partitioned from net ecosystem exchange measurements, Biogeosciences, 15, 1545–1557, https://doi.org/10.5194/bg-15-1545-2018, 2018.
+
+\bibitem[Rambal et~al.(2004)]{rambal2004}
+Rambal, S., Joffre, R., Ourcival, J. M., Cavender-Bares, J., and Rocheteau, A.: The growth respiration component in eddy CO$_2$ flux from a Quercus ilex mediterranean forest, Global Change Biology, 10, 1460–1469, https://doi.org/10.1111/j.1365-2486.2004.00819.x, 2004.
+
+\bibitem[Reichstein et~al.(2005)]{reichstein2005}
+Reichstein, M., Falge, E., Baldocchi, D., Papale, D., Aubinet, M., Berbigier, P., Bernhofer, C., Buchmann, N., Gilmanov, T., Granier, A., Grünwald, T., Havránková, K., Ilvesniemi, H., Janous, D., Knohl, A., Laurila, T., Lohila, A., Loustau, D., Matteucci, G., Meyers, T., Miglietta, F., Ourcival, J.-M., Pumpanen, J., Rambal, S., Rotenberg, E., Sanz, M., Tenhunen, J., Seufert, G., Vaccari, F., Vesala, T., Yakir, D., and Valentini, R.: On the separation of net ecosystem exchange into assimilation and ecosystem respiration: review and improved algorithm, Glob. Chang. Biol., 11, 1424–1439, https://doi.org/10.1111/j.1365-2486.2005.001002.x, 2005.
+
+\bibitem[Stocker et~al.(2020)]{stocker2020}
+Stocker, B. D., Wang, H., Smith, N. G., Harrison, S. P., Keenan, T. F., Sandoval, D., Davis, T., and Prentice, I. C.: P-model v1.0: an optimality-based light use efficiency model for simulating ecosystem gross primary production, Geoscientific Model Development, 13, 1545–1581, https://doi.org/10.5194/gmd-13-1545-2020, 2020.
+
+\bibitem[Tan et~al.(2021)]{tan2021}
+Tan, S., Wang, H., Prentice, I. C., and Yang, K.: Land-surface evapotranspiration derived from a first-principles primary production model, Environ. Res. Lett., 16, 104047, https://doi.org/10.1088/1748-9326/ac29eb, 2021.
+
+\bibitem[Ter Braak and Vrugt(2008)]{terbraak2008}
+Ter Braak, C. J. F. and Vrugt, J. A.: Differential Evolution Markov Chain with snooker updater and fewer chains, Stat Comput, 18, 435–446, https://doi.org/10.1007/s11222-008-9104-9, 2008.
+
+\bibitem[Trotsiuk et~al.(2020)]{trotsiuk2020}
+Trotsiuk, V., Hartig, F., and Forrester, D. I.: r3PG – An r package for simulating forest growth using the 3‐PG process‐based model, Methods Ecol. Evol., 11, 1470–1475, https://doi.org/10.1111/2041-210X.13474, 2020.
+
+\bibitem[Van Oijen et~al.(2005)]{vanoijen2005}
+Van Oijen, M., Rougier, J., and Smith, R.: Bayesian calibration of process-based forest models: bridging the gap between models and data, Tree Physiology, 25, 915–927, https://doi.org/10.1093/treephys/25.7.915, 2005.
+
+\bibitem[van Oijen et~al.(2013)]{vanoijen2013}
+van Oijen, M., Balkovic, J., Beer, C., Cameron, D. R., Ciais, P., Cramer, W., Kato, T., Kuhnert, M., Martin, R., Myneni, R., Rammig, A., Rolinski, S., Soussana, J.-F., Thonicke, K., Van der Velde, M., and Xu, L.: Impact of droughts on the carbon cycle in European vegetation: a probabilistic risk analysis using six vegetation models, Biogeosciences, 11, 6357–6375, https://doi.org/10.5194/bg-11-6357-2014, 2013.
+
+\bibitem[Wang et~al.(2017)]{wang2017}
+Wang, H., Prentice, I. C., Keenan, T. F., Davis, T. W., Wright, I. J., Cornwell, W. K., Evans, B. J., and Peng, C.: Towards a universal model for carbon dioxide uptake by plants, Nature Plants, 3, 734–741, https://doi.org/10.1038/s41477-017-0006-8, 2017.
+
+\bibitem[Weng et~al.(2015)]{weng2015}
+Weng, E. S., Malyshev, S., Lichstein, J. W., Farrior, C. E., Dybzinski, R., Zhang, T., Shevliakova, E., and Pacala, S. W.: Scaling from individual trees to forests in an Earth system modeling framework using a mathematically tractable model of height-structured competition, Biogeosciences, 12, 2655–2694, https://doi.org/10.5194/bg-12-2655-2015, 2015.
+
+\bibitem[Weng et~al.(2019)]{weng2019}
+Weng, E. S., Farrior, C. E., Dybzinski, R., and Pacala, S. W.: Predicting vegetation type through physiological and environmental interactions with leaf traits: evergreen and deciduous forests in an earth system modeling framework, Global Change Biology, 23, 2482–2498, https://doi.org/10.1111/gcb.13542, 2019.
+
+\bibitem[Xiang et~al.(2013)]{xiang2013}
+Xiang, Y., Gubian, S., Suomela, B., and Hoeng, J.: Generalized Simulated Annealing for Global Optimization: The GenSA Package, The R Journal, 5, 13, https://doi.org/10.32614/RJ-2013-002, 2013.
+
+\bibitem[Xiao et~al.(2014)]{xiao2014}
+Xiao, J., Chevallier, F., Gomez, C., Guanter, L., Hicke, J. A., Huete, A. R., Ichii, K., Ni, W., Pang, Y., Rahman, A. F., Sun, G., Yuan, W., Zhang, L., and Zhang, X.: Remote sensing of the terrestrial carbon cycle: A review of advances over 50 years, Remote Sensing of Environment, 233, 111383, https://doi.org/10.1016/j.rse.2019.111383, 2014.
+
+\end{thebibliography}
+
+%% Since the Copernicus LaTeX package includes the BibTeX style file copernicus.bst,
+%% authors experienced with BibTeX only have to include the following two lines:
+%%
+%% \bibliographystyle{copernicus}
+%% \bibliography{example.bib}
+%%
+%% URLs and DOIs can be entered in your BibTeX file as:
+%%
+%% URL = {http://www.xyz.org/~jones/idx_g.htm}
+%% DOI = {10.5194/xyz}
+
+
+%% LITERATURE CITATIONS
+%%
+%% command                        & example result
+%% \citet{jones90}|               & Jones et al. (1990)
+%% \citep{jones90}|               & (Jones et al., 1990)
+%% \citep{jones90,jones93}|       & (Jones et al., 1990, 1993)
+%% \citep[p.~32]{jones90}|        & (Jones et al., 1990, p.~32)
+%% \citep[e.g.,][]{jones90}|      & (e.g., Jones et al., 1990)
+%% \citep[e.g.,][p.~32]{jones90}| & (e.g., Jones et al., 1990, p.~32)
+%% \citeauthor{jones90}|          & Jones et al.
+%% \citeyear{jones90}|            & 1990
+
+
+
+%% FIGURES
+
+%% When figures and tables are placed at the end of the MS (article in one-column style), please add \clearpage
+%% between bibliography and first table and/or figure as well as between each table and/or figure.
+
+% The figure files should be labelled correctly with Arabic numerals (e.g. fig01.jpg, fig02.png).
+
+
+%% ONE-COLUMN FIGURES
+
+%%f
+%\begin{figure}[t]
+%\includegraphics[width=8.3cm]{FILE NAME}
+%\caption{TEXT}
+%\end{figure}
+%
+%%% TWO-COLUMN FIGURES
+%
+%%f
+%\begin{figure*}[t]
+%\includegraphics[width=12cm]{FILE NAME}
+%\caption{TEXT}
+%\end{figure*}
+%
+%
+%%% TABLES
+%%%
+%%% The different columns must be seperated with a & command and should
+%%% end with \\ to identify the column brake.
+%
+%%% ONE-COLUMN TABLE
+%
+%%t
+%\begin{table}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{table}
+%
+%%% TWO-COLUMN TABLE
+%
+%%t
+%\begin{table*}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{table*}
+%
+%%% LANDSCAPE TABLE
+%
+%%t
+%\begin{sidewaystable*}[t]
+%\caption{TEXT}
+%\begin{tabular}{column = lcr}
+%\tophline
+%
+%\middlehline
+%
+%\bottomhline
+%\end{tabular}
+%\belowtable{} % Table Footnotes
+%\end{sidewaystable*}
+%
+%
+%%% MATHEMATICAL EXPRESSIONS
+%
+%%% All papers typeset by Copernicus Publications follow the math typesetting regulations
+%%% given by the IUPAC Green Book (IUPAC: Quantities, Units and Symbols in Physical Chemistry,
+%%% 2nd Edn., Blackwell Science, available at: http://old.iupac.org/publications/books/gbook/green_book_2ed.pdf, 1993).
+%%%
+%%% Physical quantities/variables are typeset in italic font (t for time, T for Temperature)
+%%% Indices which are not defined are typeset in italic font (x, y, z, a, b, c)
+%%% Items/objects which are defined are typeset in roman font (Car A, Car B)
+%%% Descriptions/specifications which are defined by itself are typeset in roman font (abs, rel, ref, tot, net, ice)
+%%% Abbreviations from 2 letters are typeset in roman font (RH, LAI)
+%%% Vectors are identified in bold italic font using \vec{x}
+%%% Matrices are identified in bold roman font
+%%% Multiplication signs are typeset using the LaTeX commands \times (for vector products, grids, and exponential notations) or \cdot
+%%% The character * should not be applied as mutliplication sign
+%
+%
+%%% EQUATIONS
+%
+%%% Single-row equation
+%
+%\begin{equation}
+%
+%\end{equation}
+%
+%%% Multiline equation
+%
+%\begin{align}
+%& 3 + 5 = 8\\
+%& 3 + 5 = 8\\
+%& 3 + 5 = 8
+%\end{align}
+%
+%
+%%% MATRICES
+%
+%\begin{matrix}
+%x & y & z\\
+%x & y & z\\
+%x & y & z\\
+%\end{matrix}
+%
+%
+%%% ALGORITHM
+%
+%\begin{algorithm}
+%\caption{...}
+%\label{a1}
+%\begin{algorithmic}
+%...
+%\end{algorithmic}
+%\end{algorithm}
+%
+%
+%%% CHEMICAL FORMULAS AND REACTIONS
+%
+%%% For formulas embedded in the text, please use \chem{}
+%
+%%% The reaction environment creates labels including the letter R, i.e. (R1), (R2), etc.
+%
+%\begin{reaction}
+%%% \rightarrow should be used for normal (one-way) chemical reactions
+%%% \rightleftharpoons should be used for equilibria
+%%% \leftrightarrow should be used for resonance structures
+%\end{reaction}
+%
+%
+%%% PHYSICAL UNITS
+%%%
+%%% Please use \unit{} and apply the exponential notation
+
+
+\end{document}

@@ -3,11 +3,11 @@ library(rgeco)
 library(ggplot2)
 library(sf)
 
-# Load gpp, vj, chi data -------------------------------------------------------
-drivers <- read_rds(here::here("data/01_chi-vj-gpp_calibsofun_drivers.rds"))
-obs     <- read_rds(here::here("data/01_chi-vj-gpp_calibsofun_obs.rds"))
+# Load gpp, vj, bigD13C data -------------------------------------------------------
+drivers <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_drivers.rds"))
+obs     <- read_rds(here::here("data/01_bigD13C-vj-gpp_calibsofun_obs.rds"))
 
-# add information to driver vj or chi is fitted
+# add information to driver if gpp, vj, or bigD13C is fitted
 drivers <- drivers |>
   left_join(
     obs |> unnest_wider(targets,  names_sep = "_") |> select(sitename, starts_with("targets")),
@@ -16,8 +16,8 @@ drivers <- drivers |>
 
 
 
-gpp_forcing    <- drivers |> filter(run_model == "daily")
-vj_chi_forcing <- drivers |> filter(run_model == "onestep")
+gpp_forcing        <- drivers |> filter(run_model == "daily")
+vj_bigD13C_forcing <- drivers |> filter(run_model == "onestep")
 
 
 # NOTE: 'gpp_forcing' was already filtered:
@@ -34,16 +34,16 @@ gpp_forcing |> unnest(site_info) |>
 
       # # Remove sites without climate and landcover classification
       # gpp_forcing |> unnest(site_info) |> filter(is.na(FDK_koeppen_code) | is.na(FDK_igbp_land_use)) # nrow: 0, all gpp sites have koeppen or igbp information
-      # vj_chi_forcing |> unnest(site_info) |> filter(is.na(Defourny_LCCS) | is.na(Beck_KG)) # nrow: 3, three vj sites have no koeppen or igbp information
+      # vj_bigD13C_forcing |> unnest(site_info) |> filter(is.na(Defourny_LCCS) | is.na(Beck_KG)) # nrow: 3, three vj sites have no koeppen or igbp information
 
 
 
 # Sample sites for training and testing ----------------------------------------
 
-## ensure no data leakage if we make train-test split separately on gpp and vj_chi data sets
-stopifnot(length(intersect(gpp_forcing$sitename, vj_chi_forcing$sitename)) == 0)
+## ensure no data leakage if we make train-test split separately on gpp and vj_bigD13C data sets
+stopifnot(length(intersect(gpp_forcing$sitename, vj_bigD13C_forcing$sitename)) == 0)
 
-## Define strata for split for gpp as well as for chi-vj datasets --------------
+## Define strata for split for gpp as well as for bigD13C-vj datasets --------------
 gpp_strata <- gpp_forcing |>
   unnest(site_info) |>
   # mutate(p_over_pet = as.numeric(p_over_pet)) |>
@@ -55,19 +55,20 @@ gpp_strata <- gpp_forcing |>
   # mutate(strata = interaction(whc_bin, mat_bin, mi_bin, igbp_land_use, drop = TRUE))
   mutate(strata = interaction(FDK_koeppen_code, FDK_igbp_land_use, drop = TRUE))
 
-vjchi_strata <- vj_chi_forcing |>
+vjbigD13C_strata <- vj_bigD13C_forcing |>
   # define strata
   unnest(site_info) |>
-  mutate(strata = interaction(Beck_KG, Defourny_LCCS, targets_vj, targets_chi, targets_gpp, drop = TRUE))
+  mutate(strata = interaction(Beck_KG, Defourny_LCCS, targets_vj, targets_bigD13C, targets_gpp, drop = TRUE))
 
 
 ## gpp sites -------------------------------------------------------------------
+## for simplicity only take 1 site per stratum for training and 1 site for testing
 set.seed(1)
 
 gpp_train <- gpp_strata |>
   filter(nyears_gpp > 15) |>
   group_by(strata) |>
-  sample_n(size = 1, replace = FALSE) |> # TODO: why do we only use 1 site per strata for training?
+  sample_n(size = 1, replace = FALSE) |>
   ungroup()
 
 gpp_train
@@ -78,46 +79,48 @@ gpp_test <- gpp_strata |>
   filter(!(sitename %in% gpp_train$sitename)) |>
   filter(nyears_gpp > 5) |>
   group_by(strata) |>
-  sample_n(size = 1, replace = FALSE) |> # TODO: why do we sample and don't use all the remaining sites?
+  sample_n(size = 1, replace = FALSE) |>
   ungroup()
 
-# TODO check:
-gpp_unused <- gpp_strata |>
-  anti_join(gpp_test) |>
-  anti_join(gpp_train)
-# stopifnot(nrow(gpp_unused) == 0) # TODO: reactivate.
-# END TODO
+# # check which sites are unuse:
+# gpp_unused <- gpp_strata |>
+#   anti_join(gpp_test) |>
+#   anti_join(gpp_train)
+# # stopifnot(nrow(gpp_unused) == 0) # TODO: reactivate.
 
 
-## vj, chi sites ---------------------------------------------------------------
+## vj, bigD13C sites ---------------------------------------------------------------
 set.seed(1982)
 
 # determine test sites
-vjchi_test <- vjchi_strata |>
-  group_by(strata) |>
-  slice_sample(n=1) |>
-  ungroup()
+vjbigD13C_train <- vjbigD13C_strata |>
+  slice_sample(prop=0.5, by = c(strata, targets_vj, targets_bigD13C))
 
-# all other are train sites
-vjchi_train <- vjchi_strata |>
-  filter(!(sitename %in% vjchi_test$sitename))
+# ensure the three sites with combined d13C and VJ data are in training set
+vjbigD13C_train <-
+  bind_rows(
+    vjbigD13C_train,
+    vjbigD13C_strata |> filter(targets_vj & targets_bigD13C) # i.e. lon_+151.14_lat_-033.69, lon_-079.10_lat_+035.97 and lon_-083.81_lat_+042.27
+  ) |>
+  distinct()
 
-# check that all are used:
-vjchi_unused <- vjchi_strata |>
-  anti_join(vjchi_test) |>
-  anti_join(vjchi_train)
-stopifnot(nrow(vjchi_unused) == 0)
 
+# determine test sites
+vjbigD13C_test <- vjbigD13C_strata |>
+  filter(strata %in% unique(vjbigD13C_train$strata)) |> # ensure test is in same strata as train
+  filter(!(sitename %in% vjbigD13C_train$sitename))     # simply remove the 50% from train, no need to slice_sample again
+  # slice_sample(prop=0.5, by = c(strata, targets_vj, targets_bigD13C))
+
+vjbigD13C_strata |> group_by(targets_vj, targets_bigD13C) |> summarise(n())
+vjbigD13C_train  |> group_by(targets_vj, targets_bigD13C) |> summarise(n())
+vjbigD13C_test   |> group_by(targets_vj, targets_bigD13C) |> summarise(n())
 
 ## Write to file ---------------------------------------------------------------
-# TODO: write_rds(drivers_train, file = here::here("data/drivers_train.rds"))
-# TODO: make this as a dataframe that specifies: sitename, run_model, targets_vj, targets_chi, targets_gpp, and dataset=["test","train"]
-
 df_test_train_split <- bind_rows(
-  vjchi_train |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "train"),
-  vjchi_test  |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "test"),
-  gpp_train |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "train"),
-  gpp_test  |> select(sitename, run_model, targets_vj, targets_chi, targets_gpp) |> mutate(dataset = "test")
+  vjbigD13C_train |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "train"),
+  vjbigD13C_test  |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "test"),
+  gpp_train |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "train"),
+  gpp_test  |> select(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp) |> mutate(dataset = "test")
 )
 
 write_csv(df_test_train_split, file = here::here("data/01_test_train_split.csv"))
@@ -127,32 +130,28 @@ write_csv(df_test_train_split, file = here::here("data/01_test_train_split.csv")
 drivers2 <- drivers |>
   dplyr::left_join(
     df_test_train_split,
-    by = join_by(sitename, run_model, targets_vj, targets_chi, targets_gpp)
+    by = join_by(sitename, run_model, targets_vj, targets_bigD13C, targets_gpp)
   ) |>
   # TODO
-  mutate(dataset2 = if_else(is.na(dataset), "unused", dataset))
-# END TODO
+  mutate(dataset = if_else(is.na(dataset), "unused", dataset))
 
 
 # Plot the distribution of training and testing sites --------------------------
 dat_to_plot <- drivers2 |>
   unnest(site_info) |>
-  mutate(target = paste(targets_vj, targets_chi, targets_gpp)) |>
+  mutate(target = paste(targets_vj, targets_bigD13C, targets_gpp)) |>
   mutate(target = case_when(
     target == "FALSE FALSE TRUE" ~ "gpp",
-    target == "FALSE TRUE TRUE"  ~ "gpp+chi",
-    target == "TRUE TRUE TRUE"   ~ "gpp+chi+vj",
+    target == "FALSE TRUE TRUE"  ~ "gpp+bigD13C",
+    target == "TRUE TRUE TRUE"   ~ "gpp+bigD13C+vj",
 
-    target == "FALSE TRUE FALSE" ~ "chi",
-    target == "TRUE TRUE FALSE"  ~ "chi+vj",
+    target == "FALSE TRUE FALSE" ~ "bigD13C",
+    target == "TRUE TRUE FALSE"  ~ "bigD13C+vj",
 
     target == "TRUE FALSE FALSE" ~ "vj",
-    target == "TRUE FALSE FALSE" ~ "none",
+    target == "FALSE FALSE FALSE" ~ "none",
     TRUE ~ NA_character_)) |>
   select(target, everything())
-
-filter(dat_to_plot, is.na(target)) #TODO: where are these coming from??
-filter(dat_to_plot, is.na(target)) |> magrittr::extract2("sitename") # "lon_+151.14_lat_-033.69" "lon_-079.10_lat_+035.97" "lon_-083.81_lat_+042.27"
 
 
 ## Fig A: Plot a map of test train data:
@@ -204,7 +203,7 @@ fig_A_test_train_map <- ggplot(dat_to_plot) +
   map_layout_modifications +
   # add data
   geom_point(aes(x=lon,y=lat)) +
-  facet_grid(target~dataset2)
+  facet_grid(target~dataset)
 
 
 ggsave(
@@ -213,15 +212,17 @@ ggsave(
 
 
 
+
+
 ## Fig B: Plot histograms of covariates of of test train data:
-dat_to_plot2a <- pivot_longer(dat_to_plot, c(lon, lat, elv, whc))
-dat_to_plot2b <- pivot_longer(dat_to_plot, c(FDK_koeppen_code, FDK_igbp_land_use, Defourny_LCCS, Beck_KG))
+dat_to_plot2a <- pivot_longer(dat_to_plot, c(lon, lat, elv, whc)) |> filter(target != "none")
+dat_to_plot2b <- pivot_longer(dat_to_plot, c(FDK_koeppen_code, FDK_igbp_land_use, Defourny_LCCS, Beck_KG)) |> filter(target != "none")
 
 # numerical covariates
 fig_B_test_train_hist <- ggplot(dat_to_plot2a |> filter(!is.na(target))) +
   theme_bw() +
   # add data
-  geom_density(aes(x=value, color = dataset2)) +
+  geom_density(aes(x=value, color = dataset)) +
   facet_grid(target~name, scales = "free")
 
 ggsave(
@@ -232,9 +233,78 @@ ggsave(
 # fig_B2_test_train_hist <- ggplot(dat_to_plot2b |> filter(!is.na(target), target != "gpp") |> drop_na(value)) +
 #   theme_bw() +
 #   # add data
-#   geom_histogram(aes(x=value, color = dataset2)) +
+#   geom_histogram(aes(x=value, color = dataset)) +
 #   facet_grid(target~name, scales = "free")
 # fig_B2_test_train_hist
 # ggsave(
 #   here::here("fig/01_fig_B2_test_train_hist.png"),
 #   fig_B2_test_train_hist, width=7.2, height=4.8, units="in", scale = 2)
+
+
+
+# gpp_qc is Fluxnet2015::NEE_VUT_REF_QC, which is "fraction between 0-1, indicating percentage of measured and good quality gapfill data"
+
+## Fig C: Plot histograms of targets of of test train data:
+dat_to_plot2 <- obs |>
+  left_join(
+    select(dat_to_plot, sitename, target, dataset, lat) |> distinct(),
+    by = join_by(sitename)) |>
+  # ensure ordering of lines in ggplot
+  arrange(dataset) |> mutate(sitename = forcats::as_factor(sitename))
+
+# gpp (with and without QC 0.8 removed)
+dat_to_plot2_gpp <- dat_to_plot2 |> filter(run_model == "daily") |> unnest(data) |> mutate(doy = yday(date), week = lubridate::week(date))
+dat_to_plot2_gpp_stats <- dat_to_plot2_gpp |> group_by(dataset, sitename, lat, week, run_model) |> summarise(gpp = mean(gpp))
+
+# col_scale <- scale_color_manual(NULL, aesthetics = c("colour", "fill"), values = c("test" = "#29a274ff", "train" = "#777055ff")) # GECO colors
+cols <- scales::hue_pal()(2)
+col_scale <- scale_color_manual(
+  NULL,
+  aesthetics = c("colour", "fill"),
+  values = c("test" = cols[1], "train" = cols[2]))
+
+dat_to_plot2_gpp_stats_QC <- dat_to_plot2_gpp |>
+  filter(gpp_qc >= 0.8) |>
+  group_by(dataset, sitename, lat, week, run_model) |> summarise(gpp = mean(gpp))
+
+fig_B_test_train_targethist_gpp <-
+  ggplot(dat_to_plot2_gpp_stats |> filter(dataset %in% c("test","train")), # remove "unused"
+         aes(x=week*7, y=gpp, group = sitename, color=dataset)) +
+  geom_line() + theme_classic() +
+  theme(legend.position = "none") +
+  ggtitle("GPP (all obs)") + labs(y="GPP (gC m-2 d-1)", x="DOY")
+
+fig_B_test_train_targethist_gpp_QC <-
+  ggplot(dat_to_plot2_gpp_stats_QC |> filter(dataset %in% c("test","train")), # remove "unused"
+         aes(x=week*7, y=gpp, group = sitename, color=dataset)) +
+  geom_line() + theme_classic() +
+  theme(legend.position = "none") +
+  ggtitle("GPP (only QC>0.8)") + labs(y="GPP (gC m-2 d-1)", x="DOY")
+
+# vcmax/jmax
+fig_B_test_train_targethist_vj <-
+  dat_to_plot2 |> filter(run_model == "onestep") |> unnest(data) |> unnest(vj) |>
+  filter(dataset %in% c("test","train")) |>  # remove "unused"
+  ggplot(aes(x=vj_obs__, color = dataset)) +
+  geom_density() + theme_classic() + col_scale +
+  theme(legend.position = "none") +
+  ggtitle("Vcmax/Jmax") + labs(x="Vcmax/Jmax (-)", y=NULL)
+# bigD13C
+fig_B_test_train_targethist_bigD13C <-
+  dat_to_plot2 |> filter(run_model == "onestep") |> unnest(data) |> unnest(bigD13C) |>
+  filter(dataset %in% c("test","train")) |>  # remove "unused"
+  ggplot(aes(x=bigD13C_obs_permil, color = dataset)) +
+  geom_density() + theme_classic() + col_scale +
+  theme(legend.position = c(0.95, 0.95), legend.justification = c(1,1)) +
+  ggtitle("Δ13C") + labs(x="Δ13C (‰)", y=NULL)
+
+library(patchwork)
+fig_B_test_train_targethist <-
+  (fig_B_test_train_targethist_gpp + fig_B_test_train_targethist_gpp_QC) /
+  (fig_B_test_train_targethist_vj + fig_B_test_train_targethist_bigD13C)
+
+ggsave(
+  here::here("fig/01_fig_C_test_train_targethist.png"),
+  fig_B_test_train_targethist, width=7.2, height=4.8, units="in", scale = 1)
+
+

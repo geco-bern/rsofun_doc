@@ -1,0 +1,17 @@
+setup,sampler,burnin,iterations,n_chains,n_chains_inner,cores,cores_inner,runtime,walltime,resultfile,config,machine
+3,DEzs,25,100,9,3,9,FALSE,1005.652,191.334652900696,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-100-25iter_9x3chains_on_CPU9x0.rds,9x-chain-parallel,dash
+3,DEzs,25,100,3,3,3,FALSE,343.924,148.016386508942,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-100-25iter_3x3chains_on_CPU3x0.rds,3x-chain-parallel,dash
+3,DEzs,25,100,3,3,1,FALSE,324.706,324.720658779144,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-100-25iter_3x3chains_on_CPU1x0.rds,3x-chain,dash
+3,DEzs,25,100,1,3,1,FALSE,106.836,106.836168050766,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-100-25iter_1x3chains_on_CPU1x0.rds,single-chain,dash
+3,DEzs,12,50,9,3,9,FALSE,494.614,103.665412425995,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-50-12iter_9x3chains_on_CPU9x0.rds,9x-chain-parallel,dash
+3,DEzs,12,50,3,3,3,FALSE,142.422,69.0887620449066,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-50-12iter_3x3chains_on_CPU3x0.rds,3x-chain-parallel,dash
+3,DEzs,12,50,3,3,1,FALSE,190.333,190.356967449188,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-50-12iter_3x3chains_on_CPU1x0.rds,3x-chain,dash
+3,DEzs,12,50,1,3,1,FALSE,46.0880000000001,46.0885851383209,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-50-12iter_1x3chains_on_CPU1x0.rds,single-chain,dash
+3,DEzs,3,15,9,3,9,FALSE,196.782,51.0236508846283,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-15-3iter_9x3chains_on_CPU9x0.rds,9x-chain-parallel,dash
+3,DEzs,3,15,3,3,3,FALSE,54.012,40.7840304374695,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-15-3iter_3x3chains_on_CPU3x0.rds,3x-chain-parallel,dash
+3,DEzs,3,15,3,3,1,FALSE,57.676,57.6906709671021,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-15-3iter_3x3chains_on_CPU1x0.rds,3x-chain,dash
+3,DEzs,3,15,1,3,1,FALSE,15.427,15.4280009269714,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-15-3iter_1x3chains_on_CPU1x0.rds,single-chain,dash
+3,DEzs,1,5,9,3,9,FALSE,128.146,38.1816837787628,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-5-1iter_9x3chains_on_CPU9x0.rds,9x-chain-parallel,dash
+3,DEzs,1,5,3,3,3,FALSE,50.401,33.7606217861176,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-5-1iter_3x3chains_on_CPU3x0.rds,3x-chain-parallel,dash
+3,DEzs,1,5,3,3,1,FALSE,44.406,44.41890001297,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-5-1iter_3x3chains_on_CPU1x0.rds,3x-chain,dash
+3,DEzs,1,5,1,3,1,FALSE,12.467,12.4697089195251,/home/fabian/GitHub/geco-bern/rsofun_doc/data/out_calib__setup3_DEzs-5-1iter_1x3chains_on_CPU1x0.rds,single-chain,dash

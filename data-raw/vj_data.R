@@ -133,12 +133,7 @@ rgeco:::plot_map_simpl() +
 
 
 
-# TODO: potentially replace forcing data with data from ingestr to homogenize with chi data.
-#       however, we do not have the time information
-# rm(df_vj_forcing)
-# df_vj_forcing <- ingestr::...
-
-
+# NOTE: replace forcing data with data from ingestr to homogenize with bigD13C data.
 
 
 
@@ -156,9 +151,7 @@ rgeco:::plot_map_simpl() +
 
 # TODO: below is just a test.
 
-library(rsofun)  # install from branch simple_pmodel_v2
-# pak::pkg_install("geco-bern/rsofun@simple_pmodel_v2")
-
+library(rsofun)
 # Apply one-step P-model function on each row of df_vj
 # Define constant model parameters
 params_modl <- list(
