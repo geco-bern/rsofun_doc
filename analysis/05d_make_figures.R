@@ -1,3 +1,36 @@
+# TODO:
+# Fig Map
+  # I made this textwidth wide now. May adjust title size to balance with text of the manuscript.
+#   In general for all figures:
+  # - label all panels with cowplot::plot_grid(..., labels = letters[...])
+  # - Don't waste space and text (e.g., 'Training set' and 'Test set" repeated - just label rows once)
+  # - balance text on plot when included in document with size of text in figure caption: should be about the same size.
+  # - Chose Helvetica for all text labels. (I can't sleep after a day looking at Verdana too much)
+# FigA:
+  # - tick labels too small
+  # - either do a) b), c), ... or label variables, but not both -- generally reduce clutter.
+  # - x axis text orientation horizontal, not vertical
+  # - add units on x axis
+  # - line for MAP should be solid
+  # - explain all symbols in caption or refer to a table that lists and describes all symbols.
+  # - single-letter symbols have to be italic.
+  # [most of these are standard manuscript preparation instructions and will have to be corrected before publication anyways.]
+  # NOPE:(Avoid showing posteriors (and priors) for parameters in those setups that did not calibrate them. For example setup a did not calibrate phi parameters and not theta-star.)
+# Fig1B:
+  # - x-axis tick label bigger
+  # - all text in black and Helveteica
+  # - minus is not typeset as a minus in the x axis label. use bquote()
+  # - label panels with cowplot::plot_grid(..., labels = ...), not in title
+  # - avoid (a), b), c) in y axis tick label (same letters already used for columns)
+  # - make full page figure with 3 panels per row and all scenarios along rows.
+# FigE2:
+  # make this proper
+
+# Rename scenarios to S1 to S6 (and S7=229, S8=230)
+# Fix
+
+
+
 # Script that generates figures for manuscriptå
 
 library(readr)
@@ -30,12 +63,12 @@ rsofun_symbol_parname_description <- tribble(
   "kphio",                "$\\varphi_0$",                           "\\unit{mol\\,mol^{-1}}",       "phi[0]",                 "Quantum yield at optimal temperature" ,
   "kphio_par_a",          "$\\varphi_a$",                           "\\unit{°C^{-2}}",              "phi[a]",                 "Shape parameter for the temperature dependence of the quantum yield" ,
   "kphio_par_b",          "$\\varphi_b$",                           "\\unit{°C}",                   "phi[b]",                 "Optimal temperature for the quantum yield" ,
-  "soilm_thetastar",      "$\\theta^*$",                            "\\unit{mm}",                   "theta^'*'",              "Threshold plant-available soil water content in the soil moisture stress function" ,
+  "soilm_thetastar",      "$\\theta^*$",                            "\\unit{mm}",                   "theta^'*'",              "Soil moisture limitation threshold (eq.~\ref{eq:soilmoisturestress})" ,
   "soilm_betao",          "$\\beta_0$",                             "unitless",                     "beta[0]",                "Stress factor at low soil moisture, intercept for the soil moisture stress function" ,
-  "beta_unitcostratio",   "$\\beta$",                               "unitless",                     "beta",                   "Unit cost ratio of carboxylation (maintenance of $V_{\\mathrm{cmax}}$) to transpiration" ,
-  "rd_to_vcmax",          "$b_0$",                                  "unitless",                     "b[0]",                   "Ratio of ($R_{\\mathrm{d25}}$) to the maximum carboxylation rate $V_{\\mathrm{cmax}}$ (both temperature-normalised dark respiration; eq. C8 in Stocker et al. 2020)" ,
+  "beta_unitcostratio",   "$\\beta$",                               "unitless",                     "beta",                   "Unit cost ratio of carboxylation to transpiration" , # (maintenance of $V_{\\mathrm{cmax}}$)
+  "rd_to_vcmax",          "$b_0$",                                  "unitless",                     "b[0]",                   "Unit cost ratio of carboxylation to transpiration" , # Ratio of ($R_{\\mathrm{d25}}$) to the maximum carboxylation rate $V_{\\mathrm{cmax}}$ (both temperature-normalised dark respiration; eq. C8 in Stocker et al. 2020)
   "tau_acclim",           "$\\tau$",                                "days",                         "tau",                    "Acclimation time scale of photosynthesis" ,
-  "kc_jmax",              "$c^{*}$",                                "unitless",                     "c^'*'",                  "Unit cost of electron transport (maintenance of $J_{\\mathrm{max}}$)" ,
+  "kc_jmax",              "$c^{*}$",                                "unitless",                     "c^'*'",                  "Unit cost of electron transport" , #  (maintenance of $J_{\\mathrm{max}}$)
   # ERROR PARAMETER:
   "err_gpp",              "$\\epsilon_{\\mathrm{gpp}}$",            "\\unit{gC\\,m^{-2}\\,s^{-1}}", "epsilon['gpp']",         "Gaussian error standard deviation of GPP" ,
   "err_bigD13C",          "$\\epsilon_{\\mathrm{\\Delta^{13}C}}$",  "\\unit{\\permil}",             "epsilon[Delta^'13'*C]",  "Gaussian error standard deviation of $\\Delta^{13}C$" ,
@@ -66,9 +99,10 @@ scenario_labels <-tribble(
   226,       "c)",     "'c) '*Delta^'13'*C*',VJ'",       "'c) '*Delta^'13'*C*','*frac(V[cmax], J[max])",
   222,       "d)",     "'d) '*GPP",                      "'d) '*GPP",
   223,       "e)",     "'e) '*Delta^'13'*C*',VJ,'*GPP",  "'e) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",
-  229,       "f)",     "'f) '*Delta^'13'*C*',VJ,'*GPP",  "'f) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",   #  (priors)
-  230,       "g)",     "'g) '*Delta^'13'*C*',VJ,'*GPP", "'g) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",    #  (fixed)
-  231,       "h)",     "'h) '*Delta^'13'*C*',VJ,'*GPP", "'h) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP"     #  (priors_truncated)
+  231,       "h)",     "'h) '*Delta^'13'*C*',VJ,'*GPP",  "'h) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",     #  (priors_truncated)
+
+  229,       "y)",     "'y) '*Delta^'13'*C*',VJ,'*GPP",  "'y) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",    #  (priors)
+  230,       "z)",     "'z) '*Delta^'13'*C*',VJ,'*GPP",  "'z) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP"    #  (fixed)
   ) #|> mutate(label = factor(label))
 scenario_label_vec <- setNames(scenario_labels$label_targets, scenario_labels$label)
 custom_labeller_scenarios <- function(x) {
@@ -77,6 +111,18 @@ custom_labeller_scenarios <- function(x) {
 # ggplot(scenario_labels, aes(x=scenario, y=label)) + geom_point() +
 #   scale_y_discrete(NULL, labels = \(x) parse(text = custom_labeller_scenarios(x)), lim = rev) +
 #   theme(axis.text.y = element_text(hjust=0))
+scenario_labels2 <-tribble(
+  ~scenario, ~label,  ~label_targets,                    ~label_targets_full,                                    ~list_targets,
+  228,       "a)",     "'a) '*Delta^'13'*C",             "'a) '*Delta^'13'*C",                                   list("$\\Delta^{13}\\text{C}$" = "x"),
+  227,       "b)",     "'b) VJ'",                        "'b) '*frac(V[cmax], J[max])",                          list(                              "VJ" = "x"),
+  226,       "c)",     "'c) '*Delta^'13'*C*',VJ'",       "'c) '*Delta^'13'*C*','*frac(V[cmax], J[max])",         list("$\\Delta^{13}\\text{C}$" = "x","VJ" = "x"),
+  222,       "d)",     "'d) '*GPP",                      "'d) '*GPP",                                            list(                                         "GPP"="x"),
+  223,       "e)",     "'e) '*Delta^'13'*C*',VJ,'*GPP",  "'e) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP", list("$\\Delta^{13}\\text{C}$" = "x","VJ" = "x","GPP"="x"),
+  231,       "h)",     "'h) '*Delta^'13'*C*',VJ,'*GPP",  "'h) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP", list("$\\Delta^{13}\\text{C}$" = "x","VJ" = "x","GPP"="x"),          #  (priors_truncated)
+
+  229,       "y)",     "'y) '*Delta^'13'*C*',VJ,'*GPP",  "'y) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP", list("$\\Delta^{13}\\text{C}$" = "x","VJ" = "x","GPP"="x"),         #  (priors)
+  230,       "z)",     "'z) '*Delta^'13'*C*',VJ,'*GPP",  "'z) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP", list("$\\Delta^{13}\\text{C}$" = "x","VJ" = "x","GPP"="x")        #  (fixed)
+  ) #|> mutate(label = factor(label))
 
 
 
@@ -144,6 +190,18 @@ if (flag_plot_general){
   ggsave(
     here::here("fig/fig_C_append_climate_MapTargetTrainingSites.png"),
     pl_sitemap, width=12, height=5, units="cm", dpi=300, scale = 1.3)
+
+  # stats
+  #The data set consisted of 50 sites with $\text{GPP}$ flux time series (xxx site-dates in total),
+  # 49 sites with a total of XXX individual VJ observations (multiple individual plants and/or species per site sampled),
+  # and 325 sites with a total of XXX $\Delta$ observations
+
+  # stats_sites <-
+    site_info |> filter(gpp)     |> filter(set %in% c("train","test")) |> select(sitename, data,gpp_flag=gpp,set)         |> unnest(data) |> summarise(n())
+    site_info |> filter(vj)      |> filter(set %in% c("train","test")) |> select(sitename, data,vj_flag=vj,set)           |> unnest(data) |> unnest(vj) |> summarise(n())
+    site_info |> filter(bigD13C) |> filter(set %in% c("train","test")) |> select(sitename, data,bigD13C_flag=bigD13C,set) |> unnest(data) |> unnest(bigD13C) |> summarise(n())
+  readr::write_csv(here::here("fig/fig_C_append_climate_MapTargetTrainingSites.csv"),
+                   stats_sites)
 }
 
 ## Table a: site table [lon, lat, elv, climate, vegtype, train-or-test, targets, Nobs] ----
@@ -265,14 +323,14 @@ out_calib_s220DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/f
 out_calib_s221DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen221_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 out_calib_s222DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen222_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 out_calib_s223DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen223_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
-out_calib_s224DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen224_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
-out_calib_s225DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen225_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
+out_calib_s224DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen224_DREAMzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
+out_calib_s225DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen225_DREAMzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
 out_calib_s226DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen226_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 out_calib_s227DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen227_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 out_calib_s228DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen228_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
-out_calib_s229DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen229_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
-out_calib_s230DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen230_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
-out_calib_s231DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen231_DREAMzs-40000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
+out_calib_s229DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen229_DREAMzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
+out_calib_s230DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen230_DREAMzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds")) # TODO: change to 100k
+out_calib_s231DREAMzs <- readr::read_rds(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/calibrations/out_calib__scen231_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds"))
 
 
 
@@ -282,18 +340,22 @@ plot_mcmc_trace(out_calib_s220DREAMzs, nr_internal_chains = 3, burnin_to_skip = 
 plot_mcmc_trace(out_calib_s221DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s221DREAMzs.png")
 plot_mcmc_trace(out_calib_s222DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s222DREAMzs.png")
 plot_mcmc_trace(out_calib_s223DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s223DREAMzs.png")
-plot_mcmc_trace(out_calib_s224DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 8000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s224DREAMzs.png")
-plot_mcmc_trace(out_calib_s225DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 8000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s225DREAMzs.png")
+plot_mcmc_trace(out_calib_s224DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s224DREAMzs.png")
+plot_mcmc_trace(out_calib_s225DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s225DREAMzs.png")
 plot_mcmc_trace(out_calib_s226DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s226DREAMzs.png")
 plot_mcmc_trace(out_calib_s227DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s227DREAMzs.png")
 plot_mcmc_trace(out_calib_s228DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 30000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s228DREAMzs.png")
-plot_mcmc_trace(out_calib_s229DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 8000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s229DREAMzs.png")
-plot_mcmc_trace(out_calib_s230DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 8000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s230DREAMzs.png")
-plot_mcmc_trace(out_calib_s231DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 10000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s231DREAMzs.png")
+plot_mcmc_trace(out_calib_s229DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s229DREAMzs.png")
+plot_mcmc_trace(out_calib_s230DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s230DREAMzs.png")
+plot_mcmc_trace(out_calib_s231DREAMzs, nr_internal_chains = 3, burnin_to_skip = 0, burnin_to_skip_gelman = 25000) |> ggsave_and_return("fig_E_MCMCconvergence_trace_s231DREAMzs.png")
       BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 1)
       BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 5000)
       BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 8000)
       BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 10000)
+      BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 20000)
+      BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 25000)
+      BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 29000)
+      BayesianTools::gelmanDiagnostics(out_calib_s231DREAMzs$mod, start = 30000)
 
 
 ## Figure E2: Posterior parameter correlation analysis ----
@@ -308,14 +370,14 @@ save_corr_plot(out_calib_s220DREAMzs,thin=5,start=30000, filename = here::here("
 save_corr_plot(out_calib_s221DREAMzs,thin=5,start=30000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s221DREAMzs_burnin30000.png"))
 save_corr_plot(out_calib_s222DREAMzs,thin=5,start=30000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s222DREAMzs_burnin30000.png"))
 save_corr_plot(out_calib_s223DREAMzs,thin=5,start=30000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s223DREAMzs_burnin30000.png"))
-save_corr_plot(out_calib_s224DREAMzs,thin=5,start=8000,  filename = here::here("fig/fig_E2_MCMCconvergence_corr_s224DREAMzs_burnin8000.png"))
-save_corr_plot(out_calib_s225DREAMzs,thin=5,start=8000,  filename = here::here("fig/fig_E2_MCMCconvergence_corr_s225DREAMzs_burnin8000.png"))
+save_corr_plot(out_calib_s224DREAMzs,thin=5,start=25000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s224DREAMzs_burnin25000.png"))
+save_corr_plot(out_calib_s225DREAMzs,thin=5,start=25000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s225DREAMzs_burnin25000.png"))
 save_corr_plot(out_calib_s226DREAMzs,thin=5,start=30000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s226DREAMzs_burnin30000.png"))
 save_corr_plot(out_calib_s227DREAMzs,thin=5,start=30000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s227DREAMzs_burnin30000.png"))
 save_corr_plot(out_calib_s228DREAMzs,thin=5,start=30000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s228DREAMzs_burnin30000.png"))
-save_corr_plot(out_calib_s229DREAMzs,thin=5,start=8000,  filename = here::here("fig/fig_E2_MCMCconvergence_corr_s229DREAMzs_burnin8000.png"))
-save_corr_plot(out_calib_s230DREAMzs,thin=5,start=8000,  filename = here::here("fig/fig_E2_MCMCconvergence_corr_s230DREAMzs_burnin8000.png"))
-save_corr_plot(out_calib_s231DREAMzs,thin=5,start=12000,  filename = here::here("fig/fig_E2_MCMCconvergence_corr_s231DREAMzs_burnin8000.png"))
+save_corr_plot(out_calib_s229DREAMzs,thin=5,start=25000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s229DREAMzs_burnin25000.png"))
+save_corr_plot(out_calib_s230DREAMzs,thin=5,start=25000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s230DREAMzs_burnin25000.png"))
+save_corr_plot(out_calib_s231DREAMzs,thin=5,start=30000, filename = here::here("fig/fig_E2_MCMCconvergence_corr_s231DREAMzs_burnin25000.png"))
 
 
 
@@ -323,18 +385,33 @@ save_corr_plot(out_calib_s231DREAMzs,thin=5,start=12000,  filename = here::here(
 ## for each scenario x params
 
 ### indivdiual plots: ----
-pl_post_s220DR<-(plot_prior_posterior_density(out_calib_s220DREAMzs$mod, burnin_to_skip = 30000)   + ggtitle("Scenario 220")+ ggtitle(out_calib_s220DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s220DREAMzs.png")
-pl_post_s221DR<-(plot_prior_posterior_density(out_calib_s221DREAMzs$mod, burnin_to_skip = 30000)   + ggtitle("Scenario 221")+ ggtitle(out_calib_s221DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s221DREAMzs.png")
-pl_post_s222DR<-(plot_prior_posterior_density(out_calib_s222DREAMzs$mod, burnin_to_skip = 30000)   + ggtitle("Scenario 222")+ ggtitle(out_calib_s222DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s222DREAMzs.png")
-pl_post_s223DR<-(plot_prior_posterior_density(out_calib_s223DREAMzs$mod, burnin_to_skip = 30000)   + ggtitle("Scenario 223")+ ggtitle(out_calib_s223DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s223DREAMzs.png")
-pl_post_s224DR<-(plot_prior_posterior_density(out_calib_s224DREAMzs$mod, burnin_to_skip = 8000)   + ggtitle("Scenario 224")+ ggtitle(out_calib_s224DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s224DREAMzs.png")
-pl_post_s225DR<-(plot_prior_posterior_density(out_calib_s225DREAMzs$mod, burnin_to_skip = 8000)   + ggtitle("Scenario 225")+ ggtitle(out_calib_s225DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s225DREAMzs.png")
-pl_post_s226DR<-(plot_prior_posterior_density(out_calib_s226DREAMzs$mod, burnin_to_skip = 30000)   + ggtitle("Scenario 226")+ ggtitle(out_calib_s226DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s226DREAMzs.png")
-pl_post_s227DR<-(plot_prior_posterior_density(out_calib_s227DREAMzs$mod, burnin_to_skip = 30000)   + ggtitle("Scenario 227")+ ggtitle(out_calib_s227DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s227DREAMzs.png")
-pl_post_s228DR<-(plot_prior_posterior_density(out_calib_s228DREAMzs$mod, burnin_to_skip = 30000)   + ggtitle("Scenario 228")+ ggtitle(out_calib_s228DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s228DREAMzs.png")
-pl_post_s229DR<-(plot_prior_posterior_density(out_calib_s229DREAMzs$mod, burnin_to_skip = 8000)   + ggtitle("Scenario 229")+ ggtitle(out_calib_s229DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s229DREAMzs.png")
-pl_post_s230DR<-(plot_prior_posterior_density(out_calib_s230DREAMzs$mod, burnin_to_skip = 8000)   + ggtitle("Scenario 230")+ ggtitle(out_calib_s230DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s230DREAMzs.png")
-pl_post_s231DR<-(plot_prior_posterior_density(out_calib_s231DREAMzs$mod, burnin_to_skip = 12000)   + ggtitle("Scenario 231")+ ggtitle(out_calib_s231DREAMzs$fpath)) |> ggsave_and_return("fig_A_MCMCconvergence_posterior_s231DREAMzs.png")
+pl_post_s220DR<-plot_and_output_prior_posterior_density(out_calib_s220DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s220DREAMzs.png")
+pl_post_s221DR<-plot_and_output_prior_posterior_density(out_calib_s221DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s221DREAMzs.png")
+pl_post_s222DR<-plot_and_output_prior_posterior_density(out_calib_s222DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s222DREAMzs.png")
+pl_post_s223DR<-plot_and_output_prior_posterior_density(out_calib_s223DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s223DREAMzs.png")
+pl_post_s224DR<-plot_and_output_prior_posterior_density(out_calib_s224DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s224DREAMzs.png")
+pl_post_s225DR<-plot_and_output_prior_posterior_density(out_calib_s225DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s225DREAMzs.png")
+pl_post_s226DR<-plot_and_output_prior_posterior_density(out_calib_s226DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s226DREAMzs.png")
+pl_post_s227DR<-plot_and_output_prior_posterior_density(out_calib_s227DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s227DREAMzs.png")
+pl_post_s228DR<-plot_and_output_prior_posterior_density(out_calib_s228DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s228DREAMzs.png")
+pl_post_s229DR<-plot_and_output_prior_posterior_density(out_calib_s229DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s229DREAMzs.png")
+pl_post_s230DR<-plot_and_output_prior_posterior_density(out_calib_s230DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s230DREAMzs.png")
+pl_post_s231DR<-plot_and_output_prior_posterior_density(out_calib_s231DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s231DREAMzs.png")
+
+plot_and_output_prior_posterior_density <- function(out_calib, burnin_to_skip, fname){
+  gg <- plot_prior_posterior_density(out_calib$mod, burnin_to_skip = burnin_to_skip) +
+    ggtitle(out_calib$fpath)
+
+  # # also save statistics of posterior:
+  # stats <- gg$data |> group_by(par_estimation, variable) |> summarise(mean = mean(value),
+  #                                                                     p25 =  quantile(value, 0.25),
+  #                                                                     p75 =  quantile(value, 0.75),
+  #                                                                     IQR = p75 - p25)
+  # readr::write_csv(stats, file = here::here(file.path("fig/",  paste0(gsub(".png","", fname), ".csv"))))
+
+  # save plot and return plot
+  ggsave_and_return(gg, fname = fname)
+}
 
 ### single comparison plot: ----
 param_order6 <- out_calib_s223DREAMzs$mod[[1]]$setup$names
@@ -369,37 +446,37 @@ scenarios_to_compare6 <- list("Prior 220" = out_calib_s220DREAMzs$mod,
 pl_post_comparison6f <- plot_prior_posterior_density_compare2(
   named_list_scen =  scenarios_to_compare6[c("Prior 222","Prior 223","Prior 226","Prior 227","Prior 228","Prior 231",
                                                    "222",      "223",      "226",      "227",      "228",      "231")],
-  burnin_to_skip  = 8000,
+  burnin_to_skip  = 30000,
   add_MAP = TRUE, param_order = param_order6, params_not_to_plot = c("rd_to_vcmax", "soilm_betao", "errbias_bigD13C", "errbias_vj", "errscale_gpp"))
 ggsave_and_return(pl_post_comparison6f, "fig_A_MCMCconvergence_posterior_labelled_s222DR_223DR_226DR_227DR_228DR_231DR.png",   width = 7.2, height = 3.6)
 
 pl_post_comparison6g <- plot_prior_posterior_density_compare2(
   named_list_scen =  scenarios_to_compare6[c("Prior 222","Prior 223","Prior 226","Prior 227","Prior 228","Prior 230","Prior 231",
                                                    "222",      "223",      "226",      "227",      "228",      "230",      "231")],
-  burnin_to_skip  = 8000,
+  burnin_to_skip  = 18000,
   add_MAP = TRUE, param_order = param_order6, params_not_to_plot = c("rd_to_vcmax", "soilm_betao", "errbias_bigD13C", "errbias_vj", "errscale_gpp"))
 ggsave_and_return(pl_post_comparison6g, "fig_A_MCMCconvergence_posterior_labelled_s222DR_223DR_226DR_227DR_228DR_230DR_231DR.png",   width = 7.2, height = 3.6)
 
 pl_post_comparison6h <- plot_prior_posterior_density_compare2(
   named_list_scen =  scenarios_to_compare6[c("Prior 222","Prior 223","Prior 226","Prior 227","Prior 228","Prior 229","Prior 230","Prior 231",
                                                    "222",      "223",      "226",      "227",      "228",      "229",      "230",      "231")],
-  burnin_to_skip  = 8000,
+  burnin_to_skip  = 18000,
   add_MAP = TRUE, param_order = param_order6, params_not_to_plot = c("rd_to_vcmax", "soilm_betao", "errbias_bigD13C", "errbias_vj", "errscale_gpp"))
 ggsave_and_return(pl_post_comparison6h, "fig_A_MCMCconvergence_posterior_labelled_s222DR_223DR_226DR_227DR_228DR_220DR_230DR_231DR.png",   width = 7.2, height = 3.6)
 
 pl_post_comparison6c <- plot_prior_posterior_density_compare2(
   named_list_scen =  scenarios_to_compare6[c("Prior 221","Prior 222","Prior 223","Prior 227","Prior 228", "221","222","223","227","228")],
-  burnin_to_skip  = 8000,
+  burnin_to_skip  = 18000,
   add_MAP = TRUE, param_order = param_order6, params_not_to_plot = c("rd_to_vcmax", "soilm_betao", "errbias_bigD13C", "errbias_vj", "errscale_gpp"))
 
 pl_post_comparison6d <- plot_prior_posterior_density_compare2(
   named_list_scen =  scenarios_to_compare6[c("Prior 221","Prior 222","Prior 223","Prior 226","Prior 227","Prior 228", "221","222","223","226","227","228")],
-  burnin_to_skip  = 8000,
+  burnin_to_skip  = 18000,
   add_MAP = TRUE, param_order = param_order6, params_not_to_plot = c("rd_to_vcmax", "soilm_betao", "errbias_bigD13C", "errbias_vj", "errscale_gpp"))
 
 pl_post_comparison6e <- plot_prior_posterior_density_compare2(
   named_list_scen =  scenarios_to_compare6,
-  burnin_to_skip  = 8000,
+  burnin_to_skip  = 18000,
   add_MAP = TRUE, param_order = param_order6, params_not_to_plot = c("rd_to_vcmax", "soilm_betao", "errbias_bigD13C", "errbias_vj", "errscale_gpp"))
 
 ggsave_and_return(pl_post_comparison6c, "fig_A_MCMCconvergence_posterior_labelled_s221DR_222DR_223DR_227DR_228DR.png",         width = 7.2, height = 3.6)
@@ -426,8 +503,8 @@ caption <- paste(
   "The bounds of uniform or truncated normal prior distributions are given in square brackets.",
   "Parameters that were held fixed for the calibration are marked with a single number in brackets and an asterisk (*)")
 
-scenarios_to_compare <- scenario_labels |> filter(scenario %in% c(228,227,226,222,223,230))
-# scenarios_to_compare <- scenario_labels |> filter(scenario %in% c(228,227,226,222,229,231))
+# scenarios_to_compare <- scenario_labels |> filter(scenario %in% c(228,227,226,222,223,230))
+scenarios_to_compare <- scenario_labels |> filter(scenario %in% c(228,227,226,222,223,231))
 
 # get all priors as data.frame:
 par_priors_df <- lapply(scenarios_to_compare$scenario, \(scen) {
@@ -447,11 +524,12 @@ par_MAP_df <- bind_rows(
   data.frame(MAP = MAP(out_calib_s226DREAMzs$mod, start = 30000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 226),
   data.frame(MAP = MAP(out_calib_s222DREAMzs$mod, start = 30000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 222),
   data.frame(MAP = MAP(out_calib_s223DREAMzs$mod, start = 30000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 223),
-  data.frame(MAP = MAP(out_calib_s229DREAMzs$mod, start = 8000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 229),
-  data.frame(MAP = MAP(out_calib_s231DREAMzs$mod, start = 8000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 231),
-  data.frame(MAP = MAP(out_calib_s230DREAMzs$mod, start = 8000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 230)
+  # data.frame(MAP = MAP(out_calib_s229DREAMzs$mod, start = 25000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 229),
+  # data.frame(MAP = MAP(out_calib_s230DREAMzs$mod, start = 25000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 230),
+  data.frame(MAP = MAP(out_calib_s231DREAMzs$mod, start = 30000)$parametersMAP) |> tibble::rownames_to_column("Parameter") |> mutate(scenario = 231)
 ) |> filter(scenario %in% par_fixed_df$scenario)
 stopifnot(all(sort(unique(par_MAP_df$scenario)) == sort(unique(par_fixed_df$scenario))))
+
 
 
 # format the priors:
@@ -572,27 +650,81 @@ table_b_v2_reduced %>%
 
 
 
+# get other statistics from posterior for manual reporting in text
+get_statistics_for_report <- function (bayesianOutput, ...) { # inspired from BayesianTools::MAP()
+  samples = getSample(bayesianOutput, parametersOnly = F, ...)
+  if ("mcmcSamplerList" %in% class(bayesianOutput))
+    nPars <- bayesianOutput[[1]]$setup$numPars
+  else nPars = bayesianOutput$setup$numPars
+    best = which.max(samples[, nPars + 1])
+
+  samples[, 1:nPars] |> as.data.frame() |> pivot_longer(everything(), names_to = "Parameter") |>
+    group_by(Parameter) |>
+    summarise(mean = mean(value),
+              median = median(value),
+              p25  = quantile(value, 0.25),
+              p75  = quantile(value, 0.75),
+              IQR  = p75 - p25)
+}
+par_otherstats_df <- bind_rows(
+  get_statistics_for_report(out_calib_s228DREAMzs$mod, start = 30000)|> mutate(scenario = 228),
+  get_statistics_for_report(out_calib_s227DREAMzs$mod, start = 30000)|> mutate(scenario = 227),
+  get_statistics_for_report(out_calib_s226DREAMzs$mod, start = 30000)|> mutate(scenario = 226),
+  get_statistics_for_report(out_calib_s222DREAMzs$mod, start = 30000)|> mutate(scenario = 222),
+  get_statistics_for_report(out_calib_s223DREAMzs$mod, start = 30000)|> mutate(scenario = 223),
+  # get_statistics_for_report(out_calib_s229DREAMzs$mod, start = 25000)|> mutate(scenario = 229),
+  # get_statistics_for_report(out_calib_s230DREAMzs$mod, start = 25000)|> mutate(scenario = 230),
+  get_statistics_for_report(out_calib_s231DREAMzs$mod, start = 30000)|> mutate(scenario = 231)
+) |> filter(scenario %in% par_fixed_df$scenario)
+stopifnot(all(sort(unique(par_otherstats_df$scenario)) == sort(unique(par_fixed_df$scenario))))
+
+par_allstats_df <- left_join(par_otherstats_df, par_MAP_df) |> select(scenario, Parameter, MAP, mean, median, IQR, p25, p75) |>
+  # replace scenario number with label
+  left_join(scenario_labels |> select(scenario, label), by = join_by(scenario)) |>
+  # append Symbol and Description:
+  mutate(Parameter = factor(Parameter, levels = levels(rsofun_symbol_parname_description$Parameter))) |>
+  left_join(select(rsofun_symbol_parname_description, Parameter, Symbol_R),
+            by = join_by(Parameter)) |>
+  select(scenario, label, Parameter, Symbol_R, everything())
+par_allstats_df
+readr::write_csv(par_allstats_df, here::here("fig", "table-c-posterior_params.stats.allscen.csv"))
 
 
+
+par_otherstats_df
 
 # PREDICTION PLOTS ----
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 220 100000 30000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 221 100000 30000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 223 100000 30000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 226 100000 30000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 227 100000 30000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 228 100000 30000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 229 10000  3000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 230 10000  3000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 224 8000   2000 20 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 225 8000   2000 20 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 228 100000 30000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 227 100000 30000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 226 100000 30000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 222 100000 30000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 223 100000 30000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 229 80000 25000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 230 60000 18000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 231 80000 25000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 231 100000 30000 100 1 "_continued.rds"
 
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 222 100000 30000 100 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 224 30000  8000 100 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 225 30000  8000 100 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 229 30000  8000 100 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 230 30000  8000 100 1 "_continued.rds"
-# TO RUN PREDICTINOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 231 30000  8000 100 1 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 228 100000 30000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 227 100000 30000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 226 100000 30000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 222 100000 30000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 223 100000 30000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 229 80000 25000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 230 60000 18000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 231 80000 25000 50 10 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 231 100000 30000 50 10 "_continued.rds"
+
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 228 100000 30000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 227 100000 30000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 226 100000 30000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 222 100000 30000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 223 100000 30000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 229 80000 25000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 230 60000 18000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 231 80000 25000 20 3 "_continued.rds"
+# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh 231 100000 30000 20 3 "_continued.rds"
+
+
 
 ## Figure B2: error distribution predObs scatter plot ----
 ## for each scenario x target x test
@@ -601,8 +733,8 @@ flag_plot_predictions <- TRUE # possibility to switch this off
 
 # define what data to load (and use this as suffix for output)
 n_post <- "N20+MAP"
-n_err <- "_N4errors"
-n_err <- "_N1errors" # less memeory intense
+n_err <- "_N3errors"
+# n_err <- "_N1errors" # less memeory intense
 outfname_suffix <- paste0(n_post, n_err, "_s222-s229")
 if (flag_plot_predictions){
   # Load sampled posterior params used for predictions
@@ -612,7 +744,7 @@ if (flag_plot_predictions){
   df_227_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen227_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
   df_228_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen228_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
   df_229_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_8000burnin__out_calib__scen229_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
-  df_230_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
+  # df_230_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
   df_231_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen231_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
 
   # Load predictions for plotting
@@ -634,12 +766,12 @@ if (flag_plot_predictions){
   # df_229_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_8000burnin__out_calib__scen229_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
   # df_229_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_8000burnin__out_calib__scen229_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
   # df_229_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_8000burnin__out_calib__scen229_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
-  df_230_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
-  df_230_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
-  df_230_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
-  df_231_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen231_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
-  df_231_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen231_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
-  df_231_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen231_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
+  # df_230_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
+  # df_230_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
+  # df_230_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
+  df_231_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen231_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
+  df_231_bigD13C <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen231_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_bigD13C_sampled",n_err,".rds"))
+  df_231_gpp     <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen231_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_gpp_sampled",n_err,".rds"))
 }
 
 source(here::here("R/analyse_modobs2.R"))
@@ -661,14 +793,14 @@ my_own_scatter <- function(df, mod, ...){
 
 gpp_labs <- list(labs(x = expression(paste("Predicted GPP (g C m"^-2, "s"^-1, ")")),
                       y = expression(paste("Observed GPP (g C m"^-2, "s"^-1, ")"))))
-vj_labs <- list(labs(x = paste("Predicted Vcmax/Jmax (-)"),
-                     y = paste("Observed Vcmax/Jmax (-)")))
-bigD13C_labs <- list(labs(x = paste("Predicted Δ13C (permil)"),
-                          y = paste("Observed Δ13C (permil)")))
+vj_labs <- list(labs(x = paste("Predicted VJ (-)"),
+                     y = paste("Observed VJ (-)")))
+bigD13C_labs <- list(labs(x = paste("Predicted Δ (permil)"),
+                          y = paste("Observed Δ (permil)")))
 
 gpp_labs_xNULL     <- list(labs(x = " ", y = expression(paste("Observed GPP (g C m"^-2, "s"^-1, ")"))))
-vj_labs_xNULL      <- list(labs(x = " ", y = paste("Observed Vcmax/Jmax (-)")))
-bigD13C_labs_xNULL <- list(labs(x = " ", y = paste("Observed Δ13C (permil)")))
+vj_labs_xNULL      <- list(labs(x = " ", y = paste("Observed VJ (-)")))
+bigD13C_labs_xNULL <- list(labs(x = " ", y = paste("Observed Δ (permil)")))
 
 
 if (flag_plot_predictions){
@@ -793,7 +925,8 @@ if (flag_plot_predictions){
       })
     })
 
-    pl_scatter_comparison2 <- cowplot::plot_grid(nrow = 3, byrow=FALSE, labels = c("(a)", "(b)", "(c)", "(d)", "(e)", "(f)"),
+    # pl_scatter_comparison2 <- cowplot::plot_grid(nrow = 3, byrow=FALSE, labels = c("(a)", "(b)", "(c)", "(d)", "(e)", "(f)"), # TODO:
+    pl_scatter_comparison2 <- cowplot::plot_grid(nrow = 6, byrow=FALSE, labels = c("(a)", "(b)", "(c)", "(d)", "(e)", "(f)"), # TODO:
       cowplot::plot_grid(ncol = 3, # labels = c("1", "2", "3"),
         list_of_train_scatters$s228$bigD13C$gg + mark_as_target + bigD13C_labs_xNULL ,
         list_of_train_scatters$s228$vj$gg                       + vj_labs_xNULL      ,
@@ -822,7 +955,7 @@ if (flag_plot_predictions){
     )
     ggsave(plot = pl_scatter_comparison2,
              filename = here::here("fig", paste0("fig_B2e_pred-vs-obs_four-scen_trainingSet_pred",outfname_suffix,"_", parameter_set, ".png")),
-             width = 12, height = 6, units = "cm", dpi = "print", scale = 4.0)
+             width = 6, height = 12, units = "cm", dpi = "print", scale = 4.0)
   }
 }
 
@@ -1189,6 +1322,18 @@ if (flag_plot_predictions){
        plot = pl_density_separately_generated,
        width=12, height=6, units = "cm", scale = 2.0)
 
+
+  # statistics of preidiction and structural error
+  residual_stats <- dat_to_plot2 |>
+    group_by(scenario, label, label_targets, Scenario, y_facet, target, dataset) |>
+    summarise(N = n(),
+              mean_modelled  = mean(modelled),
+              mean_pred_obs = mean(modelled - obs),
+              std_pred_obs = sd(modelled - obs),
+              mean_pred_obs_div_by_modelled = mean_pred_obs/mean_modelled,
+              std_pred_obs_div_by_modelled = std_pred_obs/mean_modelled)
+  residual_stats
+  readr::write_csv(residual_stats, here::here("fig/table-d-residuals.stats.allscen.csv"))
 }
 
 
@@ -1207,4 +1352,45 @@ plot_predobs_gpp_timeseries3(df_B3_timeseries$gpp |> filter(Scenario == "231", d
 
 
 
+
+
+
+
+
+
+
+
+
+timing_files2 <- list.files(file.path("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/","timings"), pattern = "timings_scen.*_2025-09-.*.rds", full.names = T)
+timings2 <- lapply(timing_files2, readr::read_rds) |> bind_rows()
+
+timings <- timings2 |>
+  mutate(scenario = factor(scenario),
+         cores    = factor(cores))
+
+pl_timings <- ggplot(
+  timings,
+  aes(#x=(iterations-burnin)*n_chains*n_chains_inner,
+    x=(iterations),
+    y=as.numeric(walltime,"secs")/60,
+    color = scenario,
+    linetype = cores)) +
+  geom_point() + geom_line() +
+  geom_text(aes(label = sprintf("(%d,%d)",iterations,burnin)), vjust = 0, show.legend = F) +
+  scale_x_log10(minor_breaks=scales::minor_breaks_n(10)) +
+  scale_y_log10(minor_breaks=scales::minor_breaks_n(10)) +
+  labs(y="walltime (minutes)") + theme_minimal()
+pl_timings
+pl_timings$data$scenario |> unique()
+
+pl_timings %+% (pl_timings$data |> filter(scenario %in% c(231,230,229)))
+pl_timings_to_output <- pl_timings %+% (pl_timings$data |>
+                                          filter(iterations>=10000) |>
+                                          filter(scenario %in% scenario_labels$scenario))
+# pl_timings_to_output <- pl_timings_to_output + theme(legend.position = "inside",
+#                                                      # legend.position.inside = c(0.98,0.02), legend.justification = c(1,0))
+#                                                      legend.position.inside = c(0.02,0.98), legend.justification = c(0,1))
+ggsave(
+    here::here("fig/fig_XXX_timings.png"),
+    pl_timings_to_output, width=8.3, height=8.3, units="cm", dpi=300, scale = 1.5)
 
