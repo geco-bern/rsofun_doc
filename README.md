@@ -55,4 +55,7 @@ renv::run("analysis/03_bayesian_calibration_DEzs.R",    name = "bayesian_calibra
 renv::run("analysis/05d_make_figures.R", project = "../rsofun_doc")
 # renv::run("analysis/05_make_figures.R", project = "../rsofun_doc")
 # renv::run("analysis/05c_make_prediction_figures_111_113.R", project = "../rsofun_doc")
+
+# eventually results were archived with:
+# rsync -i --info=progress2   -avz --no-owner --omit-dir-times   /scratch/network/giub_geco/fbernhard/rsofun_doc_outputs /storage/capacity/occr_geco/data_2/archive_projects/PRJ_2025_fbernhard_rsofunDoc/
 ```
