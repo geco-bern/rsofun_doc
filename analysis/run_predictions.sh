@@ -1,8 +1,8 @@
 #! /usr/bin/bash -l
-#SBATCH --job-name="predict_scenTASKID"
+#SBATCH --job-name="predict_100k-30k_scenTASKID"
 #SBATCH --time=48:30:00
 #SBATCH --partition=icpu-stocker # if you have access, this gives you priority
-#SBATCH --array=110-112,116-118 # specifies the slurm array job with the number of tasks
+#SBATCH --array=120-122,127-128 # specifies the slurm array job with the number of tasks
 #SBATCH --cpus-per-task=9        # nr of threads, used for shared memory jobs that run locally on a single compute node (default: 1)
 #SBATCH --mem-per-cpu=8G
 #SBATCH --mail-user=your.email@unibe.ch
@@ -41,6 +41,6 @@ NERRORS=3      # how many samples of structural error
 
 
 # setup for DREAMzs
-Rscript analysis/04_make-test-train_predictions.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DREAMzs-${NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "25000" "${NPREDICTIONS}" "8" "${NERRORS}"
+Rscript analysis/04_make-test-train_predictions.R "out_calib__scen${SLURM_ARRAY_TASK_ID}_DREAMzs-${NRUNS}-0iter_8x3chains_on_CPU8x1_continued.rds" "30000" "${NPREDICTIONS}" "8" "${NERRORS}"
 
 echo "Finished on: $(date --rfc-3339=seconds)"
