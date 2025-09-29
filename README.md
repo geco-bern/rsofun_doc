@@ -30,34 +30,36 @@ renv::run("data-raw/append_climate_data.R", name = "append_climate_data")
 # setup data split into training and testing
 renv::run("analysis/01_subset_test_train_sites.R", name = "subset_test_train_sites")
 
-# run calibration scenarions in sequential order:
+```
+
+Run MCMC sampling of various calibration setups (setups are independent and can run in parallel):
+```bash
 # From RStudio:
 #   renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R",    name = "bayesian_calibration 220", args = c(220,0,50,8))
-# or alternatively (running outside of RStudio directly from shell can be more robust):
+# or alternatively (running outside of RStudio directly from tmux-shell can be more robust):
 #   cd GitHub/geco-bern/rsofun_doc/
-#   tmux  # open multiple tmux windows to run:
 #   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(231,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(229,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(228,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(227,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(226,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(223,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(222,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(221,0,50,8))'
-#   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(220,0,50,8))'
+#   etc...
 
 # Eventually, these codes were run on UBELIX with SLURM batch scripts:
-# sbatch ~/GitHub/geco-bern/analysis/run_mcmc.sh # specify the scenario throuh: "--array=220-223,226-231"
-# ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 228 100000 30000 20 3 "_continued.rds"
-# ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 227 100000 30000 20 3 "_continued.rds"
-# ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 226 100000 30000 20 3 "_continued.rds"
-# ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 222 100000 30000 20 3 "_continued.rds"
-# ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 223 100000 30000 20 3 "_continued.rds"
-# ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 231 100000 30000 20 3 "_continued.rds"
+sbatch ~/GitHub/geco-bern/rsofun_doc/analysis/run_mcmc.sh # specify the scenario throuh: "--array=220-223,226-231"
+```
+Sample posterior and predict train and test sets with various calibration setups (setups are independent and can run in parallel):
+```bash
+~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 228 100000 30000 20 3 "_continued.rds"
+~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 227 100000 30000 20 3 "_continued.rds"
+~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 226 100000 30000 20 3 "_continued.rds"
+~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 222 100000 30000 20 3 "_continued.rds"
+~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 223 100000 30000 20 3 "_continued.rds"
+~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 231 100000 30000 20 3 "_continued.rds"
+```
 
+```R
 # generate figures for manuscript
 renv::run("analysis/05_make_figures.R", project = "../rsofun_doc")
+```
 
+```bash
 # eventually results were archived from the scratch filesystem to a permanent one with:
-# rsync -i --info=progress2   -avz --no-owner --omit-dir-times   /scratch/network/giub_geco/fbernhard/rsofun_doc_outputs /storage/capacity/occr_geco/data_2/archive_projects/PRJ_2025_fbernhard_rsofunDoc/
+rsync -i --info=progress2   -avz --no-owner --omit-dir-times   /scratch/network/giub_geco/fbernhard/rsofun_doc_outputs /storage/capacity/occr_geco/data_2/archive_projects/PRJ_2025_fbernhard_rsofunDoc/
 ```
