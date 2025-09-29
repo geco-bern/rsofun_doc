@@ -1,0 +1,1 @@
+Data in this subfolder was manually copied from the scratch folder, where they were generated, into this git-tracked folder for archival.

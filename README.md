@@ -4,9 +4,10 @@ This repository contains the code for producing results published in Paredes et 
 
 ## Repository contents
 
-- `analysis/` contains scripts for site selection, sensitivity analysis, model calibration, calibration diagnostics, and model evaluation.
+- `analysis/` contains scripts for site selection, model calibration, calibration diagnostics, and model evaluation.
 - `fig/` contains publication figures
-- `data/` contains data objects created by scripts in `analysis/` or in `data-raw/`.
+- `data/` contains data objects created by scripts in `data-raw/`.
+- `analysis-output/` contains data objects created by scripts in `analysis/`.
 
 ## References
 
@@ -54,12 +55,12 @@ Sample posterior and predict train and test sets with various calibration setups
 ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 231 100000 30000 20 3 "_continued.rds"
 ```
 
+Generate figures for manuscript:
 ```R
-# generate figures for manuscript
 renv::run("analysis/05_make_figures.R", project = "../rsofun_doc")
 ```
 
+Archive results from the scratch filesystem to a permanent one, e.g. with:
 ```bash
-# eventually results were archived from the scratch filesystem to a permanent one with:
 rsync -i --info=progress2   -avz --no-owner --omit-dir-times   /scratch/network/giub_geco/fbernhard/rsofun_doc_outputs /storage/capacity/occr_geco/data_2/archive_projects/PRJ_2025_fbernhard_rsofunDoc/
 ```
