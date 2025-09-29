@@ -60,9 +60,9 @@ source(here::here("R/run_prediction_rsofun.R"))
 rsofun_symbol_parname_description <- tribble(
   ~Parameter,             ~Symbol_tex,                              ~Units_tex,                     ~Symbol_R,                       ~Description,
   # MODEL PARAMETER:
-  "kphio",                "$\\varphi_0$",                           "\\unit{mol\\,mol^{-1}}",       "phi[0]",                 "Quantum yield at optimal temperature" ,
-  "kphio_par_a",          "$\\varphi_a$",                           "\\unit{°C^{-2}}",              "phi[a]",                 "Shape parameter for the temperature dependence of the quantum yield" ,
-  "kphio_par_b",          "$\\varphi_b$",                           "\\unit{°C}",                   "phi[b]",                 "Optimal temperature for the quantum yield" ,
+  "kphio",                "$\\varphi_0^{*}$",                       "\\unit{mol\\,mol^{-1}}",       "phi[0]^'*'",             "Quantum yield at optimal temperature" ,
+  "kphio_par_a",          "$a_\\varphi$",                           "\\unit{°C^{-2}}",              "a[phi]",                 "Shape parameter for the temperature dependence of the quantum yield" ,
+  "kphio_par_b",          "$b_\\varphi$",                           "\\unit{°C}",                   "b[phi]",                 "Optimal temperature for the quantum yield" ,
   "soilm_thetastar",      "$\\theta^*$",                            "\\unit{mm}",                   "theta^'*'",              "Soil moisture limitation threshold (eq.~\ref{eq:soilmoisturestress})" ,
   "soilm_betao",          "$\\beta_0$",                             "unitless",                     "beta[0]",                "Stress factor at low soil moisture, intercept for the soil moisture stress function" ,
   "beta_unitcostratio",   "$\\beta$",                               "unitless",                     "beta",                   "Unit cost ratio of carboxylation to transpiration" , # (maintenance of $V_{\\mathrm{cmax}}$)
@@ -70,12 +70,12 @@ rsofun_symbol_parname_description <- tribble(
   "tau_acclim",           "$\\tau$",                                "days",                         "tau",                    "Acclimation time scale of photosynthesis" ,
   "kc_jmax",              "$c^{*}$",                                "unitless",                     "c^'*'",                  "Unit cost of electron transport" , #  (maintenance of $J_{\\mathrm{max}}$)
   # ERROR PARAMETER:
-  "err_gpp",              "$\\epsilon_{\\mathrm{gpp}}$",            "\\unit{gC\\,m^{-2}\\,s^{-1}}", "epsilon['gpp']",         "Gaussian error standard deviation of GPP" ,
-  "err_bigD13C",          "$\\epsilon_{\\mathrm{\\Delta^{13}C}}$",  "\\unit{\\permil}",             "epsilon[Delta^'13'*C]",  "Gaussian error standard deviation of $\\Delta^{13}C$" ,
-  "err_vj",               "$\\epsilon_{\\mathrm{vj}}$",             "unitless",                     "epsilon['vj']",          "Gaussian error standard deviation of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$" ,
-  "errbias_bigD13C",      "$\\delta_{\\mathrm{\\Delta^{13}C}}$",    "\\unit{\\permil}",             "delta[Delta^'13'*C]",    "Bias error term of $\\Delta^{13}C$ (= mod - obs)",
-  "errbias_vj",           "$\\delta_{\\mathrm{vj}}$",               "unitless",                     "delta['vj']",            "Bias error term of $\\frac{V_{\\mathrm{cmax}}}{J_{\\mathrm{max}}}$ (= mod - obs)",
-  "errscale_gpp",         "$\\kappa_{\\mathrm{gpp}}$",              "unitless",                     "kappa['gpp']",           "Multiplicative bias error term of GPP"
+  "err_gpp",              "$\\sigma_{\\text{GPP}}$",                "\\unit{gC\\,m^{-2}\\,s^{-1}}", "sigma['GPP']",           "Gaussian error standard deviation of GPP" ,
+  "err_bigD13C",          "$\\sigma_{\\text{\\Delta}}$",            "\\unit{\\permil}",             "sigma[Delta]",           "Gaussian error standard deviation of $\\Delta$" ,
+  "err_vj",               "$\\sigma_{\\text{VJ}}$",                 "unitless",                     "sigma['VJ']",            "Gaussian error standard deviation of VJ",
+  "errbias_bigD13C",      "$\\delta_{\\text{\\Delta}}$",            "\\unit{\\permil}",             "delta[Delta]",           "Bias error term of $\\Delta$ (= mod - obs)",
+  "errbias_vj",           "$\\delta_{\\text{VJ}}$",                 "unitless",                     "delta['VJ']",            "Bias error term of VJ (= mod - obs)",
+  "errscale_gpp",         "$\\kappa_{\\text{GPP}}$",                "unitless",                     "kappa['GPP']",           "Multiplicative bias error term of GPP"
 ) |> mutate(Parameter = forcats::as_factor(Parameter),   # make factor to keep ordering
             Symbol_tex = forcats::as_factor(Symbol_tex)) # make factor to keep ordering
 label_vec <- setNames(rsofun_symbol_parname_description$Symbol_R, rsofun_symbol_parname_description$Parameter)
