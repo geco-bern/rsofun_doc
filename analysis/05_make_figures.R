@@ -356,13 +356,13 @@ pl_post_s220DR<-plot_and_output_prior_posterior_density(out_calib_s220DREAMzs, b
 pl_post_s221DR<-plot_and_output_prior_posterior_density(out_calib_s221DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s221DREAMzs.png")
 pl_post_s222DR<-plot_and_output_prior_posterior_density(out_calib_s222DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s222DREAMzs.png")
 pl_post_s223DR<-plot_and_output_prior_posterior_density(out_calib_s223DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s223DREAMzs.png")
-pl_post_s224DR<-plot_and_output_prior_posterior_density(out_calib_s224DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s224DREAMzs.png")
-pl_post_s225DR<-plot_and_output_prior_posterior_density(out_calib_s225DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s225DREAMzs.png")
+# pl_post_s224DR<-plot_and_output_prior_posterior_density(out_calib_s224DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s224DREAMzs.png")
+# pl_post_s225DR<-plot_and_output_prior_posterior_density(out_calib_s225DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s225DREAMzs.png")
 pl_post_s226DR<-plot_and_output_prior_posterior_density(out_calib_s226DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s226DREAMzs.png")
 pl_post_s227DR<-plot_and_output_prior_posterior_density(out_calib_s227DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s227DREAMzs.png")
 pl_post_s228DR<-plot_and_output_prior_posterior_density(out_calib_s228DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s228DREAMzs.png")
-pl_post_s229DR<-plot_and_output_prior_posterior_density(out_calib_s229DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s229DREAMzs.png")
-pl_post_s230DR<-plot_and_output_prior_posterior_density(out_calib_s230DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s230DREAMzs.png")
+# pl_post_s229DR<-plot_and_output_prior_posterior_density(out_calib_s229DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s229DREAMzs.png")
+# pl_post_s230DR<-plot_and_output_prior_posterior_density(out_calib_s230DREAMzs, burnin_to_skip = 25000, fname = "fig_A_MCMCconvergence_posterior_s230DREAMzs.png")
 pl_post_s231DR<-plot_and_output_prior_posterior_density(out_calib_s231DREAMzs, burnin_to_skip = 30000, fname = "fig_A_MCMCconvergence_posterior_s231DREAMzs.png")
 
 plot_and_output_prior_posterior_density <- function(out_calib, burnin_to_skip, fname){
@@ -661,16 +661,6 @@ readr::write_csv(par_allstats_df, here::here("fig", "table-c-posterior_params.st
 par_otherstats_df
 
 # PREDICTION PLOTS ----
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 228 100000 30000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 227 100000 30000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 226 100000 30000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 222 100000 30000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 223 100000 30000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 229 80000 25000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 230 60000 18000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 231 80000 25000 100 1 "_continued.rds"
-# TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 231 100000 30000 100 1 "_continued.rds"
-
 # TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 228 100000 30000 50 10 "_continued.rds"
 # TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 227 100000 30000 50 10 "_continued.rds"
 # TO RUN PREDICTIOS: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 226 100000 30000 50 10 "_continued.rds"
@@ -710,9 +700,9 @@ if (flag_plot_predictions){
   df_226_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen226_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
   df_227_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen227_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
   df_228_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen228_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
-  df_229_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_8000burnin__out_calib__scen229_DREAMzs-30000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
+  # df_229_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_8000burnin__out_calib__scen229_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
   # df_230_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen230_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
-  df_231_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen231_DREAMzs-20000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
+  df_231_params  <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_6000burnin__out_calib__scen231_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_params.rds"))
 
   # Load predictions for plotting
   df_222_vj      <- readr::read_rds(paste0("/storage/scratch/giub_geco/fbernhard/rsofun_doc_outputs/data/predictions/out_predict_N20+MAP_30000burnin__out_calib__scen222_DREAMzs-100000-0iter_8x3chains_on_CPU8x1_continued.rds_vj_sampled",n_err,".rds"))
