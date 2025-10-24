@@ -1,6 +1,6 @@
 source(here::here("R/calibration_helpers.R"))
 source(here::here("R/sensitivity_sofun_serialized.R"))
-source(here::here("analysis/00_define_scenarios.R"))
+source(here::here("analysis/00_define_setups.R"))
 
 run_sensitivity_rsofun <- function(
     iterations = 3,

@@ -12,7 +12,7 @@ library(cowplot)
 library(ggridges)
 
 source(here::here("R/figure_helpers.R"))
-source(here::here("analysis/00_define_scenarios.R"))
+source(here::here("analysis/00_define_setups.R"))
 
 source(here::here("R/calibration_helpers.R"))
 source(here::here("R/prediction_helpers.R"))

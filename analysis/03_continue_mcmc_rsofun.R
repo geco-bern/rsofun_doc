@@ -18,7 +18,7 @@
 # to receive arguments to script from the shell
 args = commandArgs(trailingOnly=TRUE)
 
-source(here::here("analysis/00_define_scenarios.R")) # to define 'rsofun_doc_output_path'
+source(here::here("analysis/00_define_setups.R")) # to define 'rsofun_doc_output_path'
 # rds_input_path <- "rsofun_doc_output_path/data/calibrations/out_calib__scen14_DEzs-10000-0iter_8x3chains_on_CPU8x1.rds"
 rds_input_path <- file.path(rsofun_doc_output_path, "data", "calibrations", args[[1]])
 iterations_to_add <- as.integer(args[[2]])

@@ -56,7 +56,7 @@ stopifnot(args[["nsimulations"]]  > 0)
 stopifnot(args[["ncores"]]        > 0)
 stopifnot(args[["nerrorsamples"]] > 0)
 
-source(here::here("analysis/00_define_scenarios.R")) # to define 'rsofun_doc_output_path'
+source(here::here("analysis/00_define_setups.R")) # to define 'rsofun_doc_output_path'
 rds_input_path <- file.path(rsofun_doc_output_path, "data", "calibrations", args[["mcmc"]])
 
 stopifnot(file.exists(rds_input_path))

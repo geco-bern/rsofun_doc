@@ -47,7 +47,7 @@ sbatch ~/GitHub/geco-bern/rsofun_doc/analysis/run_mcmc.sh # specify the setup th
 ```
 
 Sample posterior and predict train and test sets with various calibration setups (setups are independent and can run in parallel).
-Setups are defined and described in `analysis/00_define_scenarios.R`
+Setups are defined and described in `analysis/00_define_setups.R`
 ```bash
 # Eventually, these codes were run on UBELIX for the six setups with the SLURM batch script run_prediction.sh:
 ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 228 100000 30000 20 3 "_continued.rds"

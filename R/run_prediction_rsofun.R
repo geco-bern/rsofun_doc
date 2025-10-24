@@ -1,5 +1,5 @@
 source(here::here("R/predict_sofun_parallelized.R"), echo = FALSE)
-source(here::here("analysis/00_define_scenarios.R"))
+source(here::here("analysis/00_define_setups.R"))
 
 run_prediction_rsofun <- function(
     mcmc_posterior,

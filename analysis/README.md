@@ -12,4 +12,4 @@ To run the analysis and generate the figures run:
 
 Note that `run_mcmc.sh` and `run_predictions.sh` take care of this.
 
-Setups are defined and described in `analysis/00_define_scenarios.R`
+Setups are defined and described in `analysis/00_define_setups.R`

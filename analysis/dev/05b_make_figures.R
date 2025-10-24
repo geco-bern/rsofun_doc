@@ -13,7 +13,7 @@ source(here::here("R/prediction_helpers.R"))
 source(here::here("R/run_prediction_rsofun.R"))
 
 source(here::here("R/figure_helpers.R"))
-source(here::here("analysis/00_define_scenarios.R"))
+source(here::here("analysis/00_define_setups.R"))
 
 
 out_calib_s14 <- readr::read_rds(file.path(rsofun_doc_output_path, "data/calibrations_from_WS02/out_calib__scen14_DEzs-80000-0iter_8x3chains_on_CPU8x1_continued.rds"))
