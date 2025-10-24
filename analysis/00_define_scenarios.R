@@ -16,6 +16,17 @@ rsofun_doc_output_path <- if (grepl("node", Sys.info()["nodename"])) {
 # Setup 2: global, full parameter set, only GPP as target
 # Setup 3: global, full parameter set, GPP and traits as target
 # We expect Setup 2 to yield wider posteriors than from Setup 1, and that posterior distributions will be narrowed again by Setup 3. This experimental design will allow us to demonstrate the robustness (or absence thereof) of the MCMC and the usefulness of using traits for simultaneously calibrating with fluxes.
+# NOTE:
+# Setups that were used were:
+#    228: Setup a)      Delta^'13 C             
+#    227: Setup b)      VJ                        
+#    226: Setup c)      Delta^'13 C*',VJ       
+#    222: Setup d)      GPP                      
+#    223: Setup e)      Delta^'13 C*',VJ, GPP  
+#    231: Setup h)      Delta^'13 C*',VJ, GPP  
+
+#    220: Setup X)      GPP (of single site FR-Pue),  and less parameters (fixing: beta_unitcostratio, rd_to_vcmax, tau_acclim, kc_jmax)
+#    221: Setup XX)     GPP                           and less parameters (fixing: beta_unitcostratio, rd_to_vcmax, tau_acclim, kc_jmax)
 
 setup_rsofun_calibration <- function(scenario){
   require(tidyverse)

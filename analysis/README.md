@@ -10,4 +10,6 @@ To run the analysis and generate the figures run:
 - analysis/01_subset_test_train_sites.R   # generates data/01_test_train_split.csv
 - analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R
 
-Note that `run_mcmc.sh` and `run_predictions.sh` take care of  this.
+Note that `run_mcmc.sh` and `run_predictions.sh` take care of this.
+
+Setups are defined and described in `analysis/00_define_scenarios.R`

@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-# Usage: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions2.sh <SCENARIO> <NRUNS> <NBURNIN> <NPREDICTIONS> <NERRORS> <SUFFIX>
+# Usage: ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh <SCENARIO> <NRUNS> <NBURNIN> <NPREDICTIONS> <NERRORS> <SUFFIX>
 SCENARIO="${1}"
 NRUNS="${2:-100000}"    # default after '-'
 NBURNIN="${3:-30000}"   # default after '-'

@@ -30,10 +30,10 @@ renv::run("data-raw/append_climate_data.R", name = "append_climate_data")
 
 # setup data split into training and testing
 renv::run("analysis/01_subset_test_train_sites.R", name = "subset_test_train_sites")
-
 ```
 
-Run MCMC sampling of various calibration setups (setups are independent and can run in parallel):
+Run MCMC sampling of various calibration setups (setups are independent and can run in parallel).
+This stores the output into a hardcoded path: `/scratch/network/giub_geco/fbernhard/rsofun_doc_outputs`:
 ```bash
 # From RStudio:
 #   renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R",    name = "bayesian_calibration 220", args = c(220,0,50,8))
@@ -42,12 +42,14 @@ Run MCMC sampling of various calibration setups (setups are independent and can 
 #   Rscript -e 'renv::run("analysis/02_start_mcmc_bayesian_calibration_DREAMzs.R", project = "../rsofun_doc", args = c(231,0,50,8))'
 #   etc...
 
-# Eventually, these codes were run on UBELIX with SLURM batch scripts:
-sbatch ~/GitHub/geco-bern/rsofun_doc/analysis/run_mcmc.sh # specify the scenario throuh: "--array=220-223,226-231"
+# Eventually, these codes were run on UBELIX for all setups with a SLURM batch script:
+sbatch ~/GitHub/geco-bern/rsofun_doc/analysis/run_mcmc.sh # specify the setup through: "--array=220-223,226-231"
 ```
 
-Sample posterior and predict train and test sets with various calibration setups (setups are independent and can run in parallel):
+Sample posterior and predict train and test sets with various calibration setups (setups are independent and can run in parallel).
+Setups are defined and described in `analysis/00_define_scenarios.R`
 ```bash
+# Eventually, these codes were run on UBELIX for the six setups with the SLURM batch script run_prediction.sh:
 ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 228 100000 30000 20 3 "_continued.rds"
 ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 227 100000 30000 20 3 "_continued.rds"
 ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 226 100000 30000 20 3 "_continued.rds"
