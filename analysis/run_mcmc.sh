@@ -38,7 +38,7 @@ DREAMZS_OR_DEZS="DREAMzs" # either DREAMzs or DEzs # needed for the inital run
 PREV_NRUNS=0
 NEW_NRUNS=1000  # how many samples to add
 echo "Starting Stage 0.1: starting with $NEW_NRUNS"
-Rscript "analysis/03_bayesian_calibration_${DREAMZS_OR_DEZS}.R" $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
+Rscript "analysis/02_start_mcmc_bayesian_calibration_${DREAMZS_OR_DEZS}.R" $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
 echo "Stage 0.1 reached on on: $(date --rfc-3339=seconds)"
 
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue
@@ -88,7 +88,7 @@ echo "Stage 0.5 reached on on: $(date --rfc-3339=seconds)"
 ## Middle phase and end phase with 10k and 20k steps:
 # NEW_NRUNS=10000  # how many samples to add
 # echo "Starting Stage 1: starting with $NEW_NRUNS"
-# Rscript "analysis/03_bayesian_calibration_${DREAMZS_OR_DEZS}.R" $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
+# Rscript "analysis/02_start_mcmc_bayesian_calibration_${DREAMZS_OR_DEZS}.R" $SLURM_ARRAY_TASK_ID "0" "${NEW_NRUNS}" "8"
 # echo "Stage 1 reached on on: $(date --rfc-3339=seconds)"
 
 PREV_NRUNS=$((PREV_NRUNS + NEW_NRUNS)) # which previous sampling to continue

@@ -45,6 +45,7 @@ Run MCMC sampling of various calibration setups (setups are independent and can 
 # Eventually, these codes were run on UBELIX with SLURM batch scripts:
 sbatch ~/GitHub/geco-bern/rsofun_doc/analysis/run_mcmc.sh # specify the scenario throuh: "--array=220-223,226-231"
 ```
+
 Sample posterior and predict train and test sets with various calibration setups (setups are independent and can run in parallel):
 ```bash
 ~/GitHub/geco-bern/rsofun_doc/analysis/run_predictions.sh 228 100000 30000 20 3 "_continued.rds"
