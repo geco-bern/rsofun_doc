@@ -11,3 +11,5 @@ ggsave_and_return <- function(plot, fname, width=7.2, height=3.6, units = "in", 
   return(plot)
 }
 
+
+ggtext <- theme(text = element_text(family = "Helvetica"))

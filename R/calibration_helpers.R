@@ -344,36 +344,40 @@ plot_prior_posterior_density_compare2 <- function(
                                     TRUE                            ~ "Posterior")) |>
     # ensure plotting order by defining Scenario as factor
     left_join(scenario_labels_arg,
-              by = join_by(scenario)) |> mutate(label = if_else(is.na(label), as.character(scenario), label),
+              by = join_by(scenario)) |> mutate(setup_label   = if_else(is.na(setup_label), as.character(scenario), setup_label),
                                                 label_targets = if_else(is.na(label_targets), as.character(scenario), label_targets)) |>
-    arrange(desc(label), Distribution) |>
-    mutate(Scenario = forcats::as_factor(as.character(label_targets)),
+    arrange(desc(setup_label), Distribution) |>
+    mutate(Scenario     = forcats::as_factor(as.character(label_targets)),
+           #Scenario     = forcats::as_factor(as.character(setup_label)),
            scenario_int = as.integer(Scenario))
 
   gg <- ggplot(df_plot2, aes(x=value, y=Scenario)) +
     theme_classic() +
-    scale_y_discrete(NULL, labels = \(x) parse(text = x)) + theme(axis.text.y = element_text(hjust=0)) +
+    # scale_y_discrete("Setup") +
+    scale_y_discrete("Setup", labels = \(x) parse(text = x)) +
     geom_density_ridges(
       data =  df_plot2 |> filter(!grepl("((MAP)|(Fixed)) ", par_estimation)),
       mapping = aes(fill = Distribution)) +
     geom_segment(
       data = df_plot2 |> filter(grepl("MAP ", par_estimation)) |> filter(!is.na(value)),
       mapping = aes(yend = as.numeric(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
-      key_glyph = "vline", linetype = "2121") + # "dashed"
-    geom_segment(
-      data = df_plot2 |> filter(grepl("Fixed ", par_estimation)) |> filter(!is.na(value)),
-      mapping = aes(yend = as.numeric(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
-      key_glyph = "vline", linetype = "solid") +
+      key_glyph = "vline", linetype = "solid") + # "dashed"
+    # geom_segment(
+    #   data = df_plot2 |> filter(grepl("Fixed ", par_estimation)) |> filter(!is.na(value)),
+    #   mapping = aes(yend = as.numeric(Scenario) + 0.6, color = Distribution), # minus (-) because of scale reverse
+    #   key_glyph = "vline", linetype = "2121") +
     # layout:
-    facet_wrap( ~ variable , nrow = 2, scales = "free_x") +
-    theme(strip.text = element_text(size=12)) +
+    facet_wrap( ~ variable , nrow = 2, scales = "free_x", strip.position = "bottom") +
+    theme(strip.text = element_text(size=12, family = "Helvetica", margin = margin(0,0,0,0))) +
     theme(legend.position = "bottom") + labs(x=NULL) +
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    theme(axis.text.y = element_text(family = "Helvetica", hjust=0)) +
+    theme(axis.text.x = element_text(family = "Helvetica", size = 9-1)) +
     scale_fill_manual(NULL, aesthetics = c("fill","colour"),
                       values = c("Posterior"="#29a274ff", "Prior" = t_col("#777055ff"),  # GECO colors
-                                 "MAP"      = "black",    "Fixed" = "black"))
+                                 "MAP"      = "black",    "Fixed" = "black")) +
+    ggtext
 
-  if(!is.null(custom_labeller_variable)){  gg <- gg + facet_wrap( ~ variable , nrow = 2, scales = "free_x", labeller = custom_labeller_variable)}
+  if(!is.null(custom_labeller_variable)){  gg <- gg + facet_wrap( ~ variable , nrow = 2, scales = "free_x", labeller = custom_labeller_variable, strip.position = "bottom")}
   return(gg)
 }
 
@@ -424,8 +428,9 @@ plot_mcmc_trace <- function(out_calib, nr_internal_chains, burnin_to_skip, burni
     gelman_df <- BayesianTools::gelmanDiagnostics(mcmc, start = burnin_to_skip, end = end)
     psrf_values <- gelman_df$psrf[,"Point est."]
     # psrf_strings <- paste0(substr(names(psrf_values),1,3), "..=", sprintf("%.2f", psrf_values))
-    psrf_strings <- paste0("'*",unname(label_vec[names(psrf_values)]), "*'=", sprintf("%.2f", psrf_values))
+    psrf_strings <- paste0("'*",unname(label_vec_short[names(psrf_values)]), "*'=", sprintf("%.2f", psrf_values))
     psrf_string <- paste0(psrf_strings, collapse = ", ")
+
     subtitle <- sprintf("'GelmanDiagnostics: mpsrf=%.1f; psrf:%s'",
             gelman_df$mpsrf,
             psrf_string)

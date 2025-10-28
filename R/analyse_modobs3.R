@@ -1,12 +1,11 @@
-## copied from sofunCalVal package
-analyse_modobs2 <- function(df,
+## copied from sofunCalVal package (and adapted to analyse_modobs3)
+analyse_modobs3 <- function(df,
                             mod,
                             obs,
                             type = "points",
                             filnam = NA,
                             relative = FALSE,
-                            xlim = NULL,
-                            ylim = NULL,
+                            lower_xlim = 0,
                             use_factor = NULL,
                             shortsubtitle = FALSE,
                             plot_subtitle = TRUE,
@@ -111,32 +110,13 @@ analyse_modobs2 <- function(df,
                          italic(N) == .(n_lab))
   }
 
-  if (type == "heat") {
+  if (type == "hex") {
 
-    # if (!identical(filnam, NA)) dev.off()
-    gg <- heatscatter(
-      df$mod,
-      df$obs,
-      xlim = xlim,
-      ylim = ylim,
-      main = "",
-      ggplot = TRUE
-    )
-
-    gg <- gg +
-      geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
-      theme_classic() +
-      labs(x = mod, y = obs)
-
-    if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE)
-    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
-
-    if (!identical(filnam, NA)) {
-      ggsave(filnam, width = 5, height = 5)
-    }
-  } else if (type == "hex") {
-
-    lims <- round(max(quantile(df$mod, 0.9999), quantile(df$obs, 0.9999)))
+    upper_xlim <- round(max(quantile(df$mod, 0.9999), quantile(df$obs, 0.9999)))
+    stopifnot(is.null(lower_xlim) || (is.numeric(lower_xlim) && length(lower_xlim)==1))
+    lower_xlim = ifelse(is.null(lower_xlim),
+                        round(min(quantile(df$mod, 0.0001), quantile(df$obs, 0.0001))),
+                        lower_xlim)
 
     ## ggplot hexbin
     gg <- df %>%
@@ -146,8 +126,8 @@ analyse_modobs2 <- function(df,
       # geom_hline(yintercept = 0, linetype = "dotted") +
       # geom_vline(xintercept = 0, linetype = "dotted") +
       coord_fixed() +
-      xlim(0, lims) +
-      ylim(0, lims) +
+      xlim(lower_xlim, upper_xlim) +
+      ylim(lower_xlim, upper_xlim) +
       theme_classic() +
       labs(x = mod, y = obs)
 
@@ -156,48 +136,6 @@ analyse_modobs2 <- function(df,
     } else if (pal == "davos"){
       gg <- gg + khroma::scale_fill_davos(trans = "log", reverse = TRUE)
     }
-
-    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
-    if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE)
-
-    if (!identical(filnam, NA)) {
-      ggsave(filnam, width = 5, height = 5)
-    }
-  } else if (type == "points") {
-
-    ## points
-    gg <- df %>%
-      ggplot(aes(x = mod, y = obs)) +
-      geom_point() +
-      geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
-      # coord_fixed() +
-      # xlim(0,NA) +
-      # ylim(0,NA) +
-      theme_classic() +
-      labs(x = mod, y = obs)
-
-    if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
-    if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE)
-
-    if (!identical(filnam, NA)) {
-      ggsave(filnam, width = 5, height = 5)
-    }
-  } else if (type == "density") {
-
-    ## points
-    gg <- df %>%
-      ggplot(aes(x = mod, y = obs)) +
-      stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon") +
-      scale_fill_gradientn(
-        colours = colorRampPalette(c("gray65", "navy", "red", "yellow"))(5),
-        guide = "legend"
-      ) +
-      geom_abline(intercept = 0, slope = 1, linetype = "dotted") +
-      coord_fixed() +
-      xlim(0,NA) +
-      ylim(0,NA) +
-      theme_classic() +
-      labs(x = mod, y = obs)
 
     if (plot_subtitle) gg <- gg + labs(subtitle = subtitle)
     if (plot_linmod) gg <- gg + geom_smooth(method = "lm", color = "red", linewidth = 0.5, se = FALSE)
