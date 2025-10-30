@@ -69,15 +69,15 @@ ggplot(rsofun_symbol_parname_description |> rename(variable = Parameter)) + geom
 ## Re-label Scenarios ----
 scenario_labels <-tribble(
   ~scenario, ~setup_label, ~label, ~label_targets,           ~label_targets_full,
-  228,       "1)",        "a)",    "'1) '*Delta",            "'1) '*Delta^'13'*C",
-  227,       "2)",        "b)",    "'2) '*'VJ'",             "'2) '*frac(V[cmax], J[max])",
-  226,       "3)",        "c)",    "'3) '*Delta*',VJ'",      "'3) '*Delta^'13'*C*','*frac(V[cmax], J[max])",
-  222,       "4)",        "d)",    "'4) '*GPP",              "'4) '*GPP",
-  223,       "5)",        "e)",    "'5) '*Delta*',VJ,'*GPP", "'5) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",
-  231,       "6)",        "h)",    "'6) '*Delta*',VJ,'*GPP", "'6) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",      #  (priors_truncated)
+  228,       "S1",        "a)",    "'S1: '*Delta",            "'S1: '*Delta^'13'*C",
+  227,       "S2",        "b)",    "'S2: '*'VJ'",             "'S2: '*frac(V[cmax], J[max])",
+  226,       "S3",        "c)",    "'S3: '*Delta*',VJ'",      "'S3: '*Delta^'13'*C*','*frac(V[cmax], J[max])",
+  222,       "S4",        "d)",    "'S4: '*GPP",              "'S4: '*GPP",
+  223,       "S5",        "e)",    "'S5: '*Delta*',VJ,'*GPP", "'S5: '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",
+  231,       "S6",        "h)",    "'S6: '*Delta*',VJ,'*GPP", "'S6: '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",      #  (priors_truncated)
 
-  229,       "7)",        "y)",    "Delta*',VJ,'*GPP",       "'7) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",     #  (priors)
-  230,       "8)",        "z)",    "Delta*',VJ,'*GPP",       "'8) '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP"     #  (fixed)
+  229,       "S7",        "y)",    "Delta*',VJ,'*GPP",       "'S7: '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP",     #  (priors)
+  230,       "S8",        "z)",    "Delta*',VJ,'*GPP",       "'S8: '*Delta^'13'*C*','*frac(V[cmax], J[max])*','*GPP"     #  (fixed)
   ) #|> mutate(label = factor(label))
 scenario_label_vec <- setNames(scenario_labels$label_targets, scenario_labels$label)
 custom_labeller_scenarios <- function(x) {
@@ -1396,7 +1396,7 @@ for (n_post_err in list(
     ggsave(here::here(file.path("fig",paste0("fig_B1d_predObs_errorDensity_",outfname_suffix,".png"))),
          plot = pl_density_separately_generated,
          width = 12, height = 6, units = "cm", dpi=300, scale = 1.8)
-    ggsave(here::here(file.path("fig",paste0("figure_4.png"))),
+    ggsave(here::here(file.path("fig",paste0("figure_4",outfname_suffix,".png"))),
          plot = pl_density_separately_generated,
          width = 12, height = 6, units = "cm", dpi=300, scale = 1.8)
 
