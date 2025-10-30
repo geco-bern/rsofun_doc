@@ -30,9 +30,9 @@ dir.create(here::here("fig"), showWarnings = FALSE)
 rsofun_symbol_parname_description <- tribble(
   ~Parameter,             ~Symbol_tex,                              ~Units_tex,                     ~Symbol_R,                                                         ~Symbol_R2,                       ~Description,
   # MODEL PARAMETER:
-  "kphio",                "$\\varphi_0^{*}$",                       "\\unit{mol\\,mol^{-1}}",       "italic(phi)[0]^'*'*' (mol '*mol^{-1}*')'",                         "italic(phi)[0]^'*'",             "Quantum yield at optimal temperature" ,
-  "kphio_par_a",          "$a_\\varphi$",                           "\\unit{°C^{-2}}",              "italic(a)[italic(phi)]*' ('*'\u00B0C'^{-2}*')'",                   "italic(a)[italic(phi)]",         "Shape parameter for the temperature dependence of the quantum yield" ,
-  "kphio_par_b",          "$b_\\varphi$",                           "\\unit{°C}",                   "italic(b)[italic(phi)]*' ('*'\u00B0C'*')'",                        "italic(b)[italic(phi)]",         "Optimal temperature for the quantum yield" ,
+  "kphio",                "$\\varphi_0^{*}$",                       "\\unit{mol\\,mol^{-1}}",       "italic(phi)[0]^'*'*' (mol mol\u207B\u00B9)'",                         "italic(phi)[0]^'*'",             "Quantum yield at optimal temperature" ,
+  "kphio_par_a",          "$a_\\varphi$",                           "\\unit{°C^{-2}}",              "italic(a)[italic(phi)]*' (\u00B0C\u207B\u00B2)'",                   "italic(a)[italic(phi)]",         "Shape parameter for the temperature dependence of the quantum yield" ,
+  "kphio_par_b",          "$b_\\varphi$",                           "\\unit{°C}",                   "italic(b)[italic(phi)]*' (\u00B0C)'",                        "italic(b)[italic(phi)]",         "Optimal temperature for the quantum yield" ,
   "soilm_thetastar",      "$\\theta^*$",                            "\\unit{mm}",                   "italic(theta)^'*'*' ('*'mm'*')'",                                  "italic(theta)^'*'",              "Soil moisture limitation threshold (eq.~\ref{eq:soilmoisturestress})" ,
   "soilm_betao",          "$\\beta_0$",                             "unitless",                     "italic(beta)[0]*' (-)'",                                           "italic(beta)[0]",                "Stress factor at low soil moisture, intercept for the soil moisture stress function" ,
   "beta_unitcostratio",   "$\\beta$",                               "unitless",                     "italic(beta)*' (-)'",                                              "italic(beta)",                   "Unit cost ratio of carboxylation to transpiration" , # (maintenance of $V_{\\mathrm{cmax}}$)
@@ -40,7 +40,7 @@ rsofun_symbol_parname_description <- tribble(
   "tau_acclim",           "$\\tau$",                                "days",                         "italic(tau)*' (days)'",                                            "italic(tau)",                    "Acclimation time scale of photosynthesis" ,
   "kc_jmax",              "$c^{*}$",                                "unitless",                     "italic(c)^'*'*' (-)'",                                             "italic(c)^'*'",                  "Unit cost of electron transport" , #  (maintenance of $J_{\\mathrm{max}}$)
   # ERROR PARAMETER:
-  "err_gpp",              "$\\sigma_{\\text{GPP}}$",                "\\unit{gC\\,m^{-2}\\,s^{-1}}", "italic(sigma)['GPP']*' ('*'gC' * ' ' * m^{-2} * ' ' * s^{-1}*')'", "italic(sigma)['GPP']",           "Gaussian error standard deviation of GPP" ,
+  "err_gpp",              "$\\sigma_{\\text{GPP}}$",                "\\unit{gC\\,m^{-2}\\,s^{-1}}", "italic(sigma)['GPP']*' (gC m \u207B\u00B2 s\u207B\u00B9)'", "italic(sigma)['GPP']",           "Gaussian error standard deviation of GPP" ,
   "err_bigD13C",          "$\\sigma_{\\text{\\Delta}}$",            "\\unit{\\permil}",             "italic(sigma)[Delta]*' ('*'\u2030'*')'",                           "italic(sigma)[Delta]",           "Gaussian error standard deviation of $\\Delta$" ,
   "err_vj",               "$\\sigma_{\\text{VJ}}$",                 "unitless",                     "italic(sigma)['VJ']*' (-)'",                                       "italic(sigma)['VJ']",            "Gaussian error standard deviation of VJ",
   "errbias_bigD13C",      "$\\delta_{\\text{\\Delta}}$",            "\\unit{\\permil}",             "italic(delta)[Delta]*' (\u2030)'",                                 "italic(delta)[Delta]",           "Bias error term of $\\Delta$ (= mod - obs)",
@@ -64,7 +64,7 @@ custom_labeller_variable <- function(labels, multi_line = TRUE) { # adapted from
 }
 ggplot(rsofun_symbol_parname_description |> rename(variable = Parameter)) + geom_point(x=rep(c(1,0,0),5),y=rep(c(1,0,1),5)) + # facet_wrap(~Parameter) +
   facet_wrap( ~ variable , nrow = 2, scales = "free_x", labeller = custom_labeller_variable) +
-  theme_bw() + theme(strip.background = element_rect(fill = "green"), strip.text = element_text(margin = margin(0,0,0,0)))
+  theme_bw() + theme(strip.background = element_rect(fill = "green"), strip.text = element_text(margin = margin(0,0,0,0), family = "Helvetica"))
 
 ## Re-label Scenarios ----
 scenario_labels <-tribble(
@@ -1396,7 +1396,7 @@ for (n_post_err in list(
     ggsave(here::here(file.path("fig",paste0("fig_B1d_predObs_errorDensity_",outfname_suffix,".png"))),
          plot = pl_density_separately_generated,
          width = 12, height = 6, units = "cm", dpi=300, scale = 1.8)
-    ggsave(here::here(file.path("fig",paste0("figure_4",outfname_suffix,".png"))),
+    ggsave(here::here(file.path("fig",paste0("figure_4_",outfname_suffix,".png"))),
          plot = pl_density_separately_generated,
          width = 12, height = 6, units = "cm", dpi=300, scale = 1.8)
 
