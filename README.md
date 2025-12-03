@@ -1,6 +1,8 @@
+[![DOI](https://zenodo.org/badge/996792001.svg)](https://doi.org/10.5281/zenodo.17204361)
+
 # rsofun_doc
 
-This repository contains the code for producing results published in Paredes et al. (2025). This study documents the rsofun package and reports results from a calibration of the P-model to GPP and traits data. A first version of the paper is published as a pre-print (see reference below). The study is currently under review at Geoscientific Model Development. Code contained in this repository serves for the revised version of the study.
+This repository contains the code for producing results published in Paredes et al. (in press). This study documents the rsofun package and reports results from a calibration of the P-model to GPP and traits data. A first version of the paper is published as a pre-print (see reference below). The study is currently under review at Geoscientific Model Development. Code contained in this repository serves for the revised version of the study.
 
 ## Repository contents
 
